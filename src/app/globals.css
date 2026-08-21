@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "@fontsource/gentium-plus";
+
+:root {
+  /* Spiritual colour palette */
+  --saffron:       #4A5D8F;
+  --saffron-light: #6277AD;
+  --saffron-dark:  #36456D;
+  --gold:          #FFD700;
+  --gold-light:    #FFE44D;
+  --gold-dark:     #CCA800;
+  --deep-blue:     #1a1a3e;
+  --deep-blue-mid: #2d2d5e;
+  --cream:         #FFF8F0;
+  --cream-dark:    #F5E6D3;
+  --lotus-pink:    #E8A4C8;
+  --lotus-dark:    #C97DB0;
+
+  /* Semantic tokens — light mode */
+  --background:    var(--cream);
+  --surface:       #ffffff;
+  --foreground:    var(--deep-blue);
+  --muted:         #6b7280;
+  --border:        rgba(26, 26, 62, 0.12);
+  --accent:        var(--saffron);
+  --accent-fg:     #ffffff;
+  --stat-number:   #36456D;
+
+  /* Fonts */
+  --font-serif:      var(--font-crimson), Georgia, serif;
+  --font-sans:       var(--font-inter), system-ui, sans-serif;
+  --font-devanagari: var(--font-noto-devanagari), serif;
+  --font-iast:       "Gentium Plus", "Times New Roman", serif;
+}
+
+[data-theme="dark"] {
+  --background:  #0f1220;
+  --surface:     #171b2f;
+  --foreground:  #f5efe4;
+  --muted:       #b4bdd1;
+  --border:      rgba(226, 194, 122, 0.22);
+
+  /* Dark mode accent tuning for better premium contrast */
+  --saffron:       #667fbe;
+  --saffron-light: #8099d8;
+  --saffron-dark:  #4e6399;
+  --gold:          #e2c27a;
+  --gold-light:    #efd6a2;
+  --gold-dark:     #b79249;
+  --lotus-pink:    #d5b0c2;
+  --lotus-dark:    #b28ca0;
+
+  --accent:      var(--saffron);
+  --accent-fg:   #f8fbff;
+  --stat-number: #d7e3ff;
+}
+
+@theme inline {
+  --color-saffron:    var(--saffron);
+  --color-gold:       var(--gold);
+  --color-deep-blue:  var(--deep-blue);
+  --color-cream:      var(--cream);
+  --color-lotus:      var(--lotus-pink);
+  --color-background: var(--background);
+  --color-surface:    var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted:      var(--muted);
+  --color-border:     var(--border);
+  --color-accent:     var(--accent);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif  { font-family: var(--font-serif); }
+.font-devanagari { font-family: var(--font-devanagari); }
+.font-iast { font-family: var(--font-iast); }
+
+/* Glassmorphism card utility */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
