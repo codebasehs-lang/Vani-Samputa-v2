@@ -38,16 +38,18 @@ export function Header() {
             <ThemeToggle />
 
             <div className="hidden items-center gap-2 lg:flex">
-              {session?.user?.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={session.user.image}
-                  alt={session.user.name ?? "User"}
-                  className="h-9 w-9 rounded-full object-cover"
-                />
-              ) : (
-                <CircleUserRound size={28} className="text-[var(--muted)]" />
-              )}
+              <Link href="/profile" aria-label="Open profile" className="icon-btn inline-flex items-center justify-center rounded-full">
+                {session?.user?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name ?? "User"}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <CircleUserRound size={28} />
+                )}
+              </Link>
               <button
                 onClick={() => signOut()}
                 aria-label="Sign out"
@@ -99,16 +101,18 @@ export function Header() {
 
           {session ? (
             <div className="hidden items-center gap-2 lg:flex">
-              {session.user?.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={session.user.image}
-                  alt={session.user.name ?? "User"}
-                  className="h-9 w-9 rounded-full object-cover"
-                />
-              ) : (
-                <CircleUserRound size={28} className="text-[var(--muted)]" />
-              )}
+              <Link href="/profile" aria-label="Open profile" className="icon-btn inline-flex items-center justify-center rounded-full">
+                {session.user?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name ?? "User"}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <CircleUserRound size={28} />
+                )}
+              </Link>
               <button
                 onClick={() => signOut()}
                 aria-label="Sign out"

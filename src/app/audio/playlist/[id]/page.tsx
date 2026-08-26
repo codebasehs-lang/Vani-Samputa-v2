@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { PlaylistTrackList } from "@/components/audio/PlaylistTrackList"
 import { TranscriptSearch } from "@/components/player/TranscriptSearch"
+import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
@@ -42,7 +43,7 @@ export default async function PlaylistPage(
         >
           🎙️
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
             {playlist.category} · {playlist.language}
           </p>
@@ -59,6 +60,7 @@ export default async function PlaylistPage(
             {playlist.lectures.length} lecture{playlist.lectures.length !== 1 ? "s" : ""}
           </p>
         </div>
+        <PlaylistFavoriteButton playlistId={playlist.id} />
       </div>
 
       {/* Track list — client component for play buttons */}

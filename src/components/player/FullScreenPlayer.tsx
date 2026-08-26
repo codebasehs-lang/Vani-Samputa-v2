@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react"
 import {
   X, Play, Pause, SkipBack, SkipForward,
   RotateCcw, RotateCw,
-  ListMusic, Moon, Volume2, Bookmark, Share2,
+  ListMusic, Moon, Volume2, NotebookPen, Share2,
 } from "lucide-react"
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -32,10 +32,10 @@ export function FullScreenPlayer() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showQueue, setShowQueue] = useState(false)
   const [showSleep, setShowSleep] = useState(false)
-  const [showBookmark, setShowBookmark] = useState(false)
-  const [bookmarkNote, setBookmarkNote] = useState("")
-  const [bookmarkSaving, setBookmarkSaving] = useState(false)
-  const [bookmarkSaved, setBookmarkSaved] = useState(false)
+  const [showNotes, setShowNotes] = useState(false)
+  const [noteText, setNoteText] = useState("")
+  const [notes, setNotes] = useState<Array<{ id: string; content: string; timestampS: number }>>([])
+  const [noteSaving, setNoteSaving] = useState(false)
   const [shareLabel, setShareLabel] = useState("Share")
   const [now, setNow] = useState(() => Date.now())
   const { data: session } = useSession()
@@ -90,18 +90,29 @@ export function FullScreenPlayer() {
     return () => cancelAnimationFrame(animId)
   }, [isFullScreen])
 
-  async function saveBookmark() {
+  useEffect(() => {
+    if (!showNotes || !currentTrack || !session) return
+    fetch(`/api/notes?lectureId=${encodeURIComponent(currentTrack.id)}`)
+      .then((response) => response.ok ? response.json() : [])
+      .then((data: Array<{ id: string; content: string; timestampS: number }>) => setNotes(data))
+      .catch(() => setNotes([]))
+  }, [showNotes, currentTrack, session])
+
+  async function saveNote() {
     if (!currentTrack || !session) return
-    setBookmarkSaving(true)
-    await fetch("/api/notes", {
+    if (!noteText.trim()) return
+    setNoteSaving(true)
+    const response = await fetch("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lectureId: currentTrack.id, content: bookmarkNote || "Bookmark", timestampS: positionS }),
+      body: JSON.stringify({ lectureId: currentTrack.id, content: noteText, timestampS: positionS }),
     })
-    setBookmarkSaving(false)
-    setBookmarkSaved(true)
-    setBookmarkNote("")
-    setTimeout(() => { setBookmarkSaved(false); setShowBookmark(false) }, 1500)
+    if (response.ok) {
+      const note = await response.json() as { id: string; content: string; timestampS: number }
+      setNotes((currentNotes) => [note, ...currentNotes])
+      setNoteText("")
+    }
+    setNoteSaving(false)
   }
 
   async function shareTrack() {
@@ -340,44 +351,13 @@ export function FullScreenPlayer() {
                 <Share2 size={14} /> {shareLabel}
               </button>
 
-              {session && (
-                <div className="relative">
-                  <button
-                    onClick={() => { setShowBookmark((v) => !v); setShowQueue(false); setShowSleep(false) }}
-                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-                    style={
-                      showBookmark
-                        ? { background: "rgba(232,164,200,0.2)", color: "#E8A4C8" }
-                        : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }
-                    }
-                  >
-                    <Bookmark size={14} /> Bookmark
-                  </button>
-                  {showBookmark && (
-                    <div
-                      className="absolute bottom-full left-0 mb-2 w-56 rounded-xl p-3 shadow-xl"
-                      style={{ background: "#2d2d5e" }}
-                    >
-                      <p className="mb-1.5 text-[10px] text-white/50">at {formatTime(positionS)}</p>
-                      <input
-                        value={bookmarkNote}
-                        onChange={(e) => setBookmarkNote(e.target.value)}
-                        placeholder="Add a note (optional)"
-                        className="w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white placeholder-white/30 outline-none focus:bg-white/15"
-                        onKeyDown={(e) => e.key === "Enter" && saveBookmark()}
-                      />
-                      <button
-                        onClick={saveBookmark}
-                        disabled={bookmarkSaving}
-                        className="mt-2 w-full rounded-lg py-1.5 text-xs font-medium text-[var(--accent-fg)] disabled:opacity-50"
-                        style={{ background: "var(--accent)" }}
-                      >
-                        {bookmarkSaved ? "✓ Saved!" : bookmarkSaving ? "Saving…" : "Save Bookmark"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              <button
+                onClick={() => { setShowNotes((value) => !value); setShowQueue(false); setShowSleep(false) }}
+                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white/60 transition-colors hover:text-white"
+                aria-expanded={showNotes}
+              >
+                <NotebookPen size={14} /> Notes
+              </button>
             </div>
 
             {/* Queue panel (dnd-kit) */}
@@ -411,6 +391,54 @@ export function FullScreenPlayer() {
               </div>
             )}
           </div>
+
+          {showNotes && (
+            <aside className="fixed inset-x-3 bottom-3 z-10 max-h-[42vh] overflow-y-auto rounded-xl border border-white/10 bg-[#20203f] p-3 text-white/80 shadow-2xl md:inset-x-auto md:right-6 md:top-20 md:bottom-6 md:w-96 md:max-h-none">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Lecture notes</h3>
+                  <p className="mt-0.5 text-[10px] text-white/40">Capture ideas as you listen.</p>
+                </div>
+                <span className="text-[10px] text-white/40">{notes.length} saved</span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-1">
+                <div>
+                  <textarea
+                    value={noteText}
+                    onChange={(event) => setNoteText(event.target.value)}
+                    placeholder="Write an essential point..."
+                    className="min-h-28 w-full resize-y rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-white/30"
+                  />
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-white/40">Timestamp: {formatTime(positionS)}</span>
+                    <button
+                      onClick={saveNote}
+                      disabled={noteSaving || !noteText.trim()}
+                      className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-fg)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {noteSaving ? "Saving..." : "Save note"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-56 overflow-y-auto rounded-lg border border-white/10 bg-black/10 p-2">
+                    {notes.length === 0 ? (
+                    <p className="p-2 text-xs text-white/40">Your saved notes will appear here.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {notes.map((note) => (
+                        <div key={note.id} className="rounded-md bg-white/[0.06] p-2">
+                          <div className="mb-1 text-[10px] font-semibold text-[var(--gold)]">{formatTime(note.timestampS)}</div>
+                          <p className="text-xs leading-5 text-white/70">{note.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </aside>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

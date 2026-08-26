@@ -50,21 +50,27 @@ export default async function ProfilePage() {
       {/* Stats */}
       <div className="surface-panel mb-8 grid grid-cols-3 divide-x divide-[var(--border)]">
         {[
-          { label: "Favorites", value: user._count.favorites },
-          { label: "Listened", value: user._count.history },
-          { label: "Notes", value: user._count.notes },
-        ].map(({ label, value }) => (
-          <div key={label} className="px-4 py-5 text-center">
+          { href: "/favorites", label: "Favorites", value: user._count.favorites },
+          { href: "/history", label: "Listened", value: user._count.history },
+          { href: "/notes", label: "Notes", value: user._count.notes },
+        ].map(({ href, label, value }) => (
+          <Link
+            key={label}
+            href={href}
+            className="px-4 py-5 text-center transition-colors hover:bg-[var(--accent)]/5"
+          >
             <p className="text-2xl font-bold" style={{ color: "var(--stat-number)" }}>{value}</p>
             <p className="mt-0.5 text-xs text-[var(--muted)] uppercase tracking-wide">{label}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
       {/* Quick links */}
       <div className="space-y-2">
         {[
+          { href: "/favorites", label: "Favorites" },
           { href: "/history",  label: "Listening History" },
+          { href: "/notes",    label: "Notes" },
           { href: "/settings", label: "Settings" },
           { href: "/admin",    label: "Admin Dashboard", adminOnly: true },
         ]

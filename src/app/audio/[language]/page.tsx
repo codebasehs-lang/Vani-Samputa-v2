@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { PageHeader } from "@/components/PageHeader"
+import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
 
 const VALID_LANGUAGES = ["odia", "hindi", "english"] as const
 type Lang = (typeof VALID_LANGUAGES)[number]
@@ -80,26 +81,28 @@ export default async function LanguageAudioPage(
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((pl) => (
-              <Link
+              <div
                 key={pl.id}
-                href={`/audio/playlist/${pl.id}`}
-                className="surface-card group overflow-hidden transition-transform hover:-translate-y-1"
+                className="surface-card group relative overflow-hidden transition-transform hover:-translate-y-1"
               >
-                <div
-                  className="flex h-28 items-center justify-center text-4xl"
-                  style={{ background: "linear-gradient(135deg, #1a1a3e 0%, #2d2d5e 100%)" }}
-                >
-                  🎙️
+                <Link href={`/audio/playlist/${pl.id}`} className="block">
+                  <div
+                    className="flex h-28 items-center justify-center text-4xl"
+                    style={{ background: "linear-gradient(135deg, #1a1a3e 0%, #2d2d5e 100%)" }}
+                  >
+                    🎙️
+                  </div>
+                  <div className="p-3 pr-11">
+                    <p className="truncate text-sm font-semibold text-[var(--foreground)]">{pl.title}</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--muted)]">
+                      {pl._count.lectures} lecture{pl._count.lectures !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </Link>
+                <div className="absolute right-2 bottom-2">
+                  <PlaylistFavoriteButton playlistId={pl.id} compact />
                 </div>
-                <div className="p-3">
-                  <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                    {pl.title}
-                  </p>
-                  <p className="mt-0.5 text-[10px] text-[var(--muted)]">
-                    {pl._count.lectures} lecture{pl._count.lectures !== 1 ? "s" : ""}
-                  </p>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>

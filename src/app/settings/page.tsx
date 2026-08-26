@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { usePlayerStore } from "@/store/playerStore"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
@@ -9,6 +10,13 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
+      <Link
+        href="/profile"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+      >
+        <ArrowLeft size={16} />
+        Back to profile
+      </Link>
       <h1 className="font-serif mb-6 text-2xl font-bold text-[var(--foreground)]">
         Settings
       </h1>

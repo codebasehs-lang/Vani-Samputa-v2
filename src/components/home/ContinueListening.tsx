@@ -1,10 +1,10 @@
 "use client"
 
 import { usePlayerStore } from "@/store/playerStore"
-import { Play, Headphones } from "lucide-react"
+import { Pause, Play } from "lucide-react"
 
 export function ContinueListening() {
-  const { currentTrack, positionS, duration, play, resume, isPlaying } = usePlayerStore()
+  const { currentTrack, positionS, duration, pause, resume, isPlaying } = usePlayerStore()
 
   if (!currentTrack) return null
 
@@ -43,16 +43,12 @@ export function ContinueListening() {
 
           {/* Play button */}
           <button
-            onClick={() => (isPlaying ? undefined : resume())}
+            onClick={() => (isPlaying ? pause() : resume())}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--accent-fg)] transition-opacity hover:opacity-90"
             style={{ background: "var(--accent)" }}
-            aria-label="Resume"
+            aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isAudio ? (
-              <Headphones size={18} fill="currentColor" />
-            ) : (
-              <Play size={18} fill="currentColor" />
-            )}
+            {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
           </button>
         </div>
       </div>

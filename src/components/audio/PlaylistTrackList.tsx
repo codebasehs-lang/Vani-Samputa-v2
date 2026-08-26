@@ -2,6 +2,7 @@
 
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { OfflineDownloadButton } from "@/components/audio/OfflineDownloadButton"
+import { FavoriteButton } from "@/components/FavoriteButton"
 import { Play, Pause, Plus } from "lucide-react"
 
 type Lecture = {
@@ -117,6 +118,7 @@ export function PlaylistTrackList({
               >
                 <Plus size={16} />
               </button>
+              <FavoriteButton lectureId={lecture.id} />
               {lecture.mediaType === "AUDIO" && (
                 <OfflineDownloadButton url={lecture.url} title={lecture.title} />
               )}

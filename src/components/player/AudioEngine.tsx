@@ -9,18 +9,40 @@ export function AudioEngine() {
     const audio = new Audio()
     audio.preload = "metadata"
     let objectUrl: string | null = null
+    let sourceRequest = 0
+    let loadedTrackId: string | null = null
+    let loadingTrackId: string | null = null
+    let historyTrackId: string | null = null
 
-    async function setAudioSource(track: { url: string; mediaType: "AUDIO" | "VIDEO" }, positionS: number, isPlaying: boolean) {
+    async function recordPlayback(trackId: string, positionS: number) {
+      if (historyTrackId === trackId) return
+      historyTrackId = trackId
+      await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lectureId: trackId, positionS, completed: false }),
+      }).catch(() => {})
+    }
+
+    async function setAudioSource(
+      track: { id: string; url: string; mediaType: "AUDIO" | "VIDEO" },
+      positionS: number,
+      requestId: number,
+    ) {
       if (objectUrl) URL.revokeObjectURL(objectUrl)
       objectUrl = null
+      loadedTrackId = null
       if (track.mediaType !== "AUDIO") {
+        loadingTrackId = null
         audio.pause()
         audio.src = ""
         return
       }
 
       try {
+        if (requestId === sourceRequest) loadingTrackId = track.id
         const cached = await caches.open("vani-samputa-audio-v1").then((cache) => cache.match(track.url))
+        if (requestId !== sourceRequest) return
         if (cached) {
           objectUrl = URL.createObjectURL(await cached.blob())
           audio.src = objectUrl
@@ -38,9 +60,17 @@ export function AudioEngine() {
           audio.addEventListener("error", failed, { once: true })
           audio.load()
         })
+        if (requestId !== sourceRequest) return
         audio.currentTime = Math.min(positionS, Number.isFinite(audio.duration) ? audio.duration : positionS)
-        if (isPlaying) await audio.play()
+        audio.playbackRate = usePlayerStore.getState().speed
+        audio.volume = usePlayerStore.getState().volume
+        const currentTrack = usePlayerStore.getState().currentTrack
+        loadedTrackId = currentTrack?.url === track.url ? currentTrack.id : null
+        loadingTrackId = null
+        if (usePlayerStore.getState().isPlaying) await audio.play()
       } catch {
+        if (requestId !== sourceRequest) return
+        loadingTrackId = null
         usePlayerStore.getState().pause()
       }
     }
@@ -53,19 +83,33 @@ export function AudioEngine() {
       usePlayerStore.getState().setDuration(audio.duration)
     )
     audio.addEventListener("ended", () => usePlayerStore.getState().playNext())
-    audio.addEventListener("error", () => usePlayerStore.getState().pause())
-
     // Wire store changes → DOM
     const unsub = usePlayerStore.subscribe((s, prev) => {
       // Track change
       if (s.currentTrack?.id !== prev.currentTrack?.id) {
-        if (s.currentTrack) setAudioSource(s.currentTrack, s.positionS, s.isPlaying)
+        sourceRequest += 1
+        historyTrackId = null
+        audio.pause()
+        usePlayerStore.getState().setDuration(0)
+        if (s.currentTrack) {
+          void recordPlayback(s.currentTrack.id, s.positionS)
+          void setAudioSource(s.currentTrack, s.positionS, sourceRequest)
+        }
         return
       }
       // Play / pause
       if (s.isPlaying !== prev.isPlaying) {
         if (s.isPlaying && s.currentTrack?.mediaType === "AUDIO") {
-          audio.play().catch(() => {})
+          if (loadedTrackId === s.currentTrack.id) {
+            void recordPlayback(s.currentTrack.id, s.positionS)
+            audio.play().catch(() => {})
+          } else if (loadingTrackId === s.currentTrack.id) {
+            return
+          } else {
+            sourceRequest += 1
+            void recordPlayback(s.currentTrack.id, s.positionS)
+            void setAudioSource(s.currentTrack, s.positionS, sourceRequest)
+          }
         } else {
           audio.pause()
         }

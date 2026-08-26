@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { VideoGrid } from "@/components/video/VideoGrid"
 import { TranscriptSearch } from "@/components/player/TranscriptSearch"
+import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
@@ -48,6 +49,7 @@ export default async function VideoPlaylistPage(
           <p className="mt-1 text-sm text-[var(--muted)] line-clamp-2">{playlist.description}</p>
         )}
         <p className="mt-2 text-xs text-[var(--muted)]">{playlist.lectures.length} videos</p>
+        <PlaylistFavoriteButton playlistId={playlist.id} />
       </div>
 
       <VideoGrid lectures={playlist.lectures} playlistId={id} />

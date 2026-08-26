@@ -33,6 +33,7 @@ model User {
   accounts  Account[]
   sessions  Session[]
   favorites UserFavorite[]
+  playlistFavorites UserPlaylistFavorite[]
   notes     UserNote[]
   history   UserHistory[]
   progress  UserProgress[]
@@ -90,6 +91,7 @@ model Playlist {
   updatedAt   DateTime  @updatedAt
 
   lectures Lecture[]
+  favorites UserPlaylistFavorite[]
   categories Category[]
 }
 
@@ -158,6 +160,18 @@ model UserFavorite {
   lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lectureId])
+}
+
+model UserPlaylistFavorite {
+  id         String   @id @default(cuid())
+  userId     String
+  playlistId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playlistId])
 }
 
 model UserNote {
