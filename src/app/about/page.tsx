@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { ABOUT_SLUGS } from "@/lib/aboutContent"
+import { PageHeader } from "@/components/PageHeader"
 
 export const metadata: Metadata = { title: "About" }
 
@@ -36,17 +37,12 @@ export default async function AboutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8 text-center">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">Spiritual Legacy</p>
-        <h1 className="font-iast text-4xl font-bold text-[var(--foreground)]" style={{ fontFamily: "var(--font-serif)" }}>
-          About Gurudeva
-        </h1>
-      </div>
+      <PageHeader eyebrow="Spiritual Legacy" title="About" align="center" />
 
       {ordered.length === 0 && (
-        <p className="py-16 text-center text-sm text-[var(--muted)]">
+        <div className="empty-state py-16 text-center text-sm text-[var(--muted)]">
           About content is not available yet. Run db seed to load initial sections.
-        </p>
+        </div>
       )}
 
       <div className="space-y-10">
@@ -55,11 +51,7 @@ export default async function AboutPage() {
           const paragraphs = splitParagraphs(article.body)
 
           return (
-            <section
-              key={article.slug}
-              className={`overflow-hidden rounded-2xl border border-[var(--border)] ${reverse ? "" : ""}`}
-              style={{ background: "var(--surface)" }}
-            >
+            <section key={article.slug} className="surface-panel overflow-hidden">
               <div className={`grid gap-0 md:grid-cols-2 ${reverse ? "md:[&>*:first-child]:order-2" : ""}`}>
                 <div className="p-6 sm:p-8">
                   <h2 className="mb-4 text-2xl font-semibold text-[var(--foreground)]" style={{ fontFamily: "var(--font-serif)" }}>
@@ -74,12 +66,7 @@ export default async function AboutPage() {
                         href="https://www.taptajivanam.com/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:opacity-90"
-                        style={{
-                          borderColor: "color-mix(in oklab, var(--accent) 65%, white 35%)",
-                          background: "var(--accent)",
-                          color: "var(--accent-fg)",
-                        }}
+                        className="btn-accent inline-flex items-center px-4 py-2 text-sm"
                       >
                         Visit Taptajivanam {"->"}
                       </a>

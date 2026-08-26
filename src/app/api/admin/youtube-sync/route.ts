@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
+import { categoryConnect, ensureCategories } from "@/lib/categories"
 
 const YT = "https://www.googleapis.com/youtube/v3"
 
@@ -33,12 +34,13 @@ export async function POST() {
         const title = item.snippet.title as string
         const language = detectLanguage(title)
         const category = detectCategory(title)
+        await ensureCategories([category])
 
         // Upsert playlist
         const pl = await prisma.playlist.upsert({
           where: { id: ytPlaylistId },
-          update: { title },
-          create: { id: ytPlaylistId, title, language, category, mediaType: "VIDEO" },
+          update: { title, categories: categoryConnect([category]) },
+          create: { id: ytPlaylistId, title, language, category, mediaType: "VIDEO", categories: categoryConnect([category]) },
         })
         playlists++
 
@@ -71,6 +73,7 @@ export async function POST() {
                   playlistId: pl.id,
                   sortOrder: video.snippet.position ?? 0,
                   publishedAt: video.snippet.publishedAt ? new Date(video.snippet.publishedAt) : null,
+                  categories: categoryConnect([category]),
                 },
               })
               created++

@@ -27,12 +27,21 @@ export function AudioEngine() {
         } else {
           audio.src = track.url
         }
-        audio.currentTime = positionS
-        if (isPlaying) audio.play().catch(() => {})
+        await new Promise<void>((resolve, reject) => {
+          const ready = () => { cleanup(); resolve() }
+          const failed = () => { cleanup(); reject(new Error("Audio could not be loaded")) }
+          const cleanup = () => {
+            audio.removeEventListener("canplay", ready)
+            audio.removeEventListener("error", failed)
+          }
+          audio.addEventListener("canplay", ready, { once: true })
+          audio.addEventListener("error", failed, { once: true })
+          audio.load()
+        })
+        audio.currentTime = Math.min(positionS, Number.isFinite(audio.duration) ? audio.duration : positionS)
+        if (isPlaying) await audio.play()
       } catch {
-        audio.src = track.url
-        audio.currentTime = positionS
-        if (isPlaying) audio.play().catch(() => {})
+        usePlayerStore.getState().pause()
       }
     }
 
@@ -80,7 +89,7 @@ export function AudioEngine() {
 
       navigator.mediaSession.metadata = new MediaMetadata({
         title: s.currentTrack.title,
-        artist: "HH Haladhara Swami Maharaja",
+        artist: "HH Haladhara Svāmī Mahārāja",
         album: "Vāṇī Saṃpuṭa",
       })
       const store = () => usePlayerStore.getState()

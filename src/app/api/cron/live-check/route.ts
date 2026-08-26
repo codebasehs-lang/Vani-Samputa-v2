@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             JSON.stringify({
-              title: "🔴 Haladhara Swami is Live!",
+              title: "🔴 Haladhara Svāmī is Live!",
               body: "Satsang is streaming now. Tap to join.",
               url: "/live",
             })

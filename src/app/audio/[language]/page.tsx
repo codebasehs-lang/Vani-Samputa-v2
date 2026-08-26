@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
+import { PageHeader } from "@/components/PageHeader"
 
 const VALID_LANGUAGES = ["odia", "hindi", "english"] as const
 type Lang = (typeof VALID_LANGUAGES)[number]
@@ -21,24 +22,26 @@ export async function generateMetadata(
 }
 
 export default async function LanguageAudioPage(
-  { params }: { params: Promise<{ language: string }> }
+  { params, searchParams }: { params: Promise<{ language: string }>; searchParams: Promise<{ tag?: string }> }
 ) {
   const { language } = await params
+  const { tag } = await searchParams
   const lang = language.toLowerCase() as Lang
   if (!VALID_LANGUAGES.includes(lang)) notFound()
 
   const { label, native } = DISPLAY[lang]
   const dbLanguage = label  // stored as "Odia", "Hindi" etc.
 
-  const playlists = await prisma.playlist.findMany({
-    where: { language: dbLanguage, mediaType: "AUDIO" },
+  const [playlists, categories] = await Promise.all([prisma.playlist.findMany({
+    where: { language: dbLanguage, mediaType: "AUDIO", ...(tag ? { categories: { some: { slug: tag } } } : {}) },
     orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-    include: { _count: { select: { lectures: true } } },
-  })
+    include: { _count: { select: { lectures: true } }, categories: { where: { active: true }, orderBy: { name: "asc" } } },
+  }), prisma.category.findMany({ where: { active: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] })])
 
   // Group by category
   const grouped = playlists.reduce<Record<string, typeof playlists>>((acc, pl) => {
-    ;(acc[pl.category] ??= []).push(pl)
+    const names = pl.categories.map((category) => category.name)
+    for (const name of names.length ? names : [pl.category]) (acc[name] ??= []).push(pl)
     return acc
   }, {})
 
@@ -51,28 +54,28 @@ export default async function LanguageAudioPage(
         <span>{label}</span>
       </p>
 
-      <h1
-        className="mb-1 text-3xl font-bold"
-        style={{ fontFamily: "var(--font-serif)", color: "var(--foreground)" }}
-      >
-        {label} — {native}
-      </h1>
-      <p className="mb-8 text-sm text-[var(--muted)]">
-        {playlists.length} playlist{playlists.length !== 1 ? "s" : ""}
-      </p>
+      <PageHeader
+        title={`${label} — ${native}`}
+        description={`${playlists.length} playlist${playlists.length !== 1 ? "s" : ""}`}
+      />
+      <div className="mb-8 flex flex-wrap gap-2">
+        <Link href={`/audio/${lang}`} data-active={!tag} className="chip px-3 py-1.5 text-xs">All</Link>
+        {categories.map((category) => (
+          <Link key={category.id} href={`/audio/${lang}?tag=${category.slug}`} data-active={tag === category.slug} className="chip px-3 py-1.5 text-xs">
+            {category.name}
+          </Link>
+        ))}
+      </div>
 
       {playlists.length === 0 && (
-        <p className="py-16 text-center text-sm text-[var(--muted)]">
+        <div className="empty-state py-16 text-center text-sm text-[var(--muted)]">
           No playlists yet — content will appear after import.
-        </p>
+        </div>
       )}
 
       {Object.entries(grouped).map(([category, items]) => (
         <section key={category} className="mb-10">
-          <h2
-            className="mb-4 text-xs font-semibold uppercase tracking-widest"
-            style={{ color: "var(--saffron)" }}
-          >
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
             {category}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -80,8 +83,7 @@ export default async function LanguageAudioPage(
               <Link
                 key={pl.id}
                 href={`/audio/playlist/${pl.id}`}
-                className="group overflow-hidden rounded-xl border border-[var(--border)] transition-transform hover:-translate-y-1"
-                style={{ background: "var(--surface)" }}
+                className="surface-card group overflow-hidden transition-transform hover:-translate-y-1"
               >
                 <div
                   className="flex h-28 items-center justify-center text-4xl"

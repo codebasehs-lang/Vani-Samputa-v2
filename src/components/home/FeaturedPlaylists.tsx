@@ -47,7 +47,7 @@ function SectionHeader({ title, href }: { title: string; href?: string }) {
     <div className="flex items-center justify-between">
       <h2 className="text-lg font-semibold text-[var(--foreground)]">{title}</h2>
       {href && (
-        <a href={href} className="text-sm font-medium" style={{ color: "var(--saffron)" }}>
+        <a href={href} className="text-sm font-medium" style={{ color: "var(--accent)" }}>
           See all →
         </a>
       )}
@@ -62,8 +62,7 @@ function PlaylistCard({ playlist }: { playlist: Playlist }) {
   return (
     <a
       href={href}
-      className="group flex-shrink-0 w-36 sm:w-44 rounded-xl overflow-hidden border border-[var(--border)] transition-transform hover:-translate-y-1"
-      style={{ background: "var(--surface)" }}
+      className="surface-card group flex-shrink-0 w-36 sm:w-44 overflow-hidden transition-transform hover:-translate-y-1"
     >
       {/* Cover */}
       <div

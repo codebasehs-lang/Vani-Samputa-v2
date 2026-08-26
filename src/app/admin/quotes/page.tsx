@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react"
 import * as XLSX from "xlsx"
+import { toast } from "sonner"
+import { Quote, Download, Upload, CircleCheck, CircleAlert } from "lucide-react"
 
 type Row = Record<string, string>
 
@@ -77,21 +79,28 @@ export default function AdminQuotesPage() {
     const data = await res.json() as ImportResult
     setResult(data)
     setBusy(false)
+    if (!res.ok) {
+      toast.error("Failed to import quotes.")
+      return
+    }
+    toast.success(`Imported: ${data.created} created, ${data.updated} updated.`)
   }
 
   const headers = rows.length > 0 ? Object.keys(rows[0]) : []
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-[var(--foreground)]">Daily Quotes Import</h1>
+      <div className="mb-2 flex items-center gap-3">
+        <span className="admin-gradient-accent flex h-10 w-10 items-center justify-center rounded-full text-white">
+          <Quote size={18} strokeWidth={1.75} />
+        </span>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Daily Quotes Import</h1>
+      </div>
       <p className="mb-6 text-sm text-[var(--muted)]">
         Download a month template, fill Quote text date-wise, and upload. Re-uploading the same dates updates existing entries.
       </p>
 
-      <div
-        className="mb-5 rounded-xl border border-[var(--border)] p-4"
-        style={{ background: "var(--surface)" }}
-      >
+      <div className="admin-panel mb-5 p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">1) Download monthly template</p>
         <div className="flex flex-wrap items-end gap-3">
           <label className="text-sm text-[var(--muted)]">
@@ -100,7 +109,7 @@ export default function AdminQuotesPage() {
               type="number"
               value={year}
               onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
-              className="mt-1 block w-28 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+              className="admin-input mt-1 block w-28 px-3 py-2 text-sm"
             />
           </label>
           <label className="text-sm text-[var(--muted)]">
@@ -108,7 +117,7 @@ export default function AdminQuotesPage() {
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="mt-1 block rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+              className="admin-select mt-1 block px-3 py-2 text-sm"
             >
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                 <option key={m} value={m}>{m}</option>
@@ -117,32 +126,30 @@ export default function AdminQuotesPage() {
           </label>
           <button
             onClick={downloadTemplate}
-            className="rounded-full px-5 py-2 text-sm font-semibold text-white"
-            style={{ background: "var(--saffron)" }}
+            className="admin-gradient-accent flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            Download XLS Template
+            <Download size={14} strokeWidth={1.75} /> Download XLS Template
           </button>
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
+      <div className="admin-panel mb-4 border-dashed p-6 text-center">
         <p className="mb-2 text-sm text-[var(--muted)]">
           2) Upload the filled file (.xlsx) with at least <code>Date</code> and <code>Quote</code> columns.
         </p>
         <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFile} className="hidden" />
         <button
           onClick={() => fileRef.current?.click()}
-          className="rounded-full px-5 py-2 text-sm font-semibold text-white"
-          style={{ background: "var(--saffron)" }}
+          className="admin-gradient-accent inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
-          Choose File
+          <Upload size={14} strokeWidth={1.75} /> Choose File
         </button>
       </div>
 
       {rows.length > 0 && (
         <div className="mb-5">
           <p className="mb-2 text-sm text-[var(--muted)]">{rows.length} rows loaded (showing first 6)</p>
-          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+          <div className="admin-panel overflow-x-auto">
             <table className="min-w-full text-xs">
               <thead className="bg-[var(--surface)]">
                 <tr>
@@ -168,8 +175,7 @@ export default function AdminQuotesPage() {
           <button
             onClick={importQuotes}
             disabled={busy}
-            className="mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: "var(--saffron)" }}
+            className="admin-gradient-accent mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
           >
             {busy ? "Importing…" : `Import ${rows.length} Rows`}
           </button>
@@ -177,13 +183,19 @@ export default function AdminQuotesPage() {
       )}
 
       {result && (
-        <div className="rounded-xl border border-[var(--border)] p-4" style={{ background: "var(--surface)" }}>
+        <div className="admin-panel admin-gradient-surface p-4">
           <p className="text-sm font-semibold text-[var(--foreground)]">Import complete</p>
-          <p className="text-sm text-green-600">Created: {result.created}</p>
-          <p className="text-sm text-blue-600">Updated: {result.updated}</p>
+          <p className="flex items-center gap-1.5 text-sm text-green-600">
+            <CircleCheck size={13} strokeWidth={1.75} /> Created: {result.created}
+          </p>
+          <p className="flex items-center gap-1.5 text-sm text-blue-600">
+            <CircleCheck size={13} strokeWidth={1.75} /> Updated: {result.updated}
+          </p>
           <p className="text-sm text-[var(--muted)]">Skipped: {result.skipped}</p>
           {result.errors.length > 0 && (
-            <p className="mt-2 text-xs text-red-500">Errors: {result.errors.length} (showing first few in API response)</p>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-red-500">
+              <CircleAlert size={13} strokeWidth={1.75} /> Errors: {result.errors.length} (showing first few in API response)
+            </p>
           )}
         </div>
       )}

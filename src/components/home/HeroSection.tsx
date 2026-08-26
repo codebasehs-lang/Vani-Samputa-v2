@@ -44,9 +44,9 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.25 }}
-          className="mb-8 text-lg font-medium text-[var(--lotus-pink)]"
+          className="font-iast mb-8 text-lg font-medium text-[var(--lotus-pink)]"
         >
-          HH Haladhara Swami Maharaja
+          HH Haladhara Svāmī Mahārāja
         </motion.p>
 
         {/* Maha Mantra */}

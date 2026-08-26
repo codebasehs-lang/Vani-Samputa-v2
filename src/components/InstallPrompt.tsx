@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { DownloadSimple, X } from "phosphor-react"
+import { Download, X } from "lucide-react"
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -35,12 +35,11 @@ export function InstallPrompt() {
 
   return (
     <aside
-      className="fixed inset-x-4 bottom-24 z-40 flex items-center gap-3 rounded-2xl border border-[var(--border)] p-4 shadow-xl md:inset-x-auto md:right-6 md:w-96"
-      style={{ background: "var(--surface)" }}
+      className="surface-panel fixed inset-x-4 bottom-24 z-40 flex items-center gap-3 p-4 md:inset-x-auto md:right-6 md:w-96"
       aria-label="Install Vani Samputa"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: "var(--saffron)" }}>
-        <DownloadSimple size={20} weight="bold" />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--accent-fg)]" style={{ background: "var(--accent)" }}>
+        <Download size={20} strokeWidth={2.5} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-iast text-sm font-semibold text-[var(--foreground)]">Keep Vāṇī Saṃpuṭa close</p>
@@ -49,15 +48,14 @@ export function InstallPrompt() {
       <button
         type="button"
         onClick={install}
-        className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
-        style={{ background: "var(--saffron)" }}
+        className="btn-accent shrink-0 px-3 py-1.5 text-xs"
       >
         Install
       </button>
       <button
         type="button"
         onClick={() => setVisible(false)}
-        className="shrink-0 text-[var(--muted)]"
+        className="icon-btn inline-flex shrink-0 items-center justify-center p-1"
         aria-label="Dismiss install prompt"
       >
         <X size={18} />

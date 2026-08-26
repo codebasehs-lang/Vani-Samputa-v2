@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
+import { categoryConnect, parseCategoryNames, validateCategories } from "@/lib/categories"
+import { parseDuration } from "@/lib/duration"
 
 type Row = Record<string, string>
 
@@ -18,9 +20,19 @@ export async function POST(req: NextRequest) {
   function col(row: Row, ...keys: string[]): string {
     for (const k of keys) {
       const found = Object.keys(row).find((c) => c.toLowerCase() === k.toLowerCase())
-      if (found) return (row[found] ?? "").trim()
+      if (found) return String(row[found] ?? "").trim()
     }
     return ""
+  }
+
+  function parseExcelDate(value: string): Date | null {
+    if (!value) return null
+    if (/^\d+(\.\d+)?$/.test(value)) {
+      const serial = Number(value)
+      if (serial > 0) return new Date(Date.UTC(1899, 11, 30) + serial * 86400000)
+    }
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
   }
 
   // Cache playlists to avoid repeated DB lookups
@@ -32,11 +44,22 @@ export async function POST(req: NextRequest) {
       const url   = col(row, "url", "link", "youtube id", "youtube_id", "videoid")
       if (!title || !url) { skipped++; continue }
 
+      const rowMediaType = col(row, "media type", "media_type", "type").toUpperCase()
+      const lectureMediaType = rowMediaType === "AUDIO" || rowMediaType === "VIDEO" ? rowMediaType : mediaType
       const language     = col(row, "language", "lang") || "Odia"
       const category     = col(row, "category", "cat") || "General"
+      const categories   = parseCategoryNames(col(row, "categories", "tags") || category)
       const playlistName = col(row, "playlist", "playlist name", "playlistname")
       const durationRaw  = col(row, "duration", "duration (sec)", "seconds")
-      const duration     = durationRaw ? Number(durationRaw) || null : null
+      const duration     = parseDuration(durationRaw)
+      const lectureDateRaw = col(row, "lecture date", "lecture_date", "date", "event date")
+      const lectureDate = parseExcelDate(lectureDateRaw)
+      const missingCategories = await validateCategories(categories)
+      if (missingCategories.length) {
+        skipped++
+        errors.push(`Row ${created + skipped}: add categories first from Admin -> Categories: ${missingCategories.join(", ")}`)
+        continue
+      }
 
       // Dedup by url
       const existing = await prisma.lecture.findFirst({ where: { url } })
@@ -45,19 +68,19 @@ export async function POST(req: NextRequest) {
       // Find or create playlist
       let playlistId: string | null = null
       if (playlistName) {
-        const cacheKey = `${playlistName}||${language}||${category}||${mediaType}`
+        const cacheKey = `${playlistName}||${language}||${lectureMediaType}`
         if (playlistCache.has(cacheKey)) {
           playlistId = playlistCache.get(cacheKey)!
         } else {
-          let pl = await prisma.playlist.findFirst({ where: { title: playlistName, language, mediaType } })
-          if (!pl) pl = await prisma.playlist.create({ data: { title: playlistName, language, category, mediaType } })
+          let pl = await prisma.playlist.findFirst({ where: { title: playlistName, language, mediaType: lectureMediaType } })
+          if (!pl) pl = await prisma.playlist.create({ data: { title: playlistName, language, category: categories[0] || "General", mediaType: lectureMediaType, categories: categoryConnect(categories) } })
           playlistId = pl.id
           playlistCache.set(cacheKey, pl.id)
         }
       }
 
       await prisma.lecture.create({
-        data: { title, url, mediaType, language, category, duration, playlistId },
+        data: { title, url, mediaType: lectureMediaType, language, category: categories[0] || "General", duration, lectureDate, playlistId, categories: categoryConnect(categories) },
       })
       created++
     } catch (e) {

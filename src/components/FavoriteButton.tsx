@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { Heart } from "phosphor-react"
+import { Heart } from "lucide-react"
 
 export function FavoriteButton({ lectureId }: { lectureId: string }) {
   const { data: session } = useSession()
@@ -41,7 +41,7 @@ export function FavoriteButton({ lectureId }: { lectureId: string }) {
     >
       <Heart
         size={18}
-        weight={favorited ? "fill" : "regular"}
+        fill={favorited ? "#E8A4C8" : "none"}
         style={{ color: favorited ? "#E8A4C8" : "var(--muted)" }}
       />
     </button>

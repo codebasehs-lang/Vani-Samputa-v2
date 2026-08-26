@@ -27,8 +27,8 @@ export default async function ProfilePage() {
           <img src={user.image} alt={user.name ?? ""} className="h-16 w-16 rounded-full object-cover" />
         ) : (
           <div
-            className="flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold text-white"
-            style={{ background: "var(--saffron)" }}
+            className="flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold text-[var(--accent-fg)]"
+            style={{ background: "var(--accent)" }}
           >
             {user.name?.[0]?.toUpperCase() ?? "U"}
           </div>
@@ -38,8 +38,8 @@ export default async function ProfilePage() {
           <p className="text-sm text-[var(--muted)]">{user.email}</p>
           {user.role === "ADMIN" && (
             <span
-              className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
-              style={{ background: "var(--saffron)" }}
+              className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold text-[var(--accent-fg)]"
+              style={{ background: "var(--accent)" }}
             >
               Admin
             </span>
@@ -48,14 +48,14 @@ export default async function ProfilePage() {
       </div>
 
       {/* Stats */}
-      <div className="mb-8 grid grid-cols-3 divide-x divide-[var(--border)] rounded-2xl border border-[var(--border)]" style={{ background: "var(--surface)" }}>
+      <div className="surface-panel mb-8 grid grid-cols-3 divide-x divide-[var(--border)]">
         {[
           { label: "Favorites", value: user._count.favorites },
           { label: "Listened", value: user._count.history },
           { label: "Notes", value: user._count.notes },
         ].map(({ label, value }) => (
           <div key={label} className="px-4 py-5 text-center">
-            <p className="text-2xl font-bold" style={{ color: "var(--saffron)" }}>{value}</p>
+            <p className="text-2xl font-bold" style={{ color: "var(--stat-number)" }}>{value}</p>
             <p className="mt-0.5 text-xs text-[var(--muted)] uppercase tracking-wide">{label}</p>
           </div>
         ))}
@@ -73,8 +73,7 @@ export default async function ProfilePage() {
             <Link
               key={href}
               href={href}
-              className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:border-[var(--saffron)]/40"
-              style={{ background: "var(--surface)" }}
+              className="surface-card flex items-center justify-between px-4 py-3 text-sm font-medium text-[var(--foreground)]"
             >
               {label}
               <span className="text-[var(--muted)]">→</span>

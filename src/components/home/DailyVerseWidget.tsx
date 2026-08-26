@@ -19,7 +19,7 @@ const SAMPLE_VERSE = {
   odia: "ଶ୍ରୀ ଗୁରୁ ଚରଣ ପଦ୍ମ, କେବଳ ଭକ୍ତି ସଦ୍ମ",
   hindi: "श्री गुरु चरण पद्म, केवल भक्ति सद्म",
   english: "At the lotus feet of the spiritual master lies the pure abode of devotion.",
-  source: "Sample quote — upload month-wise XLS in Admin > Daily Quotes",
+  source: "HH Haladhara Svāmī Mahārāja",
 }
 
 const LANGS: { key: Lang; label: string }[] = [
@@ -45,27 +45,20 @@ export function DailyVerseWidget({ verse }: { verse: Verse }) {
       <div className="mx-auto max-w-2xl">
         <h2
           className="mb-5 text-center text-xs font-semibold uppercase tracking-widest"
-          style={{ color: "var(--saffron)" }}
+          style={{ color: "var(--accent)" }}
         >
           ✦ Quote of the Day ✦
         </h2>
 
-        <div
-          className="glass rounded-2xl p-6 text-center shadow-lg"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-        >
+        <div className="surface-panel p-6 text-center">
           {/* Language tabs */}
           <div className="mb-5 flex justify-center gap-1">
             {LANGS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setLang(key)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  lang === key
-                    ? "text-white"
-                    : "text-[var(--muted)] hover:text-[var(--foreground)]"
-                }`}
-                style={lang === key ? { background: "var(--saffron)" } : {}}
+                data-active={lang === key}
+                className="chip px-3 py-1 text-xs"
               >
                 {label}
               </button>

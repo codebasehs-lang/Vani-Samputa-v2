@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useTransition } from "react"
-import { MagnifyingGlass, X, Spinner } from "phosphor-react"
+import { Search, X, LoaderCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 type Result = {
@@ -52,14 +52,11 @@ export function SearchBar() {
   return (
     <div className="px-4 py-4" style={{ background: "var(--surface)" }}>
       <div className="relative mx-auto max-w-2xl">
-        <div
-          className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 transition-colors focus-within:border-[var(--saffron)]"
-          style={{ background: "var(--background)" }}
-        >
+        <div className="field-input flex items-center gap-2 px-4 py-2.5">
           {isPending ? (
-            <Spinner size={18} className="shrink-0 animate-spin text-[var(--muted)]" />
+            <LoaderCircle size={18} className="shrink-0 animate-spin text-[var(--muted)]" />
           ) : (
-            <MagnifyingGlass size={18} className="shrink-0 text-[var(--muted)]" />
+            <Search size={18} className="shrink-0 text-[var(--muted)]" />
           )}
           <input
             value={query}
@@ -68,23 +65,24 @@ export function SearchBar() {
             className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
           />
           {query && (
-            <button onClick={clear} aria-label="Clear">
-              <X size={16} className="text-[var(--muted)]" />
+            <button
+              onClick={clear}
+              aria-label="Clear"
+              className="icon-btn inline-flex items-center justify-center rounded-full p-1"
+            >
+              <X size={16} />
             </button>
           )}
         </div>
 
         {/* Results dropdown */}
         {open && query.trim() && results.length > 0 && (
-          <ul
-            className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-[var(--border)] shadow-xl"
-            style={{ background: "var(--surface)" }}
-          >
+          <ul className="surface-panel absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto">
             {results.map((r) => (
               <li key={r.id}>
                 <button
                   onClick={() => goTo(r)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--saffron)]/10"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--accent)]/10"
                 >
                   <span className="text-lg">{r.mediaType === "AUDIO" ? "🎙️" : "🎬"}</span>
                   <div className="min-w-0">
@@ -100,10 +98,7 @@ export function SearchBar() {
         )}
 
         {open && results.length === 0 && !isPending && query.trim() && (
-          <div
-            className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-[var(--border)] px-4 py-5 text-center text-sm text-[var(--muted)] shadow-xl"
-            style={{ background: "var(--surface)" }}
-          >
+          <div className="surface-panel absolute left-0 right-0 top-full z-50 mt-1 px-4 py-5 text-center text-sm text-[var(--muted)]">
             No results for &quot;{query}&quot;
           </div>
         )}

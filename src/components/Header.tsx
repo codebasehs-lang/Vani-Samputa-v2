@@ -4,13 +4,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import { useState } from "react"
-import { List, X, SignOut, UserCircle } from "phosphor-react"
+import { Menu, X, LogOut, CircleUserRound } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
 const navLinks = [
   { href: "/",         label: "Home"     },
   { href: "/audio",    label: "Audio"    },
   { href: "/video",    label: "Video"    },
+  { href: "/lectures", label: "Lectures" },
   { href: "/articles", label: "Articles" },
   { href: "/events",   label: "Programs" },
   { href: "/live",     label: "🔴 Live"  },
@@ -45,14 +46,14 @@ export function Header() {
                   className="h-9 w-9 rounded-full object-cover"
                 />
               ) : (
-                <UserCircle size={28} className="text-[var(--muted)]" />
+                <CircleUserRound size={28} className="text-[var(--muted)]" />
               )}
               <button
                 onClick={() => signOut()}
                 aria-label="Sign out"
                 className="rounded-full p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
               >
-                <SignOut size={18} className="text-[var(--muted)]" />
+                <LogOut size={18} className="text-[var(--muted)]" />
               </button>
             </div>
           </div>
@@ -62,10 +63,7 @@ export function Header() {
   }
 
   return (
-    <header
-      className="sticky top-0 z-50 border-b border-[var(--border)]"
-      style={{ background: "color-mix(in oklab, var(--surface) 92%, white 8%)" }}
-    >
+    <header className="nav-surface sticky top-0 z-50 border-b border-[var(--border)]">
       <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-5">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3.5 font-serif text-xl font-semibold">
@@ -109,21 +107,20 @@ export function Header() {
                   className="h-9 w-9 rounded-full object-cover"
                 />
               ) : (
-                <UserCircle size={28} className="text-[var(--muted)]" />
+                <CircleUserRound size={28} className="text-[var(--muted)]" />
               )}
               <button
                 onClick={() => signOut()}
                 aria-label="Sign out"
-                className="rounded-full p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+                className="icon-btn inline-flex items-center justify-center p-2"
               >
-                <SignOut size={18} className="text-[var(--muted)]" />
+                <LogOut size={18} />
               </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="hidden items-center rounded-full border px-5 py-2 text-sm font-semibold transition-colors hover:opacity-95 lg:inline-flex"
-              style={{ background: "var(--accent)", color: "var(--accent-fg)", borderColor: "color-mix(in oklab, var(--accent) 65%, white 35%)" }}
+              className="btn-accent hidden items-center px-5 py-2 text-sm lg:inline-flex"
             >
               Sign in
             </Link>
@@ -133,19 +130,16 @@ export function Header() {
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label="Toggle menu"
-            className="rounded-full p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10 lg:hidden"
+            className="icon-btn inline-flex items-center justify-center p-2 lg:hidden"
           >
-            {open ? <X size={22} /> : <List size={22} />}
+            {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
       {/* Mobile menu drawer */}
       {open && (
-        <div
-          className="flex flex-col gap-2 border-t border-[var(--border)] px-4 py-4 lg:hidden"
-          style={{ background: "var(--surface)" }}
-        >
+        <div className="nav-surface flex flex-col gap-2 border-t border-[var(--border)] px-4 py-4 lg:hidden">
           {navLinks.map(({ href, label }) => {
             const active = isActiveLink(href)
             return (
@@ -175,8 +169,7 @@ export function Header() {
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="mt-1 inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-fg)", borderColor: "color-mix(in oklab, var(--accent) 65%, white 35%)" }}
+              className="btn-accent mt-1 inline-flex items-center justify-center px-4 py-2 text-sm"
             >
               Sign in
             </Link>

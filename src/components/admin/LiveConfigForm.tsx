@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface Props {
   id?: string
@@ -24,13 +25,18 @@ export function LiveConfigForm(props: Props) {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setBusy(true)
-    await fetch("/api/admin/live", {
+    const res = await fetch("/api/admin/live", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     })
     setBusy(false)
+    if (!res.ok) {
+      toast.error("Failed to save live config.")
+      return
+    }
     setSaved(true)
+    toast.success("Live config saved.")
     setTimeout(() => setSaved(false), 3000)
     router.refresh()
   }
@@ -41,7 +47,7 @@ export function LiveConfigForm(props: Props) {
         <input
           value={form.channelId}
           onChange={(e) => set("channelId", e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+          className="admin-input w-full px-4 py-2.5 text-sm"
           placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxx"
         />
       </Field>
@@ -49,7 +55,7 @@ export function LiveConfigForm(props: Props) {
         <input
           value={form.streamUrl}
           onChange={(e) => set("streamUrl", e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+          className="admin-input w-full px-4 py-2.5 text-sm"
           placeholder="https://youtube.com/live/xxxx or video ID"
         />
       </Field>
@@ -78,8 +84,7 @@ export function LiveConfigForm(props: Props) {
       <button
         type="submit"
         disabled={busy}
-        className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-        style={{ background: "var(--saffron)" }}
+        className="admin-gradient-accent rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
       >
         {busy ? "Saving…" : saved ? "✓ Saved" : "Save Config"}
       </button>

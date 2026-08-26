@@ -1,7 +1,7 @@
 "use client"
 
 import { usePlayerStore } from "@/store/playerStore"
-import { Play, Pause, ArrowCounterClockwise, ArrowClockwise, CaretUp } from "phosphor-react"
+import { Play, Pause, RotateCcw, RotateCw, ChevronUp } from "lucide-react"
 
 export function MiniPlayer() {
   const {
@@ -14,15 +14,12 @@ export function MiniPlayer() {
   const pct = duration > 0 ? (positionS / duration) * 100 : 0
 
   return (
-    <div
-      className="fixed bottom-16 left-0 right-0 z-40 border-t border-[var(--border)] md:bottom-0"
-      style={{ background: "var(--surface)" }}
-    >
+    <div className="nav-surface fixed bottom-16 left-0 right-0 z-40 border-t border-[var(--border)] md:bottom-0">
       {/* Thin progress strip */}
       <div className="h-0.5 w-full bg-[var(--border)]">
         <div
           className="h-full transition-all duration-300"
-          style={{ width: `${pct}%`, background: "var(--saffron)" }}
+          style={{ width: `${pct}%`, background: "var(--accent)" }}
         />
       </div>
 
@@ -45,7 +42,7 @@ export function MiniPlayer() {
           <p className="truncate text-sm font-semibold text-[var(--foreground)]">
             {currentTrack.title}
           </p>
-          <p className="text-[10px] text-[var(--muted)]">HH Haladhara Swami</p>
+          <p className="font-iast text-[10px] text-[var(--muted)]">HH Haladhara Svāmī</p>
         </button>
 
         {/* Controls */}
@@ -55,18 +52,18 @@ export function MiniPlayer() {
             className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             aria-label="Back 15s"
           >
-            <ArrowCounterClockwise size={18} weight="bold" />
+            <RotateCcw size={18} strokeWidth={2.5} />
           </button>
 
           <button
             onClick={() => (isPlaying ? pause() : resume())}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-opacity hover:opacity-90"
-            style={{ background: "var(--saffron)" }}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--accent-fg)] transition-opacity hover:opacity-90"
+            style={{ background: "var(--accent)" }}
             aria-label={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying
-              ? <Pause size={18} weight="fill" />
-              : <Play size={18} weight="fill" />}
+              ? <Pause size={18} fill="currentColor" />
+              : <Play size={18} fill="currentColor" />}
           </button>
 
           <button
@@ -74,7 +71,7 @@ export function MiniPlayer() {
             className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             aria-label="Forward 15s"
           >
-            <ArrowClockwise size={18} weight="bold" />
+            <RotateCw size={18} strokeWidth={2.5} />
           </button>
 
           <button
@@ -82,7 +79,7 @@ export function MiniPlayer() {
             className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             aria-label="Open full player"
           >
-            <CaretUp size={18} />
+            <ChevronUp size={18} />
           </button>
         </div>
       </div>

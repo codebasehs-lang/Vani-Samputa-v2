@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import type { Metadata } from "next"
+import { FileText } from "lucide-react"
+import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton"
 
 export const metadata: Metadata = { title: "Articles" }
 
@@ -16,22 +18,27 @@ export default async function AdminArticlesPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Articles ({articles.length})</h1>
         <Link
           href="/admin/articles/new"
-          className="rounded-full px-4 py-2 text-sm font-semibold text-white"
-          style={{ background: "var(--saffron)" }}
+          className="admin-gradient-accent rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           + New Article
         </Link>
       </div>
 
-      <div
-        className="overflow-hidden rounded-xl border border-[var(--border)] divide-y divide-[var(--border)]"
-        style={{ background: "var(--surface)" }}
-      >
+      <div className="admin-panel overflow-hidden divide-y divide-[var(--border)]">
         {articles.length === 0 && (
-          <p className="px-4 py-8 text-sm text-[var(--muted)]">No articles yet.</p>
+          <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ background: "color-mix(in oklab, var(--accent) 12%, var(--surface) 88%)", color: "var(--accent)" }}
+            >
+              <FileText size={22} strokeWidth={1.5} />
+            </span>
+            <p className="text-sm font-medium text-[var(--foreground)]">No articles yet</p>
+            <p className="text-xs text-[var(--muted)]">Published articles will show up here.</p>
+          </div>
         )}
         {articles.map((a) => (
-          <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+          <div key={a.id} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]">
             <div className="flex-1 min-w-0">
               <p className="truncate font-medium text-[var(--foreground)]">{a.title}</p>
               <p className="text-[10px] text-[var(--muted)]">/{a.slug}</p>
@@ -43,6 +50,7 @@ export default async function AdminArticlesPage() {
             >
               Edit
             </Link>
+            <DeleteArticleButton id={a.id} />
           </div>
         ))}
       </div>

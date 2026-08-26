@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { BellRinging, BellSlash } from "phosphor-react"
+import { BellRing, BellOff } from "lucide-react"
 
 export function NotifyMeButton() {
   const { data: session } = useSession()
@@ -70,10 +70,10 @@ export function NotifyMeButton() {
     <button
       onClick={toggle}
       disabled={busy}
-      className="flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium transition-colors hover:border-[var(--saffron)] disabled:opacity-50"
-      style={{ color: subscribed ? "var(--saffron)" : "var(--muted)" }}
+      className="flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium transition-colors hover:border-[var(--accent)] disabled:opacity-50"
+      style={{ color: subscribed ? "var(--accent)" : "var(--muted)" }}
     >
-      {subscribed ? <BellSlash size={16} /> : <BellRinging size={16} />}
+      {subscribed ? <BellOff size={16} /> : <BellRing size={16} />}
       {subscribed ? "Notifications on" : "Notify when live"}
     </button>
   )

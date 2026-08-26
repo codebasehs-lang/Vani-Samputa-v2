@@ -1,7 +1,7 @@
 "use client"
 
 import { usePlayerStore } from "@/store/playerStore"
-import { Play, Headphones, VideoCamera } from "phosphor-react"
+import { Play, Headphones } from "lucide-react"
 
 export function ContinueListening() {
   const { currentTrack, positionS, duration, play, resume, isPlaying } = usePlayerStore()
@@ -16,10 +16,7 @@ export function ContinueListening() {
       <div className="mx-auto max-w-6xl">
         <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">Continue Listening</h2>
 
-        <div
-          className="flex items-center gap-4 rounded-xl border border-[var(--border)] p-4 transition-colors hover:border-[var(--saffron)]/40"
-          style={{ background: "var(--surface)" }}
-        >
+        <div className="surface-card flex items-center gap-4 p-4">
           {/* Icon */}
           <div
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-2xl"
@@ -36,7 +33,7 @@ export function ContinueListening() {
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border)]">
               <div
                 className="h-full rounded-full transition-all"
-                style={{ width: `${percent}%`, background: "var(--saffron)" }}
+                style={{ width: `${percent}%`, background: "var(--accent)" }}
               />
             </div>
             <p className="mt-1 text-[10px] text-[var(--muted)]">
@@ -47,14 +44,14 @@ export function ContinueListening() {
           {/* Play button */}
           <button
             onClick={() => (isPlaying ? undefined : resume())}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity hover:opacity-90"
-            style={{ background: "var(--saffron)" }}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--accent-fg)] transition-opacity hover:opacity-90"
+            style={{ background: "var(--accent)" }}
             aria-label="Resume"
           >
             {isAudio ? (
-              <Headphones size={18} weight="fill" />
+              <Headphones size={18} fill="currentColor" />
             ) : (
-              <Play size={18} weight="fill" />
+              <Play size={18} fill="currentColor" />
             )}
           </button>
         </div>

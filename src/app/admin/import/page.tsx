@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react"
 import * as XLSX from "xlsx"
+import { toast } from "sonner"
+import { Upload, Download, FileSpreadsheet, Mic, Clapperboard, CircleCheck, CircleAlert } from "lucide-react"
 
 type Row = Record<string, string>
 type ImportResult = { created: number; skipped: number; errors: string[] }
@@ -36,13 +38,52 @@ export default function AdminImportPage() {
     const data: ImportResult = await res.json()
     setResult(data)
     setBusy(false)
+    if (!res.ok) {
+      toast.error("Failed to import lectures.")
+      return
+    }
+    toast.success(`Import complete: ${data.created} created, ${data.skipped} skipped.`)
+  }
+
+  function downloadSample() {
+    const sampleRows = [
+      {
+        Title: "Bhagavad Gita Chapter 1 - Lecture 1",
+        URL: "https://example.com/audio-lecture-1.mp3",
+        "Media Type": "AUDIO",
+        Language: "Odia",
+        Categories: "Bhagavad Gita",
+        Playlist: "Bhagavad Gita - Chapter 1",
+        Duration: 1800,
+        "Lecture Date": "2026-08-20",
+      },
+      {
+        Title: "Question and Answer Session",
+        URL: "https://example.com/audio-lecture-2.mp3",
+        "Media Type": "VIDEO",
+        Language: "English",
+        Categories: "Question & Answer Sessions, Guru Tattva",
+        Playlist: "",
+        Duration: 2400,
+        "Lecture Date": "2026-08-21",
+      },
+    ]
+    const worksheet = XLSX.utils.json_to_sheet(sampleRows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Lectures")
+    XLSX.writeFile(workbook, "lecture-upload-template.xlsx")
   }
 
   const headers = rows.length ? Object.keys(rows[0]) : []
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-[var(--foreground)]">Import from Excel</h1>
+      <div className="mb-6 flex items-center gap-3">
+        <span className="admin-gradient-accent flex h-10 w-10 items-center justify-center rounded-full text-white">
+          <FileSpreadsheet size={18} strokeWidth={1.75} />
+        </span>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Import from Excel</h1>
+      </div>
 
       {/* Type toggle */}
       <div className="mb-4 flex gap-2">
@@ -50,37 +91,44 @@ export default function AdminImportPage() {
           <button
             key={t}
             onClick={() => setMediaType(t)}
-            className="rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
-            style={
+            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               mediaType === t
-                ? { background: "var(--saffron)", color: "#fff" }
-                : { border: "1px solid var(--border)", color: "var(--muted)" }
-            }
+                ? "admin-gradient-accent text-white"
+                : "border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+            }`}
           >
-            {t === "AUDIO" ? "🎙️ Audio" : "🎬 Video"}
+            {t === "AUDIO" ? <Mic size={14} strokeWidth={1.75} /> : <Clapperboard size={14} strokeWidth={1.75} />}
+            {t === "AUDIO" ? "Audio" : "Video"}
           </button>
         ))}
       </div>
 
-      <div className="mb-4 rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
+      <div className="admin-panel mb-4 border-dashed p-6 text-center">
         <p className="mb-2 text-sm text-[var(--muted)]">
-          Upload .xlsx — columns: <code>Title, URL, Language, Category, Playlist, Duration</code>
+          Upload .xlsx — columns: <code>Title, URL, Media Type, Language, Categories, Playlist, Duration, Lecture Date</code>
         </p>
         <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFile} className="hidden" />
-        <button
-          onClick={() => fileRef.current?.click()}
-          className="rounded-full px-5 py-2 text-sm font-semibold text-white"
-          style={{ background: "var(--saffron)" }}
-        >
-          Choose File
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="admin-gradient-accent inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          >
+            <Upload size={14} strokeWidth={1.75} /> Choose File
+          </button>
+          <button
+            onClick={downloadSample}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-5 py-2 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+          >
+            <Download size={14} strokeWidth={1.75} /> Download Sample Excel
+          </button>
+        </div>
       </div>
 
       {/* Preview */}
       {rows.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-sm text-[var(--muted)]">{rows.length} rows loaded (showing first 5)</p>
-          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+          <div className="admin-panel overflow-x-auto">
             <table className="min-w-full text-xs">
               <thead className="bg-[var(--surface)]">
                 <tr>
@@ -106,8 +154,7 @@ export default function AdminImportPage() {
           <button
             onClick={handleImport}
             disabled={busy}
-            className="mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: "var(--saffron)" }}
+            className="admin-gradient-accent mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
           >
             {busy ? "Importing…" : `Import All ${rows.length} Rows`}
           </button>
@@ -116,15 +163,17 @@ export default function AdminImportPage() {
 
       {/* Result */}
       {result && (
-        <div
-          className="rounded-xl border border-[var(--border)] p-4"
-          style={{ background: "var(--surface)" }}
-        >
+        <div className="admin-panel p-4">
           <p className="text-sm font-semibold text-[var(--foreground)]">Import complete</p>
-          <p className="text-sm text-green-600">✓ {result.created} created</p>
+          <p className="flex items-center gap-1.5 text-sm text-green-600"><CircleCheck size={13} strokeWidth={1.75} /> {result.created} created</p>
           <p className="text-sm text-[var(--muted)]">⊘ {result.skipped} skipped (duplicates)</p>
           {result.errors.length > 0 && (
-            <p className="mt-1 text-xs text-red-500">{result.errors.length} errors</p>
+            <div className="mt-2 text-xs text-red-500">
+              <p className="flex items-center gap-1.5"><CircleAlert size={13} strokeWidth={1.75} /> {result.errors.length} errors</p>
+              <ul className="mt-1 list-disc pl-4">
+                {result.errors.map((error, index) => <li key={index}>{error}</li>)}
+              </ul>
+            </div>
           )}
         </div>
       )}

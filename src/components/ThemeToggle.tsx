@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Moon, Sun } from "phosphor-react"
+import { Moon, Sun } from "lucide-react"
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(() => {
@@ -26,12 +26,12 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+      className="icon-btn inline-flex items-center justify-center p-2"
     >
       {dark ? (
-        <Sun size={20} weight="duotone" className="text-[var(--gold)]" />
+        <Sun size={20} className="text-[var(--gold)]" />
       ) : (
-        <Moon size={20} weight="duotone" className="text-[var(--deep-blue)]" />
+        <Moon size={20} className="text-[var(--deep-blue)]" />
       )}
     </button>
   )

@@ -2,28 +2,47 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Trash } from "phosphor-react"
+import { toast } from "sonner"
+import { Trash2 } from "lucide-react"
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
 
 export function DeleteLectureButton({ id }: { id: string }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
+  const [open, setOpen] = useState(false)
 
   async function handleDelete() {
-    if (!confirm("Delete this lecture? This cannot be undone.")) return
     setBusy(true)
-    await fetch(`/api/admin/lectures?id=${id}`, { method: "DELETE" })
+    const res = await fetch(`/api/admin/lectures?id=${id}`, { method: "DELETE" })
     setBusy(false)
+    setOpen(false)
+    if (!res.ok) {
+      toast.error("Failed to delete lecture.")
+      return
+    }
+    toast.success("Lecture deleted.")
     router.refresh()
   }
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={busy}
-      className="p-1.5 text-[var(--muted)] transition-colors hover:text-red-500 disabled:opacity-40"
-      aria-label="Delete lecture"
-    >
-      <Trash size={15} />
-    </button>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        aria-label="Delete lecture"
+      >
+        <Trash2 size={15} strokeWidth={1.75} />
+      </button>
+      <ConfirmDialog
+        open={open}
+        title="Delete this lecture?"
+        description="This cannot be undone."
+        confirmLabel="Delete"
+        danger
+        busy={busy}
+        onConfirm={handleDelete}
+        onCancel={() => setOpen(false)}
+      />
+    </>
   )
 }

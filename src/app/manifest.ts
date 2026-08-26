@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Vāṇī Saṃpuṭa",
     short_name: "VāṇīSaṃ",
-    description: "Spiritual lectures by HH Haladhara Swami Maharaja — audio, video & articles",
+    description: "Spiritual lectures by HH Haladhara Svāmī Mahārāja — audio, video & articles",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, DownloadSimple } from "phosphor-react"
+import { Check, Download } from "lucide-react"
 
 const AUDIO_CACHE = "vani-samputa-audio-v1"
 
@@ -41,7 +41,7 @@ export function OfflineDownloadButton({ url, title }: { url: string; title: stri
       aria-label={saved ? `${title} is available offline` : `Save ${title} offline`}
       title={saved ? "Available offline" : "Save offline"}
     >
-      {saved ? <Check size={16} weight="bold" /> : <DownloadSimple size={16} />}
+      {saved ? <Check size={16} strokeWidth={2.5} /> : <Download size={16} />}
     </button>
   )
 }

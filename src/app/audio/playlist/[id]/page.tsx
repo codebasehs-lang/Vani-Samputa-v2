@@ -43,7 +43,7 @@ export default async function PlaylistPage(
           🎙️
         </div>
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--saffron)]">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
             {playlist.category} · {playlist.language}
           </p>
           <h1

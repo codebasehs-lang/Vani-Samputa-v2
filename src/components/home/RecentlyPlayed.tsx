@@ -1,7 +1,7 @@
 "use client"
 
 import { usePlayerStore } from "@/store/playerStore"
-import { Play, Headphones, VideoCamera } from "phosphor-react"
+import { Play, Headphones, Video } from "lucide-react"
 
 export function RecentlyPlayed() {
   const { history, currentTrack, play } = usePlayerStore()
@@ -21,8 +21,7 @@ export function RecentlyPlayed() {
             <button
               key={track.id}
               onClick={() => play(track)}
-              className="group flex items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-left transition-colors hover:border-[var(--saffron)]/50 hover:bg-[var(--saffron)]/5"
-              style={{ background: "var(--surface)" }}
+              className="surface-card group flex items-center gap-3 p-3 text-left hover:bg-[var(--accent)]/5"
             >
               {/* Thumbnail / icon */}
               <div
@@ -45,7 +44,7 @@ export function RecentlyPlayed() {
                   {track.mediaType === "AUDIO" ? (
                     <Headphones size={10} />
                   ) : (
-                    <VideoCamera size={10} />
+                    <Video size={10} />
                   )}
                   {track.mediaType === "AUDIO" ? "Audio" : "Video"}
                 </p>
@@ -53,8 +52,8 @@ export function RecentlyPlayed() {
 
               <Play
                 size={16}
-                weight="fill"
-                className="shrink-0 text-[var(--saffron)] opacity-0 transition-opacity group-hover:opacity-100"
+                fill="currentColor"
+                className="shrink-0 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-100"
               />
             </button>
           ))}

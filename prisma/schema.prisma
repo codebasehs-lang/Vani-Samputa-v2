@@ -90,6 +90,7 @@ model Playlist {
   updatedAt   DateTime  @updatedAt
 
   lectures Lecture[]
+  categories Category[]
 }
 
 model Lecture {
@@ -97,7 +98,7 @@ model Lecture {
   title       String
   description String?   @db.Text
   mediaType   MediaType
-  url         String    // audio file URL or YouTube video ID
+  url         String    @db.Text // audio file URL or YouTube video ID
   duration    Int?      // seconds (audio only)
   language    String
   category    String
@@ -105,12 +106,14 @@ model Lecture {
   transcript  String?   @db.LongText
   sortOrder   Int       @default(0)
   playCount   Int       @default(0)
+  lectureDate DateTime?
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   playlistId String?
   playlist   Playlist? @relation(fields: [playlistId], references: [id], onDelete: SetNull)
+  categories Category[]
 
   favorites UserFavorite[]
   notes     UserNote[]
@@ -193,6 +196,19 @@ model UserProgress {
   lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lectureId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  playlists Playlist[]
+  lectures  Lecture[]
 }
 
 // ─── Platform Config ──────────────────────────────────────────────────────────

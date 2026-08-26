@@ -35,7 +35,7 @@ export default async function VideoPlaylistPage(
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-8">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--saffron)" }}>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
           {playlist.category} · {playlist.language}
         </p>
         <h1

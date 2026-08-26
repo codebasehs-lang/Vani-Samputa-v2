@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { Breadcrumbs } from "@/components/admin/Breadcrumbs"
 
 export default function NewArticlePage() {
   const router = useRouter()
@@ -28,13 +30,22 @@ export default function NewArticlePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     })
-    if (!res.ok) { setError("Failed to save."); setBusy(false); return }
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      const message = data?.error ?? "Failed to save."
+      setError(message)
+      toast.error(message)
+      setBusy(false)
+      return
+    }
+    toast.success("Article created.")
     router.push("/admin/articles")
     router.refresh()
   }
 
   return (
     <div className="max-w-2xl">
+      <Breadcrumbs items={[{ label: "Articles", href: "/admin/articles" }, { label: "New Article" }]} />
       <h1 className="mb-6 text-2xl font-bold text-[var(--foreground)]">New Article</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {[
@@ -50,7 +61,7 @@ export default function NewArticlePage() {
               value={form[k as keyof typeof form]}
               onChange={(e) => (onChange ? onChange(e.target.value) : set(k, e.target.value))}
               required={required}
-              className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+              className="admin-input w-full px-4 py-2.5 text-sm"
             />
           </div>
         ))}
@@ -61,15 +72,14 @@ export default function NewArticlePage() {
             onChange={(e) => set("body", e.target.value)}
             rows={12}
             required
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)] font-mono"
+            className="admin-textarea w-full px-4 py-2.5 text-sm font-mono"
           />
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         <button
           type="submit"
           disabled={busy}
-          className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: "var(--saffron)" }}
+          className="admin-gradient-accent rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
         >
           {busy ? "Saving…" : "Publish Article"}
         </button>

@@ -31,17 +31,13 @@ export default async function AdminAboutPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)]">About Sections ({ordered.length})</h1>
         <Link
           href="/admin/about/new"
-          className="rounded-full px-4 py-2 text-sm font-semibold text-white"
-          style={{ background: "var(--saffron)" }}
+          className="admin-gradient-accent rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           + New About Section
         </Link>
       </div>
 
-      <div
-        className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]"
-        style={{ background: "var(--surface)" }}
-      >
+      <div className="admin-panel divide-y divide-[var(--border)] overflow-hidden">
         {ordered.length === 0 && (
           <p className="px-4 py-8 text-sm text-[var(--muted)]">No About sections yet.</p>
         )}

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { SessionProvider } from "next-auth/react"
+import { Toaster } from "sonner"
 import { InstallPrompt } from "@/components/InstallPrompt"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -25,5 +26,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     void navigator.serviceWorker.register("/sw.js").catch(() => {})
   }, [])
 
-  return <SessionProvider>{children}<InstallPrompt /></SessionProvider>
+  return (
+    <SessionProvider>
+      {children}
+      <InstallPrompt />
+      <Toaster position="top-right" richColors closeButton />
+    </SessionProvider>
+  )
 }

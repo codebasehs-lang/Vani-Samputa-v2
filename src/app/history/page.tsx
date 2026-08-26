@@ -22,18 +22,15 @@ export default async function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1
-        className="mb-1 text-2xl font-bold text-[var(--foreground)]"
-        style={{ fontFamily: "var(--font-serif)" }}
-      >
+      <h1 className="font-serif mb-1 text-2xl font-bold text-[var(--foreground)]">
         Listening History
       </h1>
       <p className="mb-6 text-sm text-[var(--muted)]">{history.length} entries</p>
 
       {history.length === 0 && (
-        <p className="py-16 text-center text-sm text-[var(--muted)]">
+        <div className="empty-state py-16 text-center text-sm text-[var(--muted)]">
           Nothing yet — start listening to build your history.
-        </p>
+        </div>
       )}
 
       <div className="flex flex-col divide-y divide-[var(--border)]">

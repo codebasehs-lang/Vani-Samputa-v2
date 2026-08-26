@@ -92,3 +92,261 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
+
+/* Admin portal gradient utilities — built only from existing palette tokens */
+.admin-gradient-accent {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 86%, #0f172a 14%), var(--accent));
+}
+.admin-gradient-surface {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 8%, var(--surface) 92%), var(--surface));
+}
+.admin-gradient-gold {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--gold) 22%, var(--surface) 78%), var(--surface));
+}
+
+.admin-shell-bg {
+  background:
+    radial-gradient(1200px 420px at 18% -8%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
+    radial-gradient(900px 300px at 100% 0%, color-mix(in oklab, var(--gold) 13%, transparent), transparent 62%),
+    var(--background);
+}
+
+.admin-content-surface {
+  border: 1px solid color-mix(in oklab, var(--border) 84%, var(--accent) 16%);
+  border-radius: 1rem;
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--surface) 93%, var(--accent) 7%),
+    color-mix(in oklab, var(--surface) 98%, var(--background) 2%)
+  );
+  box-shadow:
+    0 18px 40px color-mix(in oklab, var(--accent) 10%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #ffffff 65%, transparent);
+}
+
+.admin-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--surface) 95%, var(--accent) 5%);
+  box-shadow: 0 8px 20px color-mix(in oklab, #000000 5%, transparent);
+}
+
+.admin-input,
+.admin-select,
+.admin-textarea {
+  border: 1px solid color-mix(in oklab, var(--border) 82%, var(--accent) 18%);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--surface) 87%, var(--background) 13%);
+  color: var(--foreground);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: color-mix(in oklab, var(--muted) 85%, var(--foreground) 15%);
+}
+
+.admin-input:focus-visible,
+.admin-select:focus-visible,
+.admin-textarea:focus-visible {
+  outline: none;
+  border-color: color-mix(in oklab, var(--accent) 76%, var(--border) 24%);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+[data-theme="dark"] .admin-content-surface {
+  box-shadow:
+    0 18px 38px color-mix(in oklab, #000000 45%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #ffffff 14%, transparent);
+}
+
+[data-theme="dark"] .admin-input,
+[data-theme="dark"] .admin-select,
+[data-theme="dark"] .admin-textarea {
+  background: color-mix(in oklab, var(--surface) 94%, var(--background) 6%);
+}
+
+/* ================================================================
+   User-facing shared UI system (Phase 1 foundations)
+   Mirrors the admin-* system above but tuned for public-facing pages.
+   Layout (display/flex/gap/padding/sizing) stays in Tailwind classes
+   at each call site; these utilities only own color/border/shadow so
+   they never fight Tailwind's cascade (e.g. responsive hidden/flex).
+   ================================================================ */
+
+.user-shell-bg {
+  background:
+    radial-gradient(1100px 380px at 15% -10%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(800px 280px at 100% 0%, color-mix(in oklab, var(--gold) 9%, transparent), transparent 62%),
+    var(--background);
+}
+
+.nav-surface {
+  background: color-mix(in oklab, var(--surface) 90%, var(--accent) 10%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.surface-card {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--surface) 96%, var(--accent) 4%);
+  box-shadow: 0 8px 20px color-mix(in oklab, #000000 5%, transparent);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.surface-card:hover {
+  border-color: color-mix(in oklab, var(--border) 60%, var(--accent) 40%);
+  box-shadow: 0 12px 28px color-mix(in oklab, #000000 8%, transparent);
+}
+
+.surface-card[data-active="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 8px 22px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.surface-panel {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--surface) 94%, var(--accent) 6%),
+    color-mix(in oklab, var(--surface) 99%, var(--background) 1%)
+  );
+  box-shadow:
+    0 18px 40px color-mix(in oklab, var(--accent) 8%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #ffffff 60%, transparent);
+}
+
+.field-input,
+.field-select,
+.field-textarea {
+  border: 1px solid color-mix(in oklab, var(--border) 80%, var(--accent) 20%);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--surface) 90%, var(--background) 10%);
+  color: var(--foreground);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.field-input::placeholder,
+.field-textarea::placeholder {
+  color: color-mix(in oklab, var(--muted) 85%, var(--foreground) 15%);
+}
+
+.field-input:focus-visible,
+.field-select:focus-visible,
+.field-textarea:focus-visible,
+.field-input:focus-within {
+  outline: none;
+  border-color: color-mix(in oklab, var(--accent) 74%, var(--border) 26%);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
+}
+
+.chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: color-mix(in oklab, var(--surface) 92%, var(--accent) 8%);
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.chip:hover {
+  color: var(--foreground);
+  border-color: color-mix(in oklab, var(--border) 60%, var(--accent) 40%);
+}
+
+.chip[data-active="true"] {
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.chip-row {
+  scrollbar-width: none;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.empty-state {
+  border: 1px dashed color-mix(in oklab, var(--border) 55%, var(--accent) 45%);
+  border-radius: 1rem;
+  color: var(--muted);
+  background: color-mix(in oklab, var(--surface) 94%, var(--accent) 6%);
+}
+
+.empty-state svg {
+  color: color-mix(in oklab, var(--muted) 65%, var(--accent) 35%);
+}
+
+.icon-btn {
+  border-radius: 999px;
+  color: var(--muted);
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.icon-btn:hover {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+.btn-accent {
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+  box-shadow: 0 6px 16px color-mix(in oklab, var(--accent) 30%, transparent);
+  transition: filter 0.16s ease, box-shadow 0.16s ease, transform 0.05s ease;
+}
+
+.btn-accent:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 8px 20px color-mix(in oklab, var(--accent) 38%, transparent);
+}
+
+.btn-accent:active {
+  transform: translateY(1px);
+}
+
+/* Motion + accessibility foundations */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 32%, transparent);
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 32%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-theme="dark"] .surface-card,
+[data-theme="dark"] .surface-panel {
+  box-shadow:
+    0 18px 34px color-mix(in oklab, #000000 42%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #ffffff 10%, transparent);
+}
+
+[data-theme="dark"] .field-input,
+[data-theme="dark"] .field-select,
+[data-theme="dark"] .field-textarea {
+  background: color-mix(in oklab, var(--surface) 94%, var(--background) 6%);
+}
+
+[data-theme="dark"] .empty-state {
+  background: color-mix(in oklab, var(--surface) 90%, var(--background) 10%);
+}

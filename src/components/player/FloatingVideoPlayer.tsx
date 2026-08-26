@@ -3,7 +3,7 @@
 import { usePlayerStore } from "@/store/playerStore"
 import { usePathname } from "next/navigation"
 import { useCallback } from "react"
-import { X, ArrowsOut } from "phosphor-react"
+import { X, Maximize2 } from "lucide-react"
 import { YouTubePlayer } from "@/components/player/YouTubePlayer"
 import Link from "next/link"
 
@@ -51,7 +51,7 @@ export function FloatingVideoPlayer() {
             className="p-0.5 text-white/50 hover:text-white transition-colors"
             aria-label="Expand"
           >
-            <ArrowsOut size={14} />
+            <Maximize2 size={14} />
           </Link>
           <button
             onClick={() => setVideoMini(false)}

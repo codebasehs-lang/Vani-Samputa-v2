@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type AboutFormValues = {
   title: string
@@ -79,11 +80,14 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
 
     if (!response.ok) {
       const data = (await response.json().catch(() => null)) as { error?: string } | null
-      setError(data?.error ?? "Failed to save About section.")
+      const message = data?.error ?? "Failed to save About section."
+      setError(message)
+      toast.error(message)
       setBusy(false)
       return
     }
 
+    toast.success(mode === "create" ? "About section created." : "About section updated.")
     router.push("/admin/about")
     router.refresh()
   }
@@ -97,7 +101,7 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
           required
           value={form.title}
           onChange={(e) => onTitleChange(e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+          className="admin-input w-full px-4 py-2.5 text-sm"
         />
       </div>
 
@@ -109,7 +113,7 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
           value={form.slug}
           onChange={(e) => setField("slug", normalizeAboutSlug(e.target.value))}
           disabled={mode === "edit"}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)] disabled:opacity-60"
+          className="admin-input w-full px-4 py-2.5 text-sm disabled:opacity-60"
         />
         <p className="mt-1 text-[11px] text-[var(--muted)]">About slugs must start with about-</p>
       </div>
@@ -120,7 +124,7 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
           type="text"
           value={form.excerpt}
           onChange={(e) => setField("excerpt", e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+          className="admin-input w-full px-4 py-2.5 text-sm"
         />
       </div>
 
@@ -130,7 +134,7 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
           type="url"
           value={form.coverUrl}
           onChange={(e) => setField("coverUrl", e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+          className="admin-input w-full px-4 py-2.5 text-sm"
         />
       </div>
 
@@ -141,7 +145,7 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
           required
           value={form.body}
           onChange={(e) => setField("body", e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)] font-mono"
+          className="admin-textarea w-full px-4 py-2.5 text-sm font-mono"
         />
       </div>
 
@@ -150,8 +154,7 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
       <button
         type="submit"
         disabled={busy}
-        className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-        style={{ background: "var(--saffron)" }}
+        className="admin-gradient-accent rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
       >
         {busy ? "Saving..." : mode === "create" ? "Create About Section" : "Save Changes"}
       </button>

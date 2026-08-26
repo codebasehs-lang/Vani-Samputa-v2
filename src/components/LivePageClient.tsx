@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Play, LoaderCircle } from "lucide-react"
 import { NotifyMeButton } from "@/components/NotifyMeButton"
 
 interface LiveStatus {
@@ -38,7 +39,8 @@ export function LivePageClient() {
       </div>
 
       {loading && (
-        <div className="flex h-64 items-center justify-center">
+        <div className="flex h-64 flex-col items-center justify-center gap-3">
+          <LoaderCircle size={28} className="animate-spin text-[var(--muted)]" />
           <p className="text-[var(--muted)]">Checking live status…</p>
         </div>
       )}
@@ -63,11 +65,13 @@ export function LivePageClient() {
       )}
 
       {!loading && !status?.isLive && (
-        <div
-          className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-[var(--border)] py-20 text-center"
-          style={{ background: "var(--surface)" }}
-        >
-          <span className="text-5xl">🪷</span>
+        <div className="empty-state flex flex-col items-center justify-center gap-4 py-20">
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-full shadow-lg"
+            style={{ background: "linear-gradient(135deg, var(--gold) 0%, var(--saffron) 55%, var(--lotus-pink) 100%)" }}
+          >
+            <Play size={26} fill="white" className="translate-x-0.5 text-white" />
+          </div>
           <h2 className="text-xl font-semibold text-[var(--foreground)]">Not live right now</h2>
           <p className="text-sm text-[var(--muted)]">
             Satsangs are streamed on YouTube. Subscribe to get notified when we go live.

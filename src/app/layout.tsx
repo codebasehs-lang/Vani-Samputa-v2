@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Header } from "@/components/Header";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { UserShell } from "@/components/UserShell";
 import { AudioEngine } from "@/components/player/AudioEngine";
 import { MiniPlayer } from "@/components/player/MiniPlayer";
 import { FullScreenPlayer } from "@/components/player/FullScreenPlayer";
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s — Vāṇī Saṃpuṭa",
   },
   description:
-    "Spiritual lectures by HH Haladhara Swami Maharaja — audio, video & transcriptions in Odia, Hindi, English and Sanskrit.",
+    "Spiritual lectures by HH Haladhara Svāmī Mahārāja — audio, video & transcriptions in Odia, Hindi, English and Sanskrit.",
   metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
   appleWebApp: {
     capable: true,
@@ -52,7 +53,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Providers>
           <Header />
           {/* pb-32 = tab bar (64px) + mini-player (72px) on mobile; md:pb-20 = mini-player only */}
-          <main className="flex-1 pb-32 md:pb-20">{children}</main>
+          <main className="flex-1 pb-32 md:pb-20">
+            <UserShell>{children}</UserShell>
+          </main>
           <BottomTabBar />
           <AudioEngine />
           <MiniPlayer />

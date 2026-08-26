@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
+import { PageHeader } from "@/components/PageHeader"
 
 export const metadata: Metadata = { title: "Upcoming Programs" }
 
@@ -28,34 +29,17 @@ export default async function EventsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="mb-8">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">
-          Gatherings &amp; broadcasts
-        </p>
-        <h1
-          className="text-3xl font-bold text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          Upcoming Programs
-        </h1>
-      </div>
+      <PageHeader eyebrow="Gatherings & broadcasts" title="Upcoming Programs" />
 
       {events.length === 0 ? (
-        <div
-          className="rounded-2xl border border-[var(--border)] px-6 py-16 text-center"
-          style={{ background: "var(--surface)" }}
-        >
-          <span className="mb-3 block text-3xl text-[var(--saffron)]" aria-hidden="true">◷</span>
+        <div className="empty-state px-6 py-16 text-center">
+          <span className="mb-3 block text-3xl text-[var(--accent)]" aria-hidden="true">◷</span>
           <p className="text-sm text-[var(--muted)]">No upcoming programs have been scheduled.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {events.map((event) => (
-            <article
-              key={event.id}
-              className="overflow-hidden rounded-2xl border border-[var(--border)]"
-              style={{ background: "var(--surface)" }}
-            >
+            <article key={event.id} className="surface-panel overflow-hidden">
               <div className="flex flex-col sm:flex-row">
                 {event.coverUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -66,7 +50,7 @@ export default async function EventsPage() {
                   />
                 )}
                 <div className="min-w-0 flex-1 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--saffron)]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
                     {formatDate(event.startAt)}
                   </p>
                   <h2 className="mt-1 text-xl font-semibold text-[var(--foreground)]">{event.title}</h2>

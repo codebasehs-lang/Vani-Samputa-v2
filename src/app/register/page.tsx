@@ -37,17 +37,11 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
-      <div
-        className="w-full max-w-sm rounded-2xl border border-[var(--border)] p-8 shadow-xl"
-        style={{ background: "var(--surface)" }}
-      >
+      <div className="surface-panel w-full max-w-sm p-8">
         <div className="mb-6 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/branding/logo-192.png" alt="Vāṇī Saṃpuṭa" className="mx-auto h-20 w-20 rounded-full object-cover" />
-          <h1
-            className="mt-2 text-2xl font-bold text-[var(--foreground)]"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
+          <h1 className="font-serif mt-2 text-2xl font-bold text-[var(--foreground)]">
             Create account
           </h1>
           <p className="font-iast mt-1 text-sm text-[var(--muted)]">Join Vāṇī Saṃpuṭa</p>
@@ -60,7 +54,7 @@ export default function RegisterPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+            className="field-input w-full px-4 py-2.5 text-sm"
           />
           <input
             type="email"
@@ -68,7 +62,7 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+            className="field-input w-full px-4 py-2.5 text-sm"
           />
           <input
             type="password"
@@ -77,14 +71,13 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             minLength={8}
             required
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+            className="field-input w-full px-4 py-2.5 text-sm"
           />
           {error && <p className="text-xs text-red-500">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: "var(--saffron)" }}
+            className="btn-accent w-full py-2.5 text-sm disabled:opacity-60"
           >
             {loading ? "Creating account…" : "Create account"}
           </button>
@@ -92,7 +85,7 @@ export default function RegisterPage() {
 
         <p className="mt-4 text-center text-xs text-[var(--muted)]">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium" style={{ color: "var(--saffron)" }}>
+          <Link href="/login" className="font-medium text-[var(--accent)]">
             Sign in
           </Link>
         </p>

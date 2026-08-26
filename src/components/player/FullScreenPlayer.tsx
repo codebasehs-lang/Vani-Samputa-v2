@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useSession } from "next-auth/react"
 import {
   X, Play, Pause, SkipBack, SkipForward,
-  ArrowCounterClockwise, ArrowClockwise,
-  Queue, Moon, SpeakerHigh, BookmarkSimple, ShareNetwork,
-} from "phosphor-react"
+  RotateCcw, RotateCw,
+  ListMusic, Moon, Volume2, Bookmark, Share2,
+} from "lucide-react"
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -177,7 +177,7 @@ export function FullScreenPlayer() {
             <h2 className="text-lg font-bold text-white leading-tight line-clamp-2">
               {currentTrack.title}
             </h2>
-            <p className="mt-1 text-sm text-white/50">HH Haladhara Swami Maharaja</p>
+            <p className="font-iast mt-1 text-sm text-white/50">HH Haladhara Svāmī Mahārāja</p>
           </div>
 
           {/* Scrubber */}
@@ -189,7 +189,7 @@ export function FullScreenPlayer() {
               step={1}
               value={positionS}
               onChange={(e) => seek(Number(e.target.value))}
-              className="w-full accent-[var(--saffron)]"
+              className="w-full accent-[var(--accent)]"
               aria-label="Seek"
             />
             <div className="flex justify-between text-[11px] text-white/40">
@@ -205,7 +205,7 @@ export function FullScreenPlayer() {
               className="flex flex-col items-center gap-0.5 text-white/60"
               aria-label="Back 30s"
             >
-              <ArrowCounterClockwise size={22} weight="bold" />
+              <RotateCcw size={22} strokeWidth={2.5} />
               <span className="text-[9px]">30</span>
             </button>
 
@@ -214,16 +214,16 @@ export function FullScreenPlayer() {
               onClick={() => seek(0)}
               aria-label="Previous"
             >
-              <SkipBack size={26} weight="fill" />
+              <SkipBack size={26} fill="currentColor" />
             </button>
 
             <button
               onClick={() => (isPlaying ? pause() : resume())}
               className="flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-opacity hover:opacity-90"
-              style={{ background: "var(--saffron)" }}
+              style={{ background: "var(--accent)" }}
               aria-label={isPlaying ? "Pause" : "Play"}
             >
-              {isPlaying ? <Pause size={28} weight="fill" /> : <Play size={28} weight="fill" />}
+              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" />}
             </button>
 
             <button
@@ -231,7 +231,7 @@ export function FullScreenPlayer() {
               className="flex h-10 w-10 items-center justify-center rounded-full text-white/60"
               aria-label="Next"
             >
-              <SkipForward size={26} weight="fill" />
+              <SkipForward size={26} fill="currentColor" />
             </button>
 
             <button
@@ -239,7 +239,7 @@ export function FullScreenPlayer() {
               className="flex flex-col items-center gap-0.5 text-white/60"
               aria-label="Forward 30s"
             >
-              <ArrowClockwise size={22} weight="bold" />
+              <RotateCw size={22} strokeWidth={2.5} />
               <span className="text-[9px]">30</span>
             </button>
           </div>
@@ -257,7 +257,7 @@ export function FullScreenPlayer() {
                     className="rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors"
                     style={
                       speed === s
-                        ? { background: "var(--saffron)", color: "#fff" }
+                        ? { background: "var(--accent)", color: "var(--accent-fg)" }
                         : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }
                     }
                   >
@@ -269,12 +269,12 @@ export function FullScreenPlayer() {
 
             {/* Volume */}
             <div className="flex items-center gap-2">
-              <SpeakerHigh size={14} className="text-white/40 w-10 shrink-0" />
+              <Volume2 size={14} className="text-white/40 w-10 shrink-0" />
               <input
                 type="range" min={0} max={1} step={0.05}
                 value={volume}
                 onChange={(e) => setVolume(Number(e.target.value))}
-                className="flex-1 accent-[var(--saffron)]"
+                className="flex-1 accent-[var(--accent)]"
                 aria-label="Volume"
               />
             </div>
@@ -329,7 +329,7 @@ export function FullScreenPlayer() {
                     : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }
                 }
               >
-                <Queue size={14} />
+                <ListMusic size={14} />
                 Queue {queue.length > 0 && `(${queue.length})`}
               </button>
 
@@ -337,7 +337,7 @@ export function FullScreenPlayer() {
                 onClick={shareTrack}
                 className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white/60 transition-colors hover:text-white"
               >
-                <ShareNetwork size={14} /> {shareLabel}
+                <Share2 size={14} /> {shareLabel}
               </button>
 
               {session && (
@@ -351,7 +351,7 @@ export function FullScreenPlayer() {
                         : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }
                     }
                   >
-                    <BookmarkSimple size={14} /> Bookmark
+                    <Bookmark size={14} /> Bookmark
                   </button>
                   {showBookmark && (
                     <div
@@ -369,8 +369,8 @@ export function FullScreenPlayer() {
                       <button
                         onClick={saveBookmark}
                         disabled={bookmarkSaving}
-                        className="mt-2 w-full rounded-lg py-1.5 text-xs font-medium text-white disabled:opacity-50"
-                        style={{ background: "var(--saffron)" }}
+                        className="mt-2 w-full rounded-lg py-1.5 text-xs font-medium text-[var(--accent-fg)] disabled:opacity-50"
+                        style={{ background: "var(--accent)" }}
                       >
                         {bookmarkSaved ? "✓ Saved!" : bookmarkSaving ? "Saving…" : "Save Bookmark"}
                       </button>

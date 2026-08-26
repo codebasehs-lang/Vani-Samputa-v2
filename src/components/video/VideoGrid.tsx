@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { YouTubePlayer } from "@/components/player/YouTubePlayer"
-import { Play, PictureInPicture, SpeakerHigh, SpeakerSlash } from "phosphor-react"
+import { Play, PictureInPicture, Volume2, VolumeX } from "lucide-react"
 
 type Lecture = {
   id: string
@@ -101,15 +101,15 @@ export function VideoGrid({ lectures, playlistId }: { lectures: Lecture[]; playl
             </h2>
             <button
               onClick={() => setAudioOnly((v) => !v)}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+              className="chip flex items-center gap-1.5 px-3 py-1.5 text-xs"
               aria-label="Toggle audio-only mode"
             >
-              {audioOnly ? <SpeakerSlash size={14} /> : <SpeakerHigh size={14} />}
+              {audioOnly ? <VolumeX size={14} /> : <Volume2 size={14} />}
               {audioOnly ? "Show Video" : "Audio Only"}
             </button>
             <button
               onClick={requestPiP}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+              className="chip flex items-center gap-1.5 px-3 py-1.5 text-xs"
               aria-label="Picture in Picture"
             >
               <PictureInPicture size={14} /> PiP
@@ -129,12 +129,8 @@ export function VideoGrid({ lectures, playlistId }: { lectures: Lecture[]; playl
             <button
               key={lecture.id}
               onClick={() => selectVideo(lecture)}
-              className={`group overflow-hidden rounded-xl border text-left transition-transform hover:-translate-y-1 ${
-                isActive
-                  ? "border-[var(--saffron)]"
-                  : "border-[var(--border)]"
-              }`}
-              style={{ background: "var(--surface)" }}
+              data-active={isActive}
+              className="surface-card group overflow-hidden text-left transition-transform hover:-translate-y-1"
             >
               {/* Thumbnail */}
               <div className="relative overflow-hidden">
@@ -149,9 +145,9 @@ export function VideoGrid({ lectures, playlistId }: { lectures: Lecture[]; playl
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-full"
-                    style={{ background: "var(--saffron)" }}
+                    style={{ background: "var(--accent)" }}
                   >
-                    <Play size={18} weight="fill" className="text-white" />
+                    <Play size={18} fill="currentColor" className="text-[var(--accent-fg)]" />
                   </div>
                 </div>
                 {/* Progress bar */}
@@ -159,13 +155,13 @@ export function VideoGrid({ lectures, playlistId }: { lectures: Lecture[]; playl
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                     <div
                       className="h-full"
-                      style={{ width: `${progress}%`, background: "var(--saffron)" }}
+                      style={{ width: `${progress}%`, background: "var(--accent)" }}
                     />
                   </div>
                 )}
               </div>
               <div className="p-3">
-                <p className={`text-sm font-medium line-clamp-2 ${isActive ? "text-[var(--saffron)]" : "text-[var(--foreground)]"}`}>
+                <p className={`text-sm font-medium line-clamp-2 ${isActive ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>
                   {lecture.title}
                 </p>
               </div>

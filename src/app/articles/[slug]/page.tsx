@@ -46,7 +46,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <img src={article.coverUrl} alt="" className="mb-8 h-64 w-full rounded-2xl object-cover sm:h-80" />
       )}
       <header className="mb-8">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--saffron)]">Teachings</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">Teachings</p>
         <h1 className="text-4xl font-bold leading-tight text-[var(--foreground)]" style={{ fontFamily: "var(--font-serif)" }}>
           {article.title}
         </h1>

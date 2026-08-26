@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MagnifyingGlass, Play } from "phosphor-react"
+import { Search, Play } from "lucide-react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 
 type TranscriptLecture = {
@@ -72,36 +72,36 @@ export function TranscriptSearch({ lectures, playlistId }: { lectures: Transcrip
         <p className="mt-1 text-xs text-[var(--muted)]">Find a phrase across the lectures in this playlist.</p>
       </div>
       <label className="relative block">
-        <MagnifyingGlass size={16} className="pointer-events-none absolute left-3 top-3 text-[var(--muted)]" />
+        <Search size={16} className="pointer-events-none absolute left-3 top-3 text-[var(--muted)]" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search transcript text"
           aria-label="Search transcript text"
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-9 pr-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--saffron)]"
+          className="field-input w-full py-2.5 pl-9 pr-3 text-sm"
         />
       </label>
 
       {normalizedQuery.length >= 2 && results.length === 0 && (
-        <p className="py-6 text-center text-sm text-[var(--muted)]">No transcript matches found.</p>
+        <div className="empty-state py-6 text-center text-sm text-[var(--muted)]">No transcript matches found.</div>
       )}
       {results.length > 0 && (
-        <div className="mt-3 divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]" role="list">
+        <div className="surface-panel mt-3 divide-y divide-[var(--border)]" role="list">
           {results.map((result, index) => (
             <button
               key={`${result.lecture.id}-${index}`}
               type="button"
               onClick={() => selectResult(result)}
-              className="flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+              className="flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-[var(--accent)]/5"
               role="listitem"
             >
-              <Play size={14} weight="fill" className="mt-1 shrink-0 text-[var(--saffron)]" />
+              <Play size={14} fill="currentColor" className="mt-1 shrink-0 text-[var(--accent)]" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-semibold text-[var(--foreground)]">{result.lecture.title}</span>
                 <span className="mt-1 block text-sm text-[var(--muted)]">{result.text || "Transcript match"}</span>
               </span>
               {result.timestampS > 0 && (
-                <span className="shrink-0 text-xs font-semibold text-[var(--saffron)]">
+                <span className="shrink-0 text-xs font-semibold text-[var(--accent)]">
                   {Math.floor(result.timestampS / 60)}:{String(result.timestampS % 60).padStart(2, "0")}
                 </span>
               )}
