@@ -350,3 +350,36 @@ textarea:focus-visible {
 [data-theme="dark"] .empty-state {
   background: color-mix(in oklab, var(--surface) 90%, var(--background) 10%);
 }
+
+/* Notebook — ruled paper look for the lecture-notes feature */
+.notebook-paper {
+  background-color: color-mix(in oklab, var(--surface) 97%, var(--accent) 3%);
+  background-image:
+    linear-gradient(90deg, transparent 35px, color-mix(in oklab, var(--lotus-pink) 55%, transparent) 36px, transparent 37px),
+    repeating-linear-gradient(
+      transparent 0px,
+      transparent 30px,
+      var(--border) 31px,
+      var(--border) 31px
+    );
+  background-repeat: repeat, repeat;
+}
+
+.notebook-shadow {
+  box-shadow:
+    0 20px 45px color-mix(in oklab, #000000 12%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #ffffff 40%, transparent);
+}
+
+[data-theme="dark"] .notebook-shadow {
+  box-shadow:
+    0 20px 45px color-mix(in oklab, #000000 55%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #ffffff 8%, transparent);
+}
+
+.notebook-editable:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  pointer-events: none;
+}
+

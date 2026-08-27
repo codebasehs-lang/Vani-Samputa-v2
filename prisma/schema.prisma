@@ -179,6 +179,8 @@ model UserNote {
   userId     String
   lectureId  String
   content    String   @db.Text
+  color      String   @default("#FFD700")
+  drawing    String?  @db.LongText
   timestampS Int      // playback position in seconds
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
