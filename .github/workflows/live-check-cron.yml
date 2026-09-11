@@ -1,0 +1,20 @@
+name: Live Check Cron
+
+# Free alternative to Vercel's Hobby-plan cron limit (1 run/day). Pings the
+# deployed /api/cron/live-check endpoint on a schedule using repo secrets.
+# GitHub's schedule timing isn't exact and can drift a few minutes under load,
+# and GitHub disables scheduled workflows after 60 days with no repo commits.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping-live-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call live-check endpoint
+        run: |
+          curl -sf -X GET "${{ secrets.SITE_URL }}/api/cron/live-check" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

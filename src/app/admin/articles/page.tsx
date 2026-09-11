@@ -3,6 +3,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { FileText } from "lucide-react"
 import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 export const metadata: Metadata = { title: "Articles" }
 
@@ -18,7 +19,8 @@ export default async function AdminArticlesPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Articles ({articles.length})</h1>
         <Link
           href="/admin/articles/new"
-          className="admin-gradient-accent rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          style={{ background: adminGradient(ADMIN_COLORS.articles) }}
+          className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           + New Article
         </Link>
@@ -28,8 +30,8 @@ export default async function AdminArticlesPage() {
         {articles.length === 0 && (
           <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
             <span
-              className="flex h-12 w-12 items-center justify-center rounded-full"
-              style={{ background: "color-mix(in oklab, var(--accent) 12%, var(--surface) 88%)", color: "var(--accent)" }}
+              className="flex h-12 w-12 items-center justify-center rounded-full text-white"
+              style={{ background: adminGradient(ADMIN_COLORS.articles) }}
             >
               <FileText size={22} strokeWidth={1.5} />
             </span>

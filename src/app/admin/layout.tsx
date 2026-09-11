@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="admin-shell-bg min-h-full">
       <AdminSidebar />
-      <main className="min-h-full px-4 py-6 sm:px-6 lg:ml-64 lg:px-8">
+      <main className="min-h-full lg:ml-64">
         <div className="admin-content-surface min-h-[calc(100vh-3rem)] p-4 sm:p-5 lg:p-6">{children}</div>
       </main>
     </div>

@@ -8,14 +8,15 @@ import { YouTubePlayer } from "@/components/player/YouTubePlayer"
 import Link from "next/link"
 
 export function FloatingVideoPlayer() {
-  const { currentTrack, positionS, setPosition, setVideoProgress, playNext, setVideoMini } =
+  const { currentTrack, setPosition, setVideoProgress, playNext, setVideoMini, isVideoMini } =
     usePlayerStore()
   const pathname = usePathname()
 
   // Pause saving position on video route — page has its own player
   const isOnVideoRoute = pathname.startsWith("/video")
+  const isAdminRoute = pathname.startsWith("/admin")
   const isVisible =
-    currentTrack?.mediaType === "VIDEO" && !isOnVideoRoute
+    currentTrack?.mediaType === "VIDEO" && !isOnVideoRoute && !isAdminRoute && isVideoMini
 
   const handlePosition = useCallback(
     (s: number) => {
@@ -66,12 +67,13 @@ export function FloatingVideoPlayer() {
       {/* YouTube player */}
       <YouTubePlayer
         videoId={currentTrack.url}
-        startSeconds={positionS}
+        startSeconds="live"
         autoplay
         onPositionUpdate={handlePosition}
         onEnded={playNext}
-        className="w-full"
+        className="relative w-full"
         // 240×135 = 16:9
+        style={{ height: 135 }}
       />
     </div>
   )

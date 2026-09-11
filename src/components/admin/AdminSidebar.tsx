@@ -6,19 +6,21 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, BookOpen, Upload, Video,
   Newspaper, Radio, Quote, ArrowLeft, Info, Tag,
-  Menu, X,
+  ListMusic, Menu, X,
 } from "lucide-react"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 const NAV = [
-  { href: "/admin",           label: "Dashboard",    Icon: LayoutDashboard },
-  { href: "/admin/lectures",  label: "Lectures",     Icon: BookOpen        },
-  { href: "/admin/import",    label: "Import Excel", Icon: Upload          },
-  { href: "/admin/categories",label: "Categories",   Icon: Tag             },
-  { href: "/admin/quotes",    label: "Daily Quotes", Icon: Quote           },
-  { href: "/admin/youtube",   label: "YouTube Sync", Icon: Video           },
-  { href: "/admin/articles",  label: "Articles",     Icon: Newspaper       },
-  { href: "/admin/about",     label: "About",        Icon: Info            },
-  { href: "/admin/live",      label: "Live Config",  Icon: Radio           },
+  { href: "/admin",            label: "Dashboard",    Icon: LayoutDashboard, color: ADMIN_COLORS.dashboard  },
+  { href: "/admin/lectures",   label: "Lectures",     Icon: BookOpen,        color: ADMIN_COLORS.lectures   },
+  { href: "/admin/playlists",  label: "Playlists",    Icon: ListMusic,       color: ADMIN_COLORS.lectures   },
+  { href: "/admin/import",     label: "Import Excel", Icon: Upload,          color: ADMIN_COLORS.import     },
+  { href: "/admin/categories", label: "Categories",   Icon: Tag,             color: ADMIN_COLORS.categories },
+  { href: "/admin/quotes",     label: "Daily Quotes", Icon: Quote,           color: ADMIN_COLORS.quotes     },
+  { href: "/admin/youtube",    label: "YouTube Sync", Icon: Video,           color: ADMIN_COLORS.youtube    },
+  { href: "/admin/articles",   label: "Articles",     Icon: Newspaper,       color: ADMIN_COLORS.articles   },
+  { href: "/admin/about",      label: "About",        Icon: Info,            color: ADMIN_COLORS.about      },
+  { href: "/admin/live",       label: "Live Config",  Icon: Radio,           color: ADMIN_COLORS.live       },
 ]
 
 function Brand() {
@@ -37,21 +39,28 @@ function Brand() {
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4">
-      {NAV.map(({ href, label, Icon }) => {
+      {NAV.map(({ href, label, Icon, color }) => {
         const active = pathname === href || (href !== "/admin" && pathname.startsWith(href))
         return (
           <Link
             key={href}
             href={href}
             onClick={onNavigate}
-            className={`mb-1.5 flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+            style={active ? { background: `color-mix(in oklab, ${color} 14%, var(--surface) 86%)` } : undefined}
+            className={`mb-1.5 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
               active
-                ? "admin-gradient-accent text-white"
-                : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                ? "font-semibold text-[var(--foreground)]"
+                : "font-medium text-[var(--muted)] hover:bg-black/[0.03] hover:text-[var(--foreground)] dark:hover:bg-white/5"
             }`}
           >
-            <Icon size={16} strokeWidth={active ? 2.25 : 1.75} />
+            <span
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+              style={{ background: adminGradient(color) }}
+            >
+              <Icon size={15} strokeWidth={2} />
+            </span>
             {label}
+            {active && <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: color }} />}
           </Link>
         )
       })}

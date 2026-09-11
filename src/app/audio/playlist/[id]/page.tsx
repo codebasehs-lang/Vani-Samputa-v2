@@ -38,10 +38,13 @@ export default async function PlaylistPage(
       {/* Header */}
       <div className="mb-8 flex gap-5">
         <div
-          className="hidden sm:flex h-28 w-28 shrink-0 items-center justify-center rounded-xl text-5xl"
+          className="hidden sm:flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl text-5xl"
           style={{ background: "linear-gradient(135deg, #1a1a3e 0%, #2d2d5e 100%)" }}
         >
-          🎙️
+          {playlist.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={playlist.coverUrl} alt="" className="h-full w-full object-cover" />
+          ) : "🎙️"}
         </div>
         <div className="min-w-0 flex-1">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">

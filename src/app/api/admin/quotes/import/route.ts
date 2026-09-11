@@ -63,17 +63,14 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      const quote = getCol(row, "quote", "quote text", "text", "message")
-      const sanskrit = getCol(row, "sanskrit") || quote
-      const devanagari = getCol(row, "devanagari") || null
       const odia = getCol(row, "odia") || null
       const hindi = getCol(row, "hindi") || null
-      const english = getCol(row, "english") || quote || null
+      const english = getCol(row, "english") || null
       const source = getCol(row, "source", "reference") || null
 
-      if (!sanskrit) {
+      if (!odia && !hindi && !english) {
         result.skipped++
-        result.errors.push(`Row ${index + 2}: quote/sanskrit text missing`)
+        result.errors.push(`Row ${index + 2}: no quote text in Odia, Hindi or English`)
         continue
       }
 
@@ -81,8 +78,8 @@ export async function POST(req: NextRequest) {
 
       await prisma.dailyVerse.upsert({
         where: { date },
-        update: { sanskrit, devanagari, odia, hindi, english, source },
-        create: { date, sanskrit, devanagari, odia, hindi, english, source },
+        update: { odia, hindi, english, source },
+        create: { date, odia, hindi, english, source },
       })
 
       if (existing) result.updated++

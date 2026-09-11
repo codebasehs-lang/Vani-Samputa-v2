@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Breadcrumbs } from "@/components/admin/Breadcrumbs"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 const LANGUAGES = ["Odia", "Hindi", "English"]
 const MEDIA_TYPES = ["AUDIO", "VIDEO"]
@@ -98,7 +99,8 @@ export default function NewLecturePage() {
         <button
           type="submit"
           disabled={busy}
-          className="admin-gradient-accent w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+          style={{ background: adminGradient(ADMIN_COLORS.lectures) }}
+          className="w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
         >
           {busy ? "Saving…" : "Save Lecture"}
         </button>

@@ -18,7 +18,7 @@ async function getHomeData() {
     prisma.lecture.count({ where: { mediaType: "VIDEO" } }),
     prisma.playlist.count(),
     prisma.dailyVerse.findFirst({ where: { date: { gte: today, lt: tomorrow } } }),
-    prisma.playlist.findMany({ orderBy: { sortOrder: "asc" }, take: 12 }),
+    prisma.playlist.findMany({ where: { lectures: { some: {} } }, orderBy: { sortOrder: "asc" }, take: 12 }),
   ])
 
   return { audioCount, videoCount, playlistCount, todayVerse, featuredPlaylists }

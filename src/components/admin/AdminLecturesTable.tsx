@@ -3,18 +3,15 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Mic, Clapperboard, Inbox, Trash2 } from "lucide-react"
+import { Mic, Clapperboard, Inbox, Trash2, Pencil } from "lucide-react"
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
 import { DeleteLectureButton } from "@/components/admin/DeleteLectureButton"
+import { EditLectureModal, type EditableLecture } from "@/components/admin/EditLectureModal"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
-type Lecture = {
-  id: string
-  title: string
+type Lecture = EditableLecture & {
   mediaType: string
-  language: string
-  lectureDate: Date | null
   createdAt: Date
-  playlist: { title: string } | null
 }
 
 export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
@@ -22,6 +19,7 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState<Lecture | null>(null)
 
   const allSelected = lectures.length > 0 && selected.size === lectures.length
 
@@ -81,7 +79,7 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
                   className="accent-[var(--accent)]"
                 />
               </th>
-              {["Type", "Title", "Language", "Playlist", "Lecture Date", "Added", ""].map((h) => (
+              {["Type", "Title", "Language", "Playlist", "Lecture Date", "Category", ""].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                   {h}
                 </th>
@@ -94,8 +92,8 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
                 <td colSpan={8} className="px-4 py-10">
                   <div className="flex flex-col items-center gap-3 text-center">
                     <span
-                      className="flex h-12 w-12 items-center justify-center rounded-full"
-                      style={{ background: "color-mix(in oklab, var(--accent) 12%, var(--surface) 88%)", color: "var(--accent)" }}
+                      className="flex h-12 w-12 items-center justify-center rounded-full text-white"
+                      style={{ background: adminGradient(ADMIN_COLORS.lectures) }}
                     >
                       <Inbox size={22} strokeWidth={1.5} />
                     </span>
@@ -118,8 +116,8 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
                 </td>
                 <td className="px-4 py-2.5">
                   <span
-                    className="flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{ background: "color-mix(in oklab, var(--accent) 12%, var(--surface) 88%)", color: "var(--accent)" }}
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+                    style={{ background: adminGradient(l.mediaType === "AUDIO" ? ADMIN_COLORS.articles : ADMIN_COLORS.dashboard) }}
                     aria-hidden="true"
                   >
                     {l.mediaType === "AUDIO" ? <Mic size={13} strokeWidth={1.75} /> : <Clapperboard size={13} strokeWidth={1.75} />}
@@ -135,11 +133,21 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
                 <td className="px-4 py-2.5 text-[var(--muted)]">
                   {l.lectureDate ? new Date(l.lectureDate).toLocaleDateString() : "—"}
                 </td>
-                <td className="px-4 py-2.5 text-[var(--muted)]">
-                  {new Date(l.createdAt).toLocaleDateString()}
+                <td className="max-w-[160px] px-4 py-2.5 truncate text-[var(--muted)]">
+                  {l.categories.length ? l.categories.map((c) => c.name).join(", ") : "—"}
                 </td>
                 <td className="px-4 py-2.5">
-                  <DeleteLectureButton id={l.id} />
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(l)}
+                      aria-label={`Edit ${l.title}`}
+                      className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                    >
+                      <Pencil size={15} strokeWidth={1.75} />
+                    </button>
+                    <DeleteLectureButton id={l.id} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -157,6 +165,9 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
         onConfirm={handleBulkDelete}
         onCancel={() => setConfirmOpen(false)}
       />
+      {editing && (
+        <EditLectureModal key={editing.id} lecture={editing} onClose={() => setEditing(null)} />
+      )}
     </>
   )
 }

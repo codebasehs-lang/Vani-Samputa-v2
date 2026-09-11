@@ -4,6 +4,7 @@ import { useState, useRef } from "react"
 import * as XLSX from "xlsx"
 import { toast } from "sonner"
 import { Upload, Download, FileSpreadsheet, Mic, Clapperboard, CircleCheck, CircleAlert } from "lucide-react"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 type Row = Record<string, string>
 type ImportResult = { created: number; skipped: number; errors: string[] }
@@ -79,7 +80,7 @@ export default function AdminImportPage() {
   return (
     <div>
       <div className="mb-6 flex items-center gap-3">
-        <span className="admin-gradient-accent flex h-10 w-10 items-center justify-center rounded-full text-white">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full text-white" style={{ background: adminGradient(ADMIN_COLORS.import) }}>
           <FileSpreadsheet size={18} strokeWidth={1.75} />
         </span>
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Import from Excel</h1>
@@ -87,20 +88,25 @@ export default function AdminImportPage() {
 
       {/* Type toggle */}
       <div className="mb-4 flex gap-2">
-        {(["AUDIO", "VIDEO"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setMediaType(t)}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              mediaType === t
-                ? "admin-gradient-accent text-white"
-                : "border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
-            }`}
-          >
-            {t === "AUDIO" ? <Mic size={14} strokeWidth={1.75} /> : <Clapperboard size={14} strokeWidth={1.75} />}
-            {t === "AUDIO" ? "Audio" : "Video"}
-          </button>
-        ))}
+        {(["AUDIO", "VIDEO"] as const).map((t) => {
+          const active = mediaType === t
+          const color = t === "AUDIO" ? ADMIN_COLORS.articles : ADMIN_COLORS.dashboard
+          return (
+            <button
+              key={t}
+              onClick={() => setMediaType(t)}
+              style={active ? { background: adminGradient(color) } : undefined}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? "text-white"
+                  : "border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              {t === "AUDIO" ? <Mic size={14} strokeWidth={1.75} /> : <Clapperboard size={14} strokeWidth={1.75} />}
+              {t === "AUDIO" ? "Audio" : "Video"}
+            </button>
+          )
+        })}
       </div>
 
       <div className="admin-panel mb-4 border-dashed p-6 text-center">
@@ -111,7 +117,8 @@ export default function AdminImportPage() {
         <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             onClick={() => fileRef.current?.click()}
-            className="admin-gradient-accent inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            style={{ background: adminGradient(ADMIN_COLORS.import) }}
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
             <Upload size={14} strokeWidth={1.75} /> Choose File
           </button>
@@ -154,7 +161,8 @@ export default function AdminImportPage() {
           <button
             onClick={handleImport}
             disabled={busy}
-            className="admin-gradient-accent mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+            style={{ background: adminGradient(ADMIN_COLORS.import) }}
+            className="mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
           >
             {busy ? "Importing…" : `Import All ${rows.length} Rows`}
           </button>

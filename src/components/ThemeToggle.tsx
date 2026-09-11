@@ -3,28 +3,45 @@
 import { useEffect, useState } from "react"
 import { Moon, Sun } from "lucide-react"
 
+type Theme = "light" | "dark"
+
+// Shared across every mounted ThemeToggle (header, admin bar, full-screen player…)
+// so toggling one instance updates all the others immediately.
+let currentTheme: Theme | null = null
+const listeners = new Set<(theme: Theme) => void>()
+
+function resolveInitialTheme(): Theme {
+  if (typeof window === "undefined") return "light"
+  const stored = localStorage.getItem("vs-theme")
+  if (stored === "dark" || stored === "light") return stored
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+}
+
+function applyTheme(theme: Theme) {
+  currentTheme = theme
+  document.documentElement.setAttribute("data-theme", theme)
+  localStorage.setItem("vs-theme", theme)
+  listeners.forEach((notify) => notify(theme))
+}
+
 export function ThemeToggle() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window === "undefined") return false
-    const stored = localStorage.getItem("vs-theme")
-    return stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches
-  })
+  const [theme, setTheme] = useState<Theme>(() => currentTheme ?? resolveInitialTheme())
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light")
-  }, [dark])
+    if (currentTheme === null) {
+      currentTheme = resolveInitialTheme()
+      document.documentElement.setAttribute("data-theme", currentTheme)
+    }
+    setTheme(currentTheme)
+    listeners.add(setTheme)
+    return () => { listeners.delete(setTheme) }
+  }, [])
 
-  function toggle() {
-    const next = !dark
-    setDark(next)
-    const theme = next ? "dark" : "light"
-    document.documentElement.setAttribute("data-theme", theme)
-    localStorage.setItem("vs-theme", theme)
-  }
+  const dark = theme === "dark"
 
   return (
     <button
-      onClick={toggle}
+      onClick={() => applyTheme(dark ? "light" : "dark")}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       className="icon-btn inline-flex items-center justify-center p-2"
     >

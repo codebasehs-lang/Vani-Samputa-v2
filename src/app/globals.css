@@ -105,23 +105,21 @@ body {
 }
 
 .admin-shell-bg {
+  /* Flat, cool tint matching the white sidebar/header instead of a clashing
+     warm gold/cream radial gradient behind the content card. */
   background:
-    radial-gradient(1200px 420px at 18% -8%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
-    radial-gradient(900px 300px at 100% 0%, color-mix(in oklab, var(--gold) 13%, transparent), transparent 62%),
-    var(--background);
+    radial-gradient(1200px 420px at 18% -8%, color-mix(in oklab, var(--accent) 6%, transparent), transparent 65%),
+    color-mix(in oklab, var(--surface) 92%, var(--accent) 8%);
 }
 
 .admin-content-surface {
-  border: 1px solid color-mix(in oklab, var(--border) 84%, var(--accent) 16%);
-  border-radius: 1rem;
+  /* Flush against the sidebar/header now (no outer gap), so no border or
+     floating drop-shadow — just a subtle gradient to read as its own surface. */
   background: linear-gradient(
     160deg,
     color-mix(in oklab, var(--surface) 93%, var(--accent) 7%),
     color-mix(in oklab, var(--surface) 98%, var(--background) 2%)
   );
-  box-shadow:
-    0 18px 40px color-mix(in oklab, var(--accent) 10%, transparent),
-    inset 0 1px 0 color-mix(in oklab, #ffffff 65%, transparent);
 }
 
 .admin-panel {
@@ -154,12 +152,6 @@ body {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
 }
 
-[data-theme="dark"] .admin-content-surface {
-  box-shadow:
-    0 18px 38px color-mix(in oklab, #000000 45%, transparent),
-    inset 0 1px 0 color-mix(in oklab, #ffffff 14%, transparent);
-}
-
 [data-theme="dark"] .admin-input,
 [data-theme="dark"] .admin-select,
 [data-theme="dark"] .admin-textarea {
@@ -175,10 +167,19 @@ body {
    ================================================================ */
 
 .user-shell-bg {
+  /* Same surface+accent tint recipe as .nav-surface (just lighter) so the
+     page body reads as a continuation of the header instead of a clashing
+     warm cream/gold gradient underneath a cool-tinted header. */
   background:
-    radial-gradient(1100px 380px at 15% -10%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 60%),
-    radial-gradient(800px 280px at 100% 0%, color-mix(in oklab, var(--gold) 9%, transparent), transparent 62%),
-    var(--background);
+    radial-gradient(1100px 380px at 15% -10%, color-mix(in oklab, var(--accent) 6%, transparent), transparent 65%),
+    color-mix(in oklab, var(--surface) 94%, var(--accent) 6%);
+}
+
+/* Flat version of .user-shell-bg's base tone, for the <main> padding reserved
+   for the bottom tab bar / mini-player — that space sits outside the
+   .user-shell-bg div, so without this it shows the old cream body color. */
+.app-main-bg {
+  background: color-mix(in oklab, var(--surface) 94%, var(--accent) 6%);
 }
 
 .nav-surface {
@@ -267,6 +268,27 @@ body {
 
 .chip-row::-webkit-scrollbar {
   display: none;
+}
+
+/* Vertical sidebar filter list (desktop counterpart of .chip on mobile) */
+.filter-item {
+  border-radius: 0.65rem;
+  color: var(--muted);
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.filter-item:hover {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+.filter-item[data-active="true"] {
+  color: var(--accent-fg);
+  background: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--accent) 30%, transparent);
 }
 
 .empty-state {

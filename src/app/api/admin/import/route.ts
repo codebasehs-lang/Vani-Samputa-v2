@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
 import { categoryConnect, parseCategoryNames, validateCategories } from "@/lib/categories"
 import { parseDuration } from "@/lib/duration"
+import { extractYouTubeId } from "@/lib/youtube"
 
 type Row = Record<string, string>
 
@@ -41,11 +42,12 @@ export async function POST(req: NextRequest) {
   for (const row of rows) {
     try {
       const title = col(row, "title", "name", "lecture")
-      const url   = col(row, "url", "link", "youtube id", "youtube_id", "videoid")
-      if (!title || !url) { skipped++; continue }
+      const rawUrl = col(row, "url", "link", "youtube id", "youtube_id", "videoid")
+      if (!title || !rawUrl) { skipped++; continue }
 
       const rowMediaType = col(row, "media type", "media_type", "type").toUpperCase()
       const lectureMediaType = rowMediaType === "AUDIO" || rowMediaType === "VIDEO" ? rowMediaType : mediaType
+      const url = lectureMediaType === "VIDEO" ? extractYouTubeId(rawUrl) : rawUrl
       const language     = col(row, "language", "lang") || "Odia"
       const category     = col(row, "category", "cat") || "General"
       const categories   = parseCategoryNames(col(row, "categories", "tags") || category)

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { AdminLecturesTable } from "@/components/admin/AdminLecturesTable"
 import type { Metadata } from "next"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 export const metadata: Metadata = { title: "Lectures" }
 
@@ -26,7 +27,7 @@ export default async function AdminLecturesPage(
       orderBy: { [sortField]: sortDir },
       skip,
       take,
-      include: { playlist: { select: { title: true } } },
+      include: { playlist: { select: { title: true } }, categories: { select: { name: true } } },
     }),
     prisma.lecture.count({ where }),
   ])
@@ -41,7 +42,8 @@ export default async function AdminLecturesPage(
         </h1>
         <Link
           href="/admin/lectures/new"
-          className="admin-gradient-accent rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          style={{ background: adminGradient(ADMIN_COLORS.lectures) }}
+          className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           + Add Lecture
         </Link>

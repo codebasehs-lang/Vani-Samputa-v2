@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { ABOUT_SLUGS } from "@/lib/aboutContent"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 export const metadata: Metadata = { title: "About" }
 
@@ -31,7 +32,8 @@ export default async function AdminAboutPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)]">About Sections ({ordered.length})</h1>
         <Link
           href="/admin/about/new"
-          className="admin-gradient-accent rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          style={{ background: adminGradient(ADMIN_COLORS.about) }}
+          className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           + New About Section
         </Link>

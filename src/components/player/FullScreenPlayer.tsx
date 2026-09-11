@@ -18,6 +18,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { NotebookOverlay } from "@/components/player/NotebookOverlay"
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const SLEEP_OPTIONS = [15, 30, 45, 60]
@@ -164,7 +165,7 @@ export function FullScreenPlayer() {
                 Now Playing
               </p>
             )}
-            <div className="w-6" />
+            <ThemeToggle />
           </div>
 
           <div

@@ -53,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Providers>
           <Header />
           {/* pb-32 = tab bar (64px) + mini-player (72px) on mobile; md:pb-20 = mini-player only */}
-          <main className="flex-1 pb-32 md:pb-20">
+          <main className="app-main-bg flex-1 pb-32 md:pb-20">
             <UserShell>{children}</UserShell>
           </main>
           <BottomTabBar />

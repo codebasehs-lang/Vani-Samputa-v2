@@ -73,6 +73,7 @@ export const usePlayerStore = create<PlayerState>()(
           isPlaying: true,
           positionS: 0,
           isMiniPlayer: true,
+          isVideoMini: true,
           // prepend to history, dedup by id, cap at 20
           history: [track, ...s.history.filter((t) => t.id !== track.id)].slice(0, 20),
         }))
@@ -122,7 +123,7 @@ export const usePlayerStore = create<PlayerState>()(
         const { queue } = get()
         if (!queue.length) return
         const [next, ...rest] = queue
-        set({ currentTrack: next, isPlaying: true, positionS: 0, queue: rest })
+        set({ currentTrack: next, isPlaying: true, positionS: 0, isVideoMini: true, queue: rest })
       },
       openFullScreen() {
         set({ isFullScreen: true })

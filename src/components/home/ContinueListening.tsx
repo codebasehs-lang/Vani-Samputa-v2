@@ -17,13 +17,22 @@ export function ContinueListening() {
         <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">Continue Listening</h2>
 
         <div className="surface-card flex items-center gap-4 p-4">
-          {/* Icon */}
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-2xl"
-            style={{ background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)" }}
-          >
-            {isAudio ? "🎙️" : "🎬"}
-          </div>
+          {/* Thumbnail */}
+          {currentTrack.thumbnail ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={currentTrack.thumbnail}
+              alt=""
+              className="h-14 w-14 shrink-0 rounded-lg object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-2xl"
+              style={{ background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)" }}
+            >
+              {isAudio ? "🎙️" : "🎬"}
+            </div>
+          )}
 
           {/* Info + progress */}
           <div className="min-w-0 flex-1">

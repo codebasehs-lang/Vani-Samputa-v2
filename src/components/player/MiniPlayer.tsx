@@ -1,6 +1,7 @@
 "use client"
 
 import { usePlayerStore } from "@/store/playerStore"
+import { usePathname } from "next/navigation"
 import { Play, Pause, RotateCcw, RotateCw, ChevronUp } from "lucide-react"
 
 export function MiniPlayer() {
@@ -8,8 +9,14 @@ export function MiniPlayer() {
     currentTrack, isPlaying, positionS, duration,
     pause, resume, seek, openFullScreen,
   } = usePlayerStore()
+  const pathname = usePathname()
 
-  if (!currentTrack) return null
+  // Video never uses this bar — it has its own inline controls on /video, or
+  // the floating PiP player elsewhere; closing the PiP shouldn't reveal this.
+  const isRedundantForVideo = currentTrack?.mediaType === "VIDEO"
+  const isAdminRoute = pathname.startsWith("/admin")
+
+  if (!currentTrack || isRedundantForVideo || isAdminRoute) return null
 
   const pct = duration > 0 ? (positionS / duration) * 100 : 0
 

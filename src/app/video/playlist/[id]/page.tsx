@@ -34,7 +34,7 @@ export default async function VideoPlaylistPage(
   if (!playlist) notFound()
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto max-w-screen-2xl px-4 py-10 lg:px-8">
       <div className="mb-8">
         <p className="mb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
           {playlist.category} · {playlist.language}

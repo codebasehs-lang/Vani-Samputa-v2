@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import webpush from "web-push"
 
-// Vercel calls this every 5 min via cron (vercel.json)
+// Vercel calls this on the schedule defined in vercel.json.
 export async function GET(req: NextRequest) {
-  // Protect with a shared secret to prevent public abuse
-  const secret = req.headers.get("x-cron-secret") ?? req.nextUrl.searchParams.get("secret")
-  if (secret !== process.env.CRON_SECRET) {
+  // Vercel's built-in cron auth sends `Authorization: Bearer $CRON_SECRET` automatically
+  // when CRON_SECRET is set as a project env var — no secret needs to live in vercel.json.
+  // The header/query fallbacks below just make local/manual testing easier.
+  const authHeader = req.headers.get("authorization")
+  const secret = authHeader?.replace(/^Bearer\s+/i, "") ?? req.headers.get("x-cron-secret") ?? req.nextUrl.searchParams.get("secret")
+  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 

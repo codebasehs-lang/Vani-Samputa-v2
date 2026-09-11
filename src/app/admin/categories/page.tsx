@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 type Category = { id: string; name: string }
 
@@ -42,7 +43,7 @@ export default function AdminCategoriesPage() {
       <p className="mb-6 text-sm text-[var(--muted)]">Manage reusable tags for playlists and standalone lectures.</p>
       <form onSubmit={addCategory} className="mb-6 flex gap-2">
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Category name" required className="admin-input min-w-0 flex-1 px-4 py-2.5 text-sm" />
-        <button className="admin-gradient-accent rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">Add</button>
+        <button style={{ background: adminGradient(ADMIN_COLORS.categories) }} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">Add</button>
       </form>
       {error && <p className="mb-4 text-xs text-red-500">{error}</p>}
       <div className="admin-panel divide-y divide-[var(--border)]">

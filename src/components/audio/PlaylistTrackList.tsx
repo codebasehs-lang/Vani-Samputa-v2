@@ -78,37 +78,35 @@ export function PlaylistTrackList({
               key={lecture.id}
               className={`group flex items-center gap-3 py-3 ${isActive ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}
             >
-              {/* Track number / play indicator */}
-              <div className="flex w-6 shrink-0 justify-center">
-                {isActive ? (
-                  <button onClick={() => (isPlaying ? pause() : resume())} aria-label="Play/Pause">
-                    {isPlaying
+              <button
+                onClick={() => (isActive ? (isPlaying ? pause() : resume()) : play(track))}
+                aria-label={isActive ? "Play/Pause" : `Play ${lecture.title}`}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              >
+                {/* Track number / play indicator */}
+                <div className="flex w-6 shrink-0 justify-center">
+                  {isActive ? (
+                    isPlaying
                       ? <Pause size={16} fill="currentColor" />
-                      : <Play size={16} fill="currentColor" />}
-                  </button>
-                ) : (
-                  <span className="text-xs text-[var(--muted)] group-hover:hidden">{idx + 1}</span>
-                )}
-                {!isActive && (
-                  <button
-                    onClick={() => play(track)}
-                    aria-label={`Play ${lecture.title}`}
-                    className="hidden group-hover:block text-[var(--accent)]"
-                  >
-                    <Play size={16} fill="currentColor" />
-                  </button>
-                )}
-              </div>
+                      : <Play size={16} fill="currentColor" />
+                  ) : (
+                    <>
+                      <span className="text-xs text-[var(--muted)] group-hover:hidden">{idx + 1}</span>
+                      <Play size={16} fill="currentColor" className="hidden text-[var(--accent)] group-hover:block" />
+                    </>
+                  )}
+                </div>
 
-              {/* Title */}
-              <div className="min-w-0 flex-1">
-                <p className={`truncate text-sm font-medium ${isActive ? "text-[var(--accent)]" : ""}`}>
-                  {lecture.title}
-                </p>
-                {lecture.duration && (
-                  <p className="text-[10px] text-[var(--muted)]">{formatDuration(lecture.duration)}</p>
-                )}
-              </div>
+                {/* Title */}
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-sm font-medium ${isActive ? "text-[var(--accent)]" : ""}`}>
+                    {lecture.title}
+                  </p>
+                  {lecture.duration && (
+                    <p className="text-[10px] text-[var(--muted)]">{formatDuration(lecture.duration)}</p>
+                  )}
+                </div>
+              </button>
 
               {/* Add to queue */}
               <button

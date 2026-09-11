@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 
 type AboutFormValues = {
   title: string
@@ -154,7 +155,8 @@ export function AboutEditorForm({ mode, initial }: AboutEditorFormProps) {
       <button
         type="submit"
         disabled={busy}
-        className="admin-gradient-accent rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
+        style={{ background: adminGradient(ADMIN_COLORS.about) }}
+        className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
       >
         {busy ? "Saving..." : mode === "create" ? "Create About Section" : "Save Changes"}
       </button>

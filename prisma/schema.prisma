@@ -17,6 +17,13 @@ enum MediaType {
   VIDEO
 }
 
+enum YoutubeStagingStatus {
+  NEW
+  APPROVED
+  SKIPPED
+  IMPORTED
+}
+
 // ─── Auth ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -135,10 +142,33 @@ model Article {
   updatedAt   DateTime  @updatedAt
 }
 
+// Cache of YouTube channel videos pending admin review before import as Lecture rows.
+model YoutubeStagingVideo {
+  id               String               @id @default(cuid())
+  videoId          String               @unique
+  title            String
+  description      String?              @db.Text
+  thumbnail        String?
+  duration         Int?
+  publishedAt      DateTime?
+  ytPlaylistId     String?
+  ytPlaylistTitle  String?
+  detectedLanguage String
+  detectedCategory String
+  language         String?
+  category         String?
+  playlistTitle    String?
+  status           YoutubeStagingStatus @default(NEW)
+  lectureId        String?
+  lastSeenAt       DateTime             @default(now())
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+}
+
 model DailyVerse {
   id         String   @id @default(cuid())
   date       DateTime @unique @db.Date
-  sanskrit   String   @db.Text
+  sanskrit   String?  @db.Text
   devanagari String?  @db.Text
   odia       String?  @db.Text
   hindi      String?  @db.Text

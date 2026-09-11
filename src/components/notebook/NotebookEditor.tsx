@@ -24,6 +24,7 @@ export function NotebookEditor({
   onSave,
   onCancel,
   saving,
+  className = "",
 }: {
   initialContent?: string
   initialColor?: string
@@ -33,6 +34,7 @@ export function NotebookEditor({
   onSave: (payload: { content: string; color: string; drawing: string | null }) => void
   onCancel?: () => void
   saving?: boolean
+  className?: string
 }) {
   const [mode, setMode] = useState<Mode>("type")
   const [penColor, setPenColor] = useState(initialColor)
@@ -184,7 +186,7 @@ export function NotebookEditor({
   }
 
   return (
-    <div className="notebook-shadow overflow-hidden rounded-2xl border border-[var(--border)]">
+    <div className={`notebook-shadow flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] ${className}`}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <div className="flex rounded-lg border border-[var(--border)] p-0.5">
@@ -260,8 +262,8 @@ export function NotebookEditor({
         </div>
       </div>
 
-      {/* Paper surface — fixed height so the absolutely-positioned canvas always gets a real size */}
-      <div className="notebook-paper relative h-56">
+      {/* Paper surface — min-height so the absolutely-positioned canvas always gets a real size, grows to fill available space */}
+      <div className="notebook-paper relative min-h-56 flex-1">
         <div
           ref={editorRef}
           contentEditable

@@ -71,7 +71,10 @@ function PlaylistCard({ playlist }: { playlist: Playlist }) {
           background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)",
         }}
       >
-        {playlist.mediaType === "AUDIO" ? "🎙️" : "🎬"}
+        {playlist.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={playlist.coverUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+        ) : playlist.mediaType === "AUDIO" ? "🎙️" : "🎬"}
       </div>
 
       <div className="p-2.5">

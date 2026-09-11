@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useState } from "react"
 import { Menu, X, LogOut, CircleUserRound } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { ADMIN_COLORS } from "@/lib/adminColors"
 
 const navLinks = [
   { href: "/",         label: "Home"     },
@@ -15,6 +16,7 @@ const navLinks = [
   { href: "/articles", label: "Articles" },
   { href: "/events",   label: "Programs" },
   { href: "/live",     label: "🔴 Live"  },
+  { href: "https://ggs.books.vanisamputa.com", label: "Books", external: true },
   { href: "/about",    label: "About"    },
 ]
 
@@ -35,27 +37,35 @@ export function Header() {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Admin Workspace</p>
 
           <div className="flex items-center gap-2.5">
-            <ThemeToggle />
+            <span className="rounded-full" style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.categories} 14%, transparent)` }}>
+              <ThemeToggle />
+            </span>
 
             <div className="hidden items-center gap-2 lg:flex">
-              <Link href="/profile" aria-label="Open profile" className="icon-btn inline-flex items-center justify-center rounded-full">
+              <Link
+                href="/profile"
+                aria-label="Open profile"
+                className="inline-flex items-center justify-center rounded-full p-1.5 transition-opacity hover:opacity-80"
+                style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.dashboard} 14%, transparent)` }}
+              >
                 {session?.user?.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={session.user.image}
                     alt={session.user.name ?? "User"}
-                    className="h-9 w-9 rounded-full object-cover"
+                    className="h-7 w-7 rounded-full object-cover"
                   />
                 ) : (
-                  <CircleUserRound size={28} />
+                  <CircleUserRound size={22} style={{ color: ADMIN_COLORS.dashboard }} />
                 )}
               </Link>
               <button
                 onClick={() => signOut()}
                 aria-label="Sign out"
-                className="rounded-full p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+                className="rounded-full p-2 transition-opacity hover:opacity-80"
+                style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.youtube} 14%, transparent)` }}
               >
-                <LogOut size={18} className="text-[var(--muted)]" />
+                <LogOut size={18} style={{ color: ADMIN_COLORS.youtube }} />
               </button>
             </div>
           </div>
@@ -75,20 +85,21 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 lg:flex">
-          {navLinks.map(({ href, label }) => {
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 lg:flex xl:gap-7">
+          {navLinks.map(({ href, label, external }) => {
             const active = isActiveLink(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`text-sm font-medium transition-colors ${
-                  active
-                    ? "text-[var(--foreground)]"
-                    : "text-[var(--muted)] hover:text-[var(--foreground)]"
-                }`}
-                style={active ? { textShadow: "0 0 0.01px currentColor", borderBottom: "2px solid var(--accent)", paddingBottom: "2px" } : {}}
-              >
+            const className = `whitespace-nowrap text-sm font-medium transition-colors ${
+              active
+                ? "text-[var(--foreground)]"
+                : "text-[var(--muted)] hover:text-[var(--foreground)]"
+            }`
+            const style = active ? { textShadow: "0 0 0.01px currentColor", borderBottom: "2px solid var(--accent)", paddingBottom: "2px" } : {}
+            return external ? (
+              <a key={href} href={href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+                {label}
+              </a>
+            ) : (
+              <Link key={href} href={href} className={className} style={style}>
                 {label}
               </Link>
             )
@@ -144,20 +155,20 @@ export function Header() {
       {/* Mobile menu drawer */}
       {open && (
         <div className="nav-surface flex flex-col gap-2 border-t border-[var(--border)] px-4 py-4 lg:hidden">
-          {navLinks.map(({ href, label }) => {
+          {navLinks.map(({ href, label, external }) => {
             const active = isActiveLink(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className={`rounded-lg px-3 py-2 text-base font-medium transition-colors ${
-                  active
-                    ? "text-[var(--foreground)]"
-                    : "text-[var(--foreground)]/90 hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
-                style={active ? { background: "color-mix(in oklab, var(--accent) 14%, transparent 86%)" } : {}}
-              >
+            const className = `rounded-lg px-3 py-2 text-base font-medium transition-colors ${
+              active
+                ? "text-[var(--foreground)]"
+                : "text-[var(--foreground)]/90 hover:bg-black/5 dark:hover:bg-white/5"
+            }`
+            const style = active ? { background: "color-mix(in oklab, var(--accent) 14%, transparent 86%)" } : {}
+            return external ? (
+              <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className={className} style={style}>
+                {label}
+              </a>
+            ) : (
+              <Link key={href} href={href} onClick={() => setOpen(false)} className={className} style={style}>
                 {label}
               </Link>
             )

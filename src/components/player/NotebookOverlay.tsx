@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { X } from "lucide-react"
 import { NotebookEditor } from "@/components/notebook/NotebookEditor"
 import { NotePage, fmtTimestamp, type NotebookNote } from "@/components/notebook/NotePage"
 
@@ -23,6 +24,7 @@ export function NotebookOverlay({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [showSaved, setShowSaved] = useState(false)
   // captured once when the notebook opens; the player's live position keeps ticking underneath
   const [composerTimestamp, setComposerTimestamp] = useState(() => fmtTimestamp(positionS))
 
@@ -73,9 +75,28 @@ export function NotebookOverlay({
 
   const editingNote = notes.find((n) => n.id === editingId) ?? null
 
+  const savedNotesList = loading ? (
+    <p className="text-center text-xs text-[var(--muted)]">Loading notes…</p>
+  ) : notes.length === 0 ? (
+    <div className="empty-state py-10 text-center text-sm">
+      No notes yet — pick a pen colour above and write your first one.
+    </div>
+  ) : (
+    notes.map((note) => (
+      <NotePage
+        key={note.id}
+        note={note}
+        onEdit={() => setEditingId(note.id)}
+        onDelete={() => deleteNote(note.id)}
+      />
+    ))
+  )
+
   return (
-    <div className="mx-auto flex h-full w-full max-w-2xl flex-col gap-5 overflow-y-auto px-4 py-6">
-      <p className="truncate text-center text-xs text-[var(--muted)]">{lectureTitle}</p>
+    <div className="relative flex h-full w-full flex-col overflow-y-auto px-4 py-6 md:overflow-hidden md:px-10 lg:px-16">
+      {/* Notebook editor — full width */}
+      <div className="flex w-full min-w-0 flex-1 flex-col gap-5 md:h-full md:min-h-0 md:overflow-y-auto md:pr-2">
+        <p className="truncate text-center text-xs text-[var(--muted)]">{lectureTitle}</p>
         {editingNote ? (
           <NotebookEditor
             key={editingNote.id}
@@ -86,6 +107,7 @@ export function NotebookOverlay({
             saving={saving}
             onCancel={() => setEditingId(null)}
             onSave={(payload) => updateNote(editingNote.id, payload)}
+            className="flex-1"
           />
         ) : (
           <NotebookEditor
@@ -94,27 +116,42 @@ export function NotebookOverlay({
             onTimestampChange={setComposerTimestamp}
             saving={saving}
             onSave={createNote}
+            className="flex-1"
           />
         )}
 
-        <div className="flex flex-col gap-4">
-          {loading ? (
-            <p className="text-center text-xs text-[var(--muted)]">Loading notes…</p>
-          ) : notes.length === 0 ? (
-            <div className="empty-state py-10 text-center text-sm">
-              No notes yet — pick a pen colour above and write your first one.
-            </div>
-          ) : (
-            notes.map((note) => (
-              <NotePage
-                key={note.id}
-                note={note}
-                onEdit={() => setEditingId(note.id)}
-                onDelete={() => deleteNote(note.id)}
-              />
-            ))
-          )}
+        {/* Saved notes stay inline on mobile — no room for a side drawer */}
+        <div className="flex flex-col gap-4 md:hidden">{savedNotesList}</div>
+      </div>
+
+      {/* Tab to reveal the saved-notes drawer (desktop only) */}
+      <button
+        onClick={() => setShowSaved(true)}
+        className="fixed right-0 top-1/2 z-10 hidden -translate-y-1/2 items-center gap-1.5 rounded-l-xl border border-r-0 border-[var(--border)] bg-[var(--surface)] px-2 py-4 text-[11px] font-semibold uppercase tracking-widest text-[var(--muted)] shadow-lg transition-all hover:text-[var(--foreground)] md:flex"
+        style={{ writingMode: "vertical-rl", visibility: showSaved ? "hidden" : "visible" }}
+        aria-label="Show saved notes"
+      >
+        Saved Notes{notes.length > 0 ? ` (${notes.length})` : ""}
+      </button>
+
+      {/* Saved-notes drawer (desktop) */}
+      <div
+        className={`fixed inset-y-0 right-0 z-20 hidden w-[340px] flex-col gap-4 overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl transition-transform duration-300 md:flex ${
+          showSaved ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Saved Notes</h3>
+          <button
+            onClick={() => setShowSaved(false)}
+            aria-label="Close saved notes"
+            className="rounded-full p-1 text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+          >
+            <X size={16} />
+          </button>
         </div>
+        {savedNotesList}
+      </div>
     </div>
   )
 }

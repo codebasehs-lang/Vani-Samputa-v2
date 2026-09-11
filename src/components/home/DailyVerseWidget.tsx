@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 type Verse = {
-  sanskrit: string
+  sanskrit: string | null
   devanagari: string | null
   odia: string | null
   hindi: string | null
@@ -83,9 +83,9 @@ export function DailyVerseWidget({ verse }: { verse: Verse }) {
             {text}
           </p>
 
-          {activeVerse.source && (
-            <p className="mt-4 text-xs font-medium text-[var(--muted)]">{activeVerse.source}</p>
-          )}
+          <p className="mt-4 text-xs font-medium text-[var(--muted)]">
+            {activeVerse.source || "HH Haladhara Svāmī Mahārāja"}
+          </p>
         </div>
       </div>
     </section>
