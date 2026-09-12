@@ -154,41 +154,65 @@ export function Header() {
 
       {/* Mobile menu drawer */}
       {open && (
-        <div className="nav-surface flex flex-col gap-2 border-t border-[var(--border)] px-4 py-4 lg:hidden">
-          {navLinks.map(({ href, label, external }) => {
-            const active = isActiveLink(href)
-            const className = `rounded-lg px-3 py-2 text-base font-medium transition-colors ${
-              active
-                ? "text-[var(--foreground)]"
-                : "text-[var(--foreground)]/90 hover:bg-black/5 dark:hover:bg-white/5"
-            }`
-            const style = active ? { background: "color-mix(in oklab, var(--accent) 14%, transparent 86%)" } : {}
-            return external ? (
-              <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className={className} style={style}>
-                {label}
-              </a>
-            ) : (
-              <Link key={href} href={href} onClick={() => setOpen(false)} className={className} style={style}>
-                {label}
-              </Link>
-            )
-          })}
-          {session ? (
-            <button
-              onClick={() => { signOut(); setOpen(false) }}
-              className="rounded-lg px-3 py-2 text-left text-base font-medium text-[var(--muted)] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-            >
-              Sign out
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="btn-accent mt-1 inline-flex items-center justify-center px-4 py-2 text-sm"
-            >
-              Sign in
-            </Link>
-          )}
+        <div className="fixed inset-0 z-60 lg:hidden">
+          <button
+            aria-label="Close menu"
+            className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
+            onClick={() => setOpen(false)}
+          />
+          <aside
+            aria-label="Mobile navigation"
+            className="nav-surface absolute inset-y-0 right-0 flex w-[min(21rem,88vw)] flex-col border-l border-[var(--border)] px-5 py-5 shadow-2xl"
+          >
+            <div className="mb-7 flex items-center justify-between">
+              <span className="font-iast text-lg font-semibold tracking-[0.06em] text-[var(--foreground)]">Vāṇī Saṃpuṭa</span>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+                className="icon-btn inline-flex items-center justify-center p-2"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            <nav className="flex flex-col gap-2">
+              {navLinks.map(({ href, label, external }) => {
+                const active = isActiveLink(href)
+                const className = `rounded-lg px-3 py-2 text-base font-medium transition-colors ${
+                  active
+                    ? "text-[var(--foreground)]"
+                    : "text-[var(--foreground)]/90 hover:bg-black/5 dark:hover:bg-white/5"
+                }`
+                const style = active ? { background: "color-mix(in oklab, var(--accent) 14%, transparent 86%)" } : {}
+                return external ? (
+                  <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className={className} style={style}>
+                    {label}
+                  </a>
+                ) : (
+                  <Link key={href} href={href} onClick={() => setOpen(false)} className={className} style={style}>
+                    {label}
+                  </Link>
+                )
+              })}
+            </nav>
+            <div className="mt-auto pt-6">
+              {session ? (
+                <button
+                  onClick={() => { signOut(); setOpen(false) }}
+                  className="w-full rounded-lg px-3 py-2 text-left text-base font-medium text-[var(--muted)] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                >
+                  Sign out
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="btn-accent inline-flex w-full items-center justify-center px-4 py-2 text-sm"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
+          </aside>
         </div>
       )}
     </header>

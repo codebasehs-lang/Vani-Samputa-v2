@@ -14,9 +14,10 @@ export async function generateMetadata(
 }
 
 export default async function VideoPlaylistPage(
-  { params }: { params: Promise<{ id: string }> }
+  { params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ video?: string }> }
 ) {
   const { id } = await params
+  const { video } = await searchParams
 
   const playlist = await prisma.playlist.findUnique({
     where: { id },
@@ -52,7 +53,7 @@ export default async function VideoPlaylistPage(
         <PlaylistFavoriteButton playlistId={playlist.id} />
       </div>
 
-      <VideoGrid lectures={playlist.lectures} playlistId={id} />
+      <VideoGrid lectures={playlist.lectures} playlistId={id} initialVideoId={video} />
       <TranscriptSearch lectures={playlist.lectures} playlistId={id} />
     </div>
   )

@@ -9,6 +9,16 @@ import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 type Row = Record<string, string>
 type ImportResult = { created: number; skipped: number; errors: string[] }
 
+function formatPreviewDate(value: unknown) {
+  const serial = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(serial) || serial <= 0) return String(value ?? "")
+
+  const date = XLSX.SSF.parse_date_code(serial)
+  if (!date) return String(value ?? "")
+
+  return `${date.y}-${String(date.m).padStart(2, "0")}-${String(date.d).padStart(2, "0")}`
+}
+
 export default function AdminImportPage() {
   const [mediaType, setMediaType] = useState<"AUDIO" | "VIDEO">("AUDIO")
   const [rows, setRows] = useState<Row[]>([])
@@ -147,11 +157,11 @@ export default function AdminImportPage() {
               <tbody>
                 {rows.slice(0, 5).map((row, i) => (
                   <tr key={i} className="border-t border-[var(--border)]">
-                    {headers.map((h) => (
-                      <td key={h} className="max-w-[200px] truncate px-3 py-2 text-[var(--foreground)]">
-                        {row[h]}
-                      </td>
-                    ))}
+                      {headers.map((h) => {
+                        const isLectureDate = ["lecture date", "lecture_date", "date", "event date"].includes(h.toLowerCase())
+                        const value = isLectureDate ? formatPreviewDate(row[h]) : String(row[h] ?? "")
+                        return <td key={h} className="max-w-[200px] truncate px-3 py-2 text-[var(--foreground)]">{value}</td>
+                      })}
                   </tr>
                 ))}
               </tbody>

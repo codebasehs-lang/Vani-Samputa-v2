@@ -43,7 +43,7 @@ export default async function LanguageVideoPage(
     include: {
       _count: { select: { lectures: true } },
       categories: { where: { active: true }, orderBy: { name: "asc" } },
-      lectures: { orderBy: { sortOrder: "asc" }, take: 1, select: { thumbnail: true, url: true } },
+      lectures: { orderBy: { sortOrder: "asc" }, take: 1, select: { id: true, thumbnail: true, url: true } },
     },
   }), prisma.category.findMany({ where: { active: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] })])
 
@@ -124,7 +124,7 @@ export default async function LanguageVideoPage(
                   key={pl.id}
                   className="surface-card group relative overflow-hidden transition-transform hover:-translate-y-1"
                 >
-                  <Link href={`/video/playlist/${pl.id}`} className="block">
+                  <Link href={`/video/playlist/${pl.id}${pl.lectures[0] ? `?video=${pl.lectures[0].id}` : ""}`} className="block">
                     <div className="relative aspect-video w-full overflow-hidden">
                       {(() => {
                         const first = pl.lectures[0]

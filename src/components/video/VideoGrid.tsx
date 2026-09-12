@@ -33,13 +33,15 @@ function parseTranscript(transcript: string): TranscriptLine[] {
     })
 }
 
-export function VideoGrid({ lectures, playlistId }: { lectures: Lecture[]; playlistId: string }) {
+export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: Lecture[]; playlistId: string; initialVideoId?: string }) {
   const { play, seek, setPosition, setVideoProgress, playNext, videoProgressMap, currentTrack, setVideoMini } =
     usePlayerStore()
   // Start null on both server and client — the persisted store rehydrates from
   // localStorage only on the client, so reading it during the initial render
   // would mismatch the SSR-ed markup and trigger a hydration error.
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(
+    initialVideoId && lectures.some((lecture) => lecture.id === initialVideoId) ? initialVideoId : null
+  )
   const [audioOnly, setAudioOnly] = useState(false)
   const [showTranscript, setShowTranscript] = useState(false)
 
