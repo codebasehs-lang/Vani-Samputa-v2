@@ -39,7 +39,7 @@ export function PlaylistTrackList({
     return {
       id: l.id,
       title: l.title,
-      url: l.url,
+      url: l.mediaType === "AUDIO" ? `/api/audio/${l.id}` : l.url,
       mediaType: l.mediaType as "AUDIO" | "VIDEO",
       duration: l.duration ?? undefined,
       thumbnail: l.thumbnail ?? undefined,
@@ -118,7 +118,7 @@ export function PlaylistTrackList({
               </button>
               <FavoriteButton lectureId={lecture.id} />
               {lecture.mediaType === "AUDIO" && (
-                <OfflineDownloadButton url={lecture.url} title={lecture.title} />
+                <OfflineDownloadButton lectureId={lecture.id} title={lecture.title} />
               )}
             </div>
           )

@@ -1,6 +1,7 @@
 const VERSION = "vani-samputa-v1"
 const PRECACHE = `${VERSION}-precache`
 const RUNTIME = `${VERSION}-runtime`
+const AUDIO_CACHE = "vani-samputa-audio-v1"
 const APP_SHELL = ["/", "/audio", "/video", "/events", "/live", "/manifest.webmanifest"]
 
 self.addEventListener("install", (event) => {
@@ -11,7 +12,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key.startsWith("vani-samputa-") && ![PRECACHE, RUNTIME].includes(key))
+      keys.filter((key) => key.startsWith("vani-samputa-") && ![PRECACHE, RUNTIME, AUDIO_CACHE].includes(key))
         .map((key) => caches.delete(key))
     ))
   )
