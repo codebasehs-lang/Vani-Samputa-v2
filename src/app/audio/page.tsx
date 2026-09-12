@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { PageHeader } from "@/components/PageHeader"
 
 export const metadata: Metadata = { title: "Audio Lectures" }
+export const dynamic = "force-dynamic"
 
 const LANGUAGES = [
   { key: "Odia",    label: "Odia",    native: "ଓଡ଼ିଆ",  color: "#4A5D8F", glyph: "ଓ" },
