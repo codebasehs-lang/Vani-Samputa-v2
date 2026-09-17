@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { SplashVisual } from "@/components/SplashVisual"
 
-const FIRST_VISIT_SPLASH_KEY = "vs-first-visit-splash-v1"
+const FIRST_VISIT_SPLASH_KEY = "vs-first-visit-desktop-splash-v1"
 const FIRST_VISIT_SPLASH_DURATION_MS = 3600
 const FIRST_VISIT_SPLASH_FADE_MS = 500
 
@@ -12,6 +12,9 @@ export function FirstVisitSplash() {
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches
+    if (!isDesktop) return
+
     const seen = window.localStorage.getItem(FIRST_VISIT_SPLASH_KEY) === "1"
     if (seen) return
 
