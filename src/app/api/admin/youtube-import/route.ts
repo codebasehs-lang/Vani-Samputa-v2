@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
-import { categoryConnect, validateCategories } from "@/lib/categories"
+import { categoryConnect, parseCategoryNames, validateCategories } from "@/lib/categories"
 import { prisma } from "@/lib/prisma"
 
 type ImportRow = {
@@ -16,6 +16,8 @@ type ImportRow = {
   sortOrder?: number
 }
 
+type ValidRow = ImportRow & { categoryNames: string[] }
+
 export async function POST(req: NextRequest) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
@@ -27,15 +29,19 @@ export async function POST(req: NextRequest) {
   }
 
   const errors: string[] = []
-  const validRows: ImportRow[] = []
+  const validRows: ValidRow[] = []
   const seen = new Set<string>()
   for (const [index, row] of rows.entries()) {
     const rowNumber = index + 1
     const videoId = String(row.videoId ?? "").trim()
     const title = String(row.title ?? "").trim()
-    const categories = [String(row.category ?? "").trim()].filter(Boolean)
+    const categoryNames = parseCategoryNames(row.category ?? "")
     if (!videoId || !title) {
       errors.push(`Row ${rowNumber}: title and YouTube ID are required.`)
+      continue
+    }
+    if (!categoryNames.length) {
+      errors.push(`Row ${rowNumber}: choose at least one category.`)
       continue
     }
     if (seen.has(videoId)) {
@@ -43,12 +49,12 @@ export async function POST(req: NextRequest) {
       continue
     }
     seen.add(videoId)
-    const missingCategories = await validateCategories(categories)
+    const missingCategories = await validateCategories(categoryNames)
     if (missingCategories.length) {
       errors.push(`Row ${rowNumber}: add categories first: ${missingCategories.join(", ")}.`)
       continue
     }
-    validRows.push({ ...row, videoId, title, language: row.language?.trim() || "Odia", category: categories[0] })
+    validRows.push({ ...row, videoId, title, language: row.language?.trim() || "Odia", category: categoryNames.join(", "), categoryNames })
   }
 
   const existing = await prisma.lecture.findMany({ where: { url: { in: validRows.map((row) => row.videoId) } }, select: { url: true } })
@@ -68,7 +74,7 @@ export async function POST(req: NextRequest) {
           if (!playlistId) {
             const existingPlaylist = await tx.playlist.findFirst({ where: { title: playlistTitle, language: row.language, mediaType: "VIDEO" }, select: { id: true } })
             playlistId = existingPlaylist?.id ?? (await tx.playlist.create({
-              data: { title: playlistTitle, language: row.language, category: row.category, mediaType: "VIDEO", categories: categoryConnect([row.category]) },
+              data: { title: playlistTitle, language: row.language, category: row.categoryNames[0], mediaType: "VIDEO", categories: categoryConnect(row.categoryNames) },
               select: { id: true },
             })).id
             playlistIds.set(cacheKey, playlistId)
@@ -82,14 +88,14 @@ export async function POST(req: NextRequest) {
             url: row.videoId,
             mediaType: "VIDEO",
             language: row.language,
-            category: row.category,
+            category: row.categoryNames[0],
             thumbnail: row.thumbnail ?? null,
             duration: row.duration ?? null,
             lectureDate: parseDate(row.lectureDate),
             publishedAt: parseDate(row.lectureDate),
             sortOrder: row.sortOrder ?? 0,
             playlistId,
-            categories: categoryConnect([row.category]),
+            categories: categoryConnect(row.categoryNames),
           },
         })
         await tx.youtubeStagingVideo.updateMany({ where: { videoId: row.videoId }, data: { status: "IMPORTED", lectureId: lecture.id } })

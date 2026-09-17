@@ -3,8 +3,15 @@
 import { useEffect, useState } from "react"
 import * as XLSX from "xlsx"
 import { toast } from "sonner"
-import { Video, RefreshCw, CircleCheck, CircleAlert, Upload, Download, ExternalLink } from "lucide-react"
+import { Video, RefreshCw, CircleCheck, CircleAlert, Upload, Download, ExternalLink, X } from "lucide-react"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+
+// Categories are stored as a comma-separated string (e.g. "Goswami, Kirtan") since a
+// playlist/lecture can belong to more than one category.
+function splitCategoryNames(value: string | null | undefined): string[] {
+  if (!value) return []
+  return [...new Set(value.split(",").map((name) => name.trim()).filter(Boolean))]
+}
 
 type Status = "NEW" | "APPROVED" | "SKIPPED" | "IMPORTED"
 
@@ -163,7 +170,7 @@ export default function AdminYoutubePage() {
   }
 
   const languageOptions = [...new Set(rows.map((row) => row.language ?? row.detectedLanguage))].sort()
-  const categoryOptions = [...new Set(rows.map((row) => row.category ?? row.detectedCategory).filter(Boolean))].sort()
+  const categoryOptions = [...new Set(rows.flatMap((row) => splitCategoryNames(row.category ?? row.detectedCategory)))].sort()
   const playlistOptions = [...new Set(rows.map((row) => row.playlistTitle ?? row.ytPlaylistTitle ?? "").filter(Boolean))].sort()
 
   const statusFilteredRows = filter === "ALL" ? rows : rows.filter((row) => row.status === filter)
@@ -171,7 +178,7 @@ export default function AdminYoutubePage() {
   const filteredRows = statusFilteredRows.filter((row) => {
     if (search && !row.title.toLowerCase().includes(search) && !row.videoId.toLowerCase().includes(search)) return false
     if (languageFilter !== "ALL" && (row.language ?? row.detectedLanguage) !== languageFilter) return false
-    if (categoryFilter !== "ALL" && (row.category ?? row.detectedCategory) !== categoryFilter) return false
+    if (categoryFilter !== "ALL" && !splitCategoryNames(row.category ?? row.detectedCategory).includes(categoryFilter)) return false
     if (playlistFilter !== "ALL" && (row.playlistTitle ?? row.ytPlaylistTitle ?? "") !== playlistFilter) return false
     return true
   })
@@ -317,7 +324,7 @@ export default function AdminYoutubePage() {
               <tbody>
                 {filteredRows.map((row) => {
                   const effectiveLanguage = row.language ?? row.detectedLanguage
-                  const effectiveCategory = row.category ?? row.detectedCategory
+                  const selectedCategories = splitCategoryNames(row.category ?? row.detectedCategory).filter((name) => categories.includes(name))
                   const effectivePlaylist = row.playlistTitle ?? row.ytPlaylistTitle ?? ""
                   const locked = row.status === "IMPORTED"
                   return (
@@ -357,15 +364,12 @@ export default function AdminYoutubePage() {
                         </select>
                       </td>
                       <td className="px-3 py-3">
-                        <select
-                          value={categories.includes(effectiveCategory) ? effectiveCategory : ""}
+                        <CategoryCell
+                          selected={selectedCategories}
+                          options={categories}
                           disabled={locked}
-                          onChange={(event) => void patchRow(row.videoId, { category: event.target.value })}
-                          className="admin-input w-full px-2 py-1.5"
-                        >
-                          <option value="">Choose category</option>
-                          {categories.map((category) => <option key={category}>{category}</option>)}
-                        </select>
+                          onChange={(next) => void patchRow(row.videoId, { category: next.join(", ") })}
+                        />
                       </td>
                       <td className="px-3 py-3">
                         <input
@@ -377,7 +381,7 @@ export default function AdminYoutubePage() {
                       </td>
                       <td className="px-3 py-3 text-[var(--muted)]">{formatDuration(row.duration)}</td>
                       <td className="px-3 py-3">
-                        <StatusBadge status={row.status} hasCategory={Boolean(categories.includes(effectiveCategory))} />
+                        <StatusBadge status={row.status} hasCategory={selectedCategories.length > 0} />
                       </td>
                       <td className="px-3 py-3">
                         {!locked && (
@@ -406,6 +410,58 @@ export default function AdminYoutubePage() {
           {result.errors.map((error) => <p key={error} className="text-xs text-red-500">{error}</p>)}
         </div>
       )}
+    </div>
+  )
+}
+
+function CategoryCell({
+  selected,
+  options,
+  disabled,
+  onChange,
+}: {
+  selected: string[]
+  options: string[]
+  disabled: boolean
+  onChange: (next: string[]) => void
+}) {
+  return (
+    <div className="min-w-[160px]">
+      {selected.length > 0 && (
+        <div className="mb-1 flex flex-wrap gap-1">
+          {selected.map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--accent)]"
+            >
+              {name}
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => onChange(selected.filter((n) => n !== name))}
+                  aria-label={`Remove ${name}`}
+                  className="rounded-full hover:bg-[var(--accent)]/20"
+                >
+                  <X size={10} strokeWidth={2} />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+      <select
+        value=""
+        disabled={disabled}
+        onChange={(event) => {
+          const value = event.target.value
+          if (!value || selected.includes(value)) return
+          onChange([...selected, value])
+        }}
+        className="admin-input w-full px-2 py-1.5"
+      >
+        <option value="">{selected.length ? "Add category" : "Choose category"}</option>
+        {options.filter((name) => !selected.includes(name)).map((category) => <option key={category}>{category}</option>)}
+      </select>
     </div>
   )
 }
