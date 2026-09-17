@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Spiritual lectures by HH Haladhara Svāmī Mahārāja — audio, video & articles",
     start_url: "/",
     display: "standalone",
-    orientation: "portrait",
+    orientation: "any",
     background_color: "#0f1220",
     theme_color: "#0f1220",
     categories: ["education", "lifestyle", "music"],
