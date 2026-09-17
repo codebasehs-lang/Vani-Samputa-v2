@@ -30,6 +30,7 @@ export const metadata: Metadata = {
   },
   description:
     "Spiritual lectures by HH Haladhara Svāmī Mahārāja — audio, video & transcriptions in Odia, Hindi, English and Sanskrit.",
+  themeColor: "#FFF8F0",
   metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
   appleWebApp: {
     capable: true,
