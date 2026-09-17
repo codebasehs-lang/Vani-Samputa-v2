@@ -1,7 +1,19 @@
 "use client"
 
-import { useEffect, useRef, useCallback, type CSSProperties } from "react"
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type CSSProperties,
+} from "react"
 import { usePlayerStore } from "@/store/playerStore"
+
+export type YouTubePlayerHandle = {
+  getCurrentTime: () => number | null
+  seekTo: (seconds: number) => void
+}
 
 interface Props {
   videoId: string
@@ -37,15 +49,15 @@ function loadYTApi(cb: () => void) {
   document.head.appendChild(tag)
 }
 
-export function YouTubePlayer({
-  videoId,
-  startSeconds = 0,
-  autoplay = true,
-  className,
-  style,
-  onPositionUpdate,
-  onEnded,
-}: Props) {
+export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function YouTubePlayer({
+    videoId,
+    startSeconds = 0,
+    autoplay = true,
+    className,
+    style,
+    onPositionUpdate,
+    onEnded,
+  }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null)
@@ -54,6 +66,16 @@ export function YouTubePlayer({
   // Only used as the initial seek position — later prop updates (e.g. live position
   // reporting) must not re-trigger player creation, so it's frozen at mount time.
   const startSecondsRef = useRef(startSeconds)
+
+  useImperativeHandle(ref, () => ({
+    getCurrentTime() {
+      const position = playerRef.current?.getCurrentTime?.()
+      return typeof position === "number" && Number.isFinite(position) ? position : null
+    },
+    seekTo(seconds: number) {
+      playerRef.current?.seekTo?.(seconds, true)
+    },
+  }), [])
 
   const init = useCallback(() => {
     if (!mountedRef.current || !containerRef.current) return
@@ -84,8 +106,10 @@ export function YouTubePlayer({
     })
 
     timerRef.current = setInterval(() => {
-      const pos: number = playerRef.current?.getCurrentTime?.() ?? 0
-      onPositionUpdate?.(pos)
+      const pos = playerRef.current?.getCurrentTime?.()
+      if (typeof pos === "number" && Number.isFinite(pos)) {
+        onPositionUpdate?.(pos)
+      }
     }, 1_000)
   }, [videoId, autoplay, onPositionUpdate, onEnded])
 
@@ -97,8 +121,10 @@ export function YouTubePlayer({
       if (timerRef.current) clearInterval(timerRef.current)
       // Flush the real position before teardown (e.g. switching to the mini player)
       // so the store never lags behind by up to a full poll interval.
-      const pos: number | null = playerRef.current?.getCurrentTime?.() ?? null
-      if (pos !== null) onPositionUpdate?.(pos)
+      const pos = playerRef.current?.getCurrentTime?.()
+      if (typeof pos === "number" && Number.isFinite(pos)) {
+        onPositionUpdate?.(pos)
+      }
       playerRef.current?.destroy()
       playerRef.current = null
     }
@@ -121,4 +147,4 @@ export function YouTubePlayer({
       <div ref={containerRef} className="absolute inset-0 h-full w-full" />
     </div>
   )
-}
+})

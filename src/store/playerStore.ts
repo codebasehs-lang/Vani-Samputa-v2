@@ -29,6 +29,7 @@ type PlayerState = {
 
   play: (track: Track) => void
   pause: () => void
+  stop: () => void
   resume: () => void
   seek: (positionS: number) => void
   clearSeekRequest: () => void
@@ -73,7 +74,7 @@ export const usePlayerStore = create<PlayerState>()(
           isPlaying: true,
           positionS: 0,
           isMiniPlayer: true,
-          isVideoMini: true,
+          isVideoMini: track.mediaType === "VIDEO",
           // prepend to history, dedup by id, cap at 20
           history: [track, ...s.history.filter((t) => t.id !== track.id)].slice(0, 20),
         }))
@@ -81,8 +82,23 @@ export const usePlayerStore = create<PlayerState>()(
       pause() {
         set({ isPlaying: false })
       },
+      stop() {
+        set({
+          currentTrack: null,
+          isPlaying: false,
+          positionS: 0,
+          duration: 0,
+          requestedPositionS: null,
+          isFullScreen: false,
+          isMiniPlayer: false,
+          isVideoMini: false,
+        })
+      },
       resume() {
-        set({ isPlaying: true })
+        set((s) => ({
+          isPlaying: true,
+          isMiniPlayer: s.currentTrack?.mediaType === "AUDIO" ? true : s.isMiniPlayer,
+        }))
       },
       seek(positionS) {
         set({ positionS, requestedPositionS: positionS })
@@ -123,7 +139,14 @@ export const usePlayerStore = create<PlayerState>()(
         const { queue } = get()
         if (!queue.length) return
         const [next, ...rest] = queue
-        set({ currentTrack: next, isPlaying: true, positionS: 0, isVideoMini: true, queue: rest })
+        set({
+          currentTrack: next,
+          isPlaying: true,
+          positionS: 0,
+          isMiniPlayer: next.mediaType === "AUDIO",
+          isVideoMini: next.mediaType === "VIDEO",
+          queue: rest,
+        })
       },
       openFullScreen() {
         set({ isFullScreen: true })

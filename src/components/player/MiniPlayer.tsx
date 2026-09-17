@@ -2,12 +2,12 @@
 
 import { usePlayerStore } from "@/store/playerStore"
 import { usePathname } from "next/navigation"
-import { Play, Pause, RotateCcw, RotateCw, ChevronUp } from "lucide-react"
+import { Play, Pause, RotateCcw, RotateCw, ChevronUp, X } from "lucide-react"
 
 export function MiniPlayer() {
   const {
-    currentTrack, isPlaying, positionS, duration,
-    pause, resume, seek, openFullScreen,
+    currentTrack, isPlaying, isMiniPlayer, positionS, duration,
+    pause, stop, resume, seek, openFullScreen,
   } = usePlayerStore()
   const pathname = usePathname()
 
@@ -16,7 +16,7 @@ export function MiniPlayer() {
   const isRedundantForVideo = currentTrack?.mediaType === "VIDEO"
   const isAdminRoute = pathname.startsWith("/admin")
 
-  if (!currentTrack || isRedundantForVideo || isAdminRoute) return null
+  if (!currentTrack || !isMiniPlayer || isRedundantForVideo || isAdminRoute) return null
 
   const pct = duration > 0 ? (positionS / duration) * 100 : 0
 
@@ -87,6 +87,14 @@ export function MiniPlayer() {
             aria-label="Open full player"
           >
             <ChevronUp size={18} />
+          </button>
+
+          <button
+            onClick={stop}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+            aria-label="Close audio player"
+          >
+            <X size={18} />
           </button>
         </div>
       </div>

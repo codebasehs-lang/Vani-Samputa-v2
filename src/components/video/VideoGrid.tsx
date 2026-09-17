@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
-import { YouTubePlayer } from "@/components/player/YouTubePlayer"
 import { formatDuration } from "@/lib/duration"
-import { Play, PictureInPicture, Volume2, VolumeX, FileText, ChevronDown, ChevronUp } from "lucide-react"
+import { isDocumentPiPSupported, registerVideoDock, requestDocumentPiP } from "@/lib/videoDock"
+import { Play, PictureInPicture2, Volume2, VolumeX, FileText, ChevronDown, ChevronUp } from "lucide-react"
 
 type Lecture = {
   id: string
@@ -34,7 +34,7 @@ function parseTranscript(transcript: string): TranscriptLine[] {
 }
 
 export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: Lecture[]; playlistId: string; initialVideoId?: string }) {
-  const { play, seek, setPosition, setVideoProgress, playNext, videoProgressMap, currentTrack, setVideoMini } =
+  const { play, seek, videoProgressMap, currentTrack, setVideoMini } =
     usePlayerStore()
   // Start null on both server and client — the persisted store rehydrates from
   // localStorage only on the client, so reading it during the initial render
@@ -44,6 +44,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
   )
   const [audioOnly, setAudioOnly] = useState(false)
   const [showTranscript, setShowTranscript] = useState(false)
+  const dockRef = useRef<HTMLDivElement>(null)
 
   // Collapse the transcript panel again whenever the active video changes.
   useEffect(() => {
@@ -63,6 +64,18 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
     const track = usePlayerStore.getState().currentTrack
     if (track?.mediaType === "VIDEO" && track.playlistId === playlistId && lectures.some((l) => l.id === track.id)) {
       setActiveId(track.id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Arriving via a deep link (?video=...) for a lecture that isn't already the
+  // globally active track — register it as "now playing" so the dock/mini-player
+  // and position tracking stay in sync with what actually renders here.
+  useEffect(() => {
+    if (!initialVideoId) return
+    const lecture = lectures.find((l) => l.id === initialVideoId)
+    if (lecture && usePlayerStore.getState().currentTrack?.id !== lecture.id) {
+      play(toTrack(lecture))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -87,33 +100,23 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
   }
 
   const activeLecture = lectures.find((l) => l.id === activeId)
+  // The dock can only host the player once this lecture is genuinely the
+  // globally active track — otherwise a different video may already be
+  // playing (e.g. floating) elsewhere and must keep that slot.
+  const isActivePlayback = Boolean(activeLecture) && currentTrack?.id === activeId
+
+  // Register this page's player slot as the current dock target whenever its
+  // lecture is the active track. The shared player node gets physically moved
+  // here (not recreated), so playback position and audio continue seamlessly.
+  useEffect(() => {
+    if (!isActivePlayback || !activeId || !dockRef.current) return
+    return registerVideoDock(dockRef.current, activeId)
+  }, [isActivePlayback, activeId])
 
   const transcriptLines = useMemo(
     () => (activeLecture?.transcript ? parseTranscript(activeLecture.transcript) : []),
     [activeLecture?.transcript]
   )
-
-  const handlePosition = useCallback(
-    (s: number) => {
-      setPosition(s)
-      if (activeLecture) {
-        const pct = activeLecture.duration ? Math.round((s / activeLecture.duration) * 100) : 0
-        setVideoProgress(activeLecture.id, pct)
-      }
-    },
-    [activeLecture, setPosition, setVideoProgress]
-  )
-
-  async function requestPiP() {
-    // Access the internal video element of the YT iframe
-    const iframe = document.querySelector<HTMLIFrameElement>(".yt-iframe iframe, iframe[src*='youtube']")
-    try {
-      const video = iframe?.contentDocument?.querySelector("video")
-      await video?.requestPictureInPicture()
-    } catch {
-      // PiP may be blocked by cross-origin; ignore
-    }
-  }
 
   return (
     <div>
@@ -122,17 +125,35 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
           {/* Main column: player, details, transcript */}
           <div className="lg:col-span-2">
             <div
-              className="yt-iframe relative w-full overflow-hidden rounded-2xl bg-black shadow-xl"
+              className="yt-iframe relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-xl"
               style={audioOnly ? { opacity: 0, width: 1, height: 1, overflow: "hidden" } : {}}
             >
-              <YouTubePlayer
-                key={activeLecture.id}
-                videoId={activeLecture.url}
-                startSeconds={activeLecture.id === currentTrack?.id ? "live" : 0}
-                autoplay
-                onPositionUpdate={handlePosition}
-                onEnded={playNext}
-              />
+              {isActivePlayback ? (
+                // The shared, always-running player gets physically docked here — never
+                // recreated — so switching to/from the floating mini view or a Picture-in-
+                // Picture window keeps playing from the same position without a restart.
+                <div ref={dockRef} className="absolute inset-0" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => selectVideo(activeLecture)}
+                  className="absolute inset-0 flex items-center justify-center"
+                  aria-label={`Play ${activeLecture.title}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activeLecture.thumbnail ?? `https://img.youtube.com/vi/${activeLecture.url}/mqdefault.jpg`}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <span
+                    className="relative flex h-14 w-14 items-center justify-center rounded-full"
+                    style={{ background: "var(--accent)" }}
+                  >
+                    <Play size={22} fill="currentColor" className="text-[var(--accent-fg)]" />
+                  </span>
+                </button>
+              )}
             </div>
 
             {audioOnly && (
@@ -180,13 +201,15 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                     {audioOnly ? <VolumeX size={14} /> : <Volume2 size={14} />}
                     {audioOnly ? "Show Video" : "Audio Only"}
                   </button>
-                  <button
-                    onClick={requestPiP}
-                    className="chip flex items-center gap-1.5 px-3 py-1.5 text-xs"
-                    aria-label="Picture in Picture"
-                  >
-                    <PictureInPicture size={14} /> PiP
-                  </button>
+                  {isActivePlayback && isDocumentPiPSupported() && (
+                    <button
+                      onClick={requestDocumentPiP}
+                      className="chip flex items-center gap-1.5 px-3 py-1.5 text-xs"
+                      aria-label="Picture in Picture"
+                    >
+                      <PictureInPicture2 size={14} /> PiP
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

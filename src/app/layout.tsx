@@ -8,7 +8,7 @@ import { UserShell } from "@/components/UserShell";
 import { AudioEngine } from "@/components/player/AudioEngine";
 import { MiniPlayer } from "@/components/player/MiniPlayer";
 import { FullScreenPlayer } from "@/components/player/FullScreenPlayer";
-import { FloatingVideoPlayer } from "@/components/player/FloatingVideoPlayer";
+import { VideoStage } from "@/components/player/VideoStage";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const crimson = Crimson_Text({
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AudioEngine />
           <MiniPlayer />
           <FullScreenPlayer />
-          <FloatingVideoPlayer />
+          <VideoStage />
         </Providers>
       </body>
     </html>
