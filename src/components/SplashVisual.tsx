@@ -14,7 +14,7 @@ export function SplashVisual({
           <span className="splash-glow-ring" aria-hidden />
           <span className="splash-orbit-ring" aria-hidden />
           <Image
-            src="/branding/logo-192-clean.png"
+            src="/branding/logo-192.png"
             alt="Vāṇī Saṃpuṭa"
             width={128}
             height={128}
