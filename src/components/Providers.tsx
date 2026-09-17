@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { SessionProvider } from "next-auth/react"
 import { Toaster } from "sonner"
 import { InstallPrompt } from "@/components/InstallPrompt"
+import { FirstVisitSplash } from "@/components/FirstVisitSplash"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -29,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       {children}
+      <FirstVisitSplash />
       <InstallPrompt />
       <Toaster position="top-right" richColors closeButton />
     </SessionProvider>

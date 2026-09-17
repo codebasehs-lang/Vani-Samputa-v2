@@ -243,6 +243,90 @@ body {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
 }
 
+@keyframes splash-orbit {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes splash-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-dot {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.splash-stage {
+  background:
+    radial-gradient(850px 340px at 50% -5%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 65%),
+    var(--background);
+}
+
+.splash-logo {
+  box-shadow:
+    0 10px 26px color-mix(in oklab, #000 18%, transparent),
+    0 0 0 1px color-mix(in oklab, #fff 35%, transparent);
+}
+
+.splash-glow-ring {
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--gold) 32%, transparent) 0%,
+    color-mix(in oklab, var(--gold) 12%, transparent) 42%,
+    transparent 72%
+  );
+  animation: splash-breathe 1.8s ease-in-out infinite;
+}
+
+.splash-orbit-ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in oklab, var(--accent) 45%, transparent);
+  border-top-color: color-mix(in oklab, var(--gold) 65%, transparent);
+  border-right-color: color-mix(in oklab, var(--gold) 35%, transparent);
+  animation: splash-orbit 1.25s linear infinite;
+}
+
+.splash-loading-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: splash-dot 0.95s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-glow-ring,
+  .splash-orbit-ring,
+  .splash-loading-dot {
+    animation: none;
+  }
+}
+
 .chip {
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -404,4 +488,3 @@ textarea:focus-visible {
   color: var(--muted);
   pointer-events: none;
 }
-
