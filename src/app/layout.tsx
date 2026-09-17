@@ -38,10 +38,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/branding/logo-192.png", type: "image/png", sizes: "192x192" },
-      { url: "/branding/logo-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/branding/logo-192-clean.png", type: "image/png", sizes: "192x192" },
+      { url: "/branding/logo-512-clean.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: "/branding/logo-192.png",
+    apple: "/branding/logo-192-clean.png",
   },
   formatDetection: { telephone: false },
 };

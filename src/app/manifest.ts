@@ -12,8 +12,10 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0f1220",
     categories: ["education", "lifestyle", "music"],
     icons: [
-      { src: "/branding/logo-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/branding/logo-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/branding/logo-192-clean.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/branding/logo-512-clean.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/branding/logo-192-clean.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/branding/logo-512-clean.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     screenshots: [],
   }
