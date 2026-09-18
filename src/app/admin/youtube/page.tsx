@@ -22,6 +22,7 @@ type StagedVideo = {
   thumbnail: string | null
   duration: number | null
   publishedAt: string | null
+  ytPlaylistPosition: number | null
   ytPlaylistTitle: string | null
   detectedLanguage: string
   detectedCategory: string
@@ -119,7 +120,13 @@ export default function AdminYoutubePage() {
   }
 
   async function handleImport() {
-    const selectedRows = rows.filter((row) => row.status === "APPROVED" && Boolean(row.category ?? row.detectedCategory))
+    const selectedRows = rows
+      .filter((row) => row.status === "APPROVED" && Boolean(row.category ?? row.detectedCategory))
+      .sort((a, b) => {
+        const playlistComparison = (a.playlistTitle ?? a.ytPlaylistTitle ?? "").localeCompare(b.playlistTitle ?? b.ytPlaylistTitle ?? "")
+        if (playlistComparison !== 0) return playlistComparison
+        return (a.ytPlaylistPosition ?? Number.MAX_SAFE_INTEGER) - (b.ytPlaylistPosition ?? Number.MAX_SAFE_INTEGER)
+      })
     if (!selectedRows.length) return
     setBusy(true)
     setResult(null)
@@ -137,6 +144,7 @@ export default function AdminYoutubePage() {
           playlistTitle: row.playlistTitle ?? row.ytPlaylistTitle ?? "",
           duration: row.duration,
           lectureDate: row.publishedAt,
+          sortOrder: row.ytPlaylistPosition ?? 0,
         })),
       }),
     })

@@ -10,7 +10,14 @@ export async function GET() {
 
   const [categories, videos] = await Promise.all([
     prisma.category.findMany({ where: { active: true }, select: { name: true }, orderBy: { name: "asc" } }),
-    prisma.youtubeStagingVideo.findMany({ orderBy: [{ status: "asc" }, { publishedAt: "desc" }] }),
+    prisma.youtubeStagingVideo.findMany({
+      orderBy: [
+        { status: "asc" },
+        { ytPlaylistTitle: "asc" },
+        { ytPlaylistPosition: "asc" },
+        { publishedAt: "desc" },
+      ],
+    }),
   ])
 
   return NextResponse.json({ categories: categories.map((category) => category.name), videos })

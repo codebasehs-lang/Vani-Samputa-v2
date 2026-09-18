@@ -153,6 +153,7 @@ model YoutubeStagingVideo {
   publishedAt      DateTime?
   ytPlaylistId     String?
   ytPlaylistTitle  String?
+  ytPlaylistPosition Int?
   detectedLanguage String
   detectedCategory String
   language         String?
@@ -291,4 +292,3 @@ model Event {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
-

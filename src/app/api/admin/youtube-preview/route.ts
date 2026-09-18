@@ -36,7 +36,8 @@ export async function POST() {
   let updated = 0
 
   try {
-    const existingLectureUrls = new Set((await prisma.lecture.findMany({ where: { mediaType: "VIDEO" }, select: { url: true } })).map((lecture) => lecture.url))
+    const existingLectures = await prisma.lecture.findMany({ where: { mediaType: "VIDEO" }, select: { id: true, url: true } })
+    const existingLectureIds = new Map(existingLectures.map((lecture) => [lecture.url, lecture.id]))
     let pageToken = ""
 
     do {
@@ -72,7 +73,8 @@ export async function POST() {
             const thumbnail = detail?.snippet?.thumbnails?.medium?.url ?? video.snippet?.thumbnails?.medium?.url ?? video.snippet?.thumbnails?.default?.url ?? null
             const duration = isoDurationToSeconds(detail?.contentDetails?.duration)
             const publishedAt = video.snippet?.publishedAt ? new Date(video.snippet.publishedAt) : null
-            const isImported = existingLectureUrls.has(videoId)
+            const existingLectureId = existingLectureIds.get(videoId)
+            const isImported = Boolean(existingLectureId)
 
             const existingStaged = await prisma.youtubeStagingVideo.findUnique({ where: { videoId } })
             if (existingStaged) {
@@ -85,6 +87,7 @@ export async function POST() {
                   publishedAt,
                   ytPlaylistId: playlistId,
                   ytPlaylistTitle: playlistTitle,
+                  ytPlaylistPosition: video.snippet?.position ?? null,
                   lastSeenAt: new Date(),
                   ...(isImported ? { status: "IMPORTED" as const } : {}),
                 },
@@ -101,12 +104,19 @@ export async function POST() {
                   publishedAt,
                   ytPlaylistId: playlistId,
                   ytPlaylistTitle: playlistTitle,
+                  ytPlaylistPosition: video.snippet?.position ?? null,
                   detectedLanguage: language,
                   detectedCategory: category,
                   status: isImported ? "IMPORTED" : "NEW",
                 },
               })
               inserted++
+            }
+            if (existingLectureId && typeof video.snippet?.position === "number") {
+              await prisma.lecture.update({
+                where: { id: existingLectureId },
+                data: { sortOrder: video.snippet.position },
+              })
             }
           }
           itemPageToken = itemData.nextPageToken ?? ""
