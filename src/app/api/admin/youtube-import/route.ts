@@ -14,6 +14,7 @@ type ImportRow = {
   duration?: number | null
   lectureDate?: string | null
   sortOrder?: number
+  customSortOrder?: number | null
 }
 
 type ValidRow = ImportRow & { categoryNames: string[] }
@@ -98,7 +99,10 @@ export async function POST(req: NextRequest) {
             categories: categoryConnect(row.categoryNames),
           },
         })
-        await tx.youtubeStagingVideo.updateMany({ where: { videoId: row.videoId }, data: { status: "IMPORTED", lectureId: lecture.id } })
+        await tx.youtubeStagingVideo.updateMany({
+          where: { videoId: row.videoId },
+          data: { status: "IMPORTED", lectureId: lecture.id, customSortOrder: row.customSortOrder ?? null },
+        })
         created++
       }
     })

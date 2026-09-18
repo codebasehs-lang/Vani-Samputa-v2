@@ -88,6 +88,7 @@ export async function POST() {
                   ytPlaylistId: playlistId,
                   ytPlaylistTitle: playlistTitle,
                   ytPlaylistPosition: video.snippet?.position ?? null,
+                  lectureId: existingLectureId ?? null,
                   lastSeenAt: new Date(),
                   ...(isImported ? { status: "IMPORTED" as const } : {}),
                 },
@@ -105,6 +106,7 @@ export async function POST() {
                   ytPlaylistId: playlistId,
                   ytPlaylistTitle: playlistTitle,
                   ytPlaylistPosition: video.snippet?.position ?? null,
+                  lectureId: existingLectureId ?? null,
                   detectedLanguage: language,
                   detectedCategory: category,
                   status: isImported ? "IMPORTED" : "NEW",
@@ -112,7 +114,7 @@ export async function POST() {
               })
               inserted++
             }
-            if (existingLectureId && typeof video.snippet?.position === "number") {
+            if (existingLectureId && typeof video.snippet?.position === "number" && existingStaged?.customSortOrder == null) {
               await prisma.lecture.update({
                 where: { id: existingLectureId },
                 data: { sortOrder: video.snippet.position },

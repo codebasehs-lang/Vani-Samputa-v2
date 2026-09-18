@@ -13,6 +13,14 @@ function splitCategoryNames(value: string | null | undefined): string[] {
   return [...new Set(value.split(",").map((name) => name.trim()).filter(Boolean))]
 }
 
+function getSortRank(row: StagedVideo) {
+  return row.customSortOrder ?? row.ytPlaylistPosition ?? Number.MAX_SAFE_INTEGER
+}
+
+function getImportSortOrder(row: StagedVideo) {
+  return row.customSortOrder ?? row.ytPlaylistPosition ?? 0
+}
+
 type Status = "NEW" | "APPROVED" | "SKIPPED" | "IMPORTED"
 
 type StagedVideo = {
@@ -23,6 +31,7 @@ type StagedVideo = {
   duration: number | null
   publishedAt: string | null
   ytPlaylistPosition: number | null
+  customSortOrder: number | null
   ytPlaylistTitle: string | null
   detectedLanguage: string
   detectedCategory: string
@@ -33,6 +42,7 @@ type StagedVideo = {
 }
 
 type ImportResult = { created: number; skipped: number; errors: string[] }
+type OrderUpdate = { videoId: string; customSortOrder: number }
 
 const languages = ["Odia", "Hindi", "English", "Sanskrit"]
 const filterTabs: { key: Status | "ALL"; label: string }[] = [
@@ -88,7 +98,7 @@ export default function AdminYoutubePage() {
     toast.success(`Sync complete: ${data.inserted} new, ${data.updated} refreshed.`)
   }
 
-  async function patchRow(videoId: string, changes: Partial<Pick<StagedVideo, "language" | "category" | "playlistTitle" | "status">>) {
+  async function patchRow(videoId: string, changes: Partial<Pick<StagedVideo, "language" | "category" | "playlistTitle" | "status" | "customSortOrder">>) {
     setRows((current) => current.map((row) => row.videoId === videoId ? { ...row, ...changes } : row))
     const response = await fetch("/api/admin/youtube-staging", {
       method: "PATCH",
@@ -119,13 +129,38 @@ export default function AdminYoutubePage() {
     if (!response.ok) toast.error("Could not save bulk selection; refresh and try again.")
   }
 
+  async function persistOrderUpdates(orderUpdates: OrderUpdate[]) {
+    if (!orderUpdates.length) return
+    setRows((current) => current.map((row) => {
+      const update = orderUpdates.find((item) => item.videoId === row.videoId)
+      return update ? { ...row, customSortOrder: update.customSortOrder } : row
+    }))
+    const response = await fetch("/api/admin/youtube-staging", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderUpdates }),
+    })
+    if (!response.ok) toast.error("Could not save playlist order; refresh and try again.")
+  }
+
+  function applyPlaylistOrder(videoId: string, requestedOrder: number) {
+    const currentRows = playlistOrderRows
+    const currentIndex = currentRows.findIndex((row) => row.videoId === videoId)
+    if (currentIndex === -1) return
+    const nextIndex = Math.min(Math.max(Math.trunc(requestedOrder) - 1, 0), currentRows.length - 1)
+    const reordered = [...currentRows]
+    const [moved] = reordered.splice(currentIndex, 1)
+    reordered.splice(nextIndex, 0, moved)
+    void persistOrderUpdates(reordered.map((row, index) => ({ videoId: row.videoId, customSortOrder: index + 1 })))
+  }
+
   async function handleImport() {
     const selectedRows = rows
       .filter((row) => row.status === "APPROVED" && Boolean(row.category ?? row.detectedCategory))
       .sort((a, b) => {
         const playlistComparison = (a.playlistTitle ?? a.ytPlaylistTitle ?? "").localeCompare(b.playlistTitle ?? b.ytPlaylistTitle ?? "")
         if (playlistComparison !== 0) return playlistComparison
-        return (a.ytPlaylistPosition ?? Number.MAX_SAFE_INTEGER) - (b.ytPlaylistPosition ?? Number.MAX_SAFE_INTEGER)
+        return getSortRank(a) - getSortRank(b)
       })
     if (!selectedRows.length) return
     setBusy(true)
@@ -144,7 +179,8 @@ export default function AdminYoutubePage() {
           playlistTitle: row.playlistTitle ?? row.ytPlaylistTitle ?? "",
           duration: row.duration,
           lectureDate: row.publishedAt,
-          sortOrder: row.ytPlaylistPosition ?? 0,
+          sortOrder: getImportSortOrder(row),
+          customSortOrder: row.customSortOrder,
         })),
       }),
     })
@@ -169,6 +205,7 @@ export default function AdminYoutubePage() {
       Playlist: row.playlistTitle ?? row.ytPlaylistTitle ?? "",
       Duration: row.duration ?? "",
       "Lecture Date": row.publishedAt ? row.publishedAt.slice(0, 10) : "",
+      Order: getImportSortOrder(row),
       Status: row.status,
     }))
     const worksheet = XLSX.utils.json_to_sheet(exportRows)
@@ -183,13 +220,15 @@ export default function AdminYoutubePage() {
 
   const statusFilteredRows = filter === "ALL" ? rows : rows.filter((row) => row.status === filter)
   const search = searchText.trim().toLowerCase()
+  const canCustomizePlaylistOrder = filter === "ALL" && playlistFilter !== "ALL" && !search && languageFilter === "ALL" && categoryFilter === "ALL"
   const filteredRows = statusFilteredRows.filter((row) => {
     if (search && !row.title.toLowerCase().includes(search) && !row.videoId.toLowerCase().includes(search)) return false
     if (languageFilter !== "ALL" && (row.language ?? row.detectedLanguage) !== languageFilter) return false
     if (categoryFilter !== "ALL" && !splitCategoryNames(row.category ?? row.detectedCategory).includes(categoryFilter)) return false
     if (playlistFilter !== "ALL" && (row.playlistTitle ?? row.ytPlaylistTitle ?? "") !== playlistFilter) return false
     return true
-  })
+  }).sort((a, b) => canCustomizePlaylistOrder ? getSortRank(a) - getSortRank(b) : 0)
+  const playlistOrderRows = canCustomizePlaylistOrder ? filteredRows : []
   const eligibleFilteredIds = filteredRows.filter((row) => row.status !== "IMPORTED").map((row) => row.videoId)
   const allFilteredApproved = eligibleFilteredIds.length > 0 && eligibleFilteredIds.every((id) => rows.find((row) => row.videoId === id)?.status === "APPROVED")
 
@@ -302,10 +341,13 @@ export default function AdminYoutubePage() {
               </button>
             )}
             <span className="text-sm text-[var(--muted)]">{filteredRows.length} of {rows.length} shown</span>
+            {playlistFilter !== "ALL" && !canCustomizePlaylistOrder && (
+              <span className="text-sm text-[var(--muted)]">Use the All tab and clear search/language/category filters to customize full playlist order.</span>
+            )}
           </div>
 
           <div className="admin-panel max-h-[70vh] overflow-auto">
-            <table className="min-w-[1150px] w-full text-xs">
+            <table className={`${canCustomizePlaylistOrder ? "min-w-[1250px]" : "min-w-[1150px]"} w-full text-xs`}>
               <thead className="sticky top-0 bg-[var(--surface)]">
                 <tr>
                   <th className="w-16 px-3 py-3 text-left">
@@ -324,17 +366,19 @@ export default function AdminYoutubePage() {
                   <th className="w-28 px-3 py-3 text-left">Language</th>
                   <th className="w-44 px-3 py-3 text-left">Category</th>
                   <th className="w-48 px-3 py-3 text-left">Playlist</th>
+                  {canCustomizePlaylistOrder && <th className="w-32 px-3 py-3 text-left">Order</th>}
                   <th className="w-20 px-3 py-3 text-left">Duration</th>
                   <th className="w-28 px-3 py-3 text-left">Status</th>
                   <th className="w-24 px-3 py-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row) => {
+                {filteredRows.map((row, index) => {
                   const effectiveLanguage = row.language ?? row.detectedLanguage
                   const selectedCategories = splitCategoryNames(row.category ?? row.detectedCategory).filter((name) => categories.includes(name))
                   const effectivePlaylist = row.playlistTitle ?? row.ytPlaylistTitle ?? ""
                   const locked = row.status === "IMPORTED"
+                  const visibleOrder = index + 1
                   return (
                     <tr key={row.videoId} className="border-t border-[var(--border)] align-top">
                       <td className="px-3 py-3">
@@ -387,6 +431,38 @@ export default function AdminYoutubePage() {
                           className="admin-input w-full px-2 py-1.5"
                         />
                       </td>
+                      {canCustomizePlaylistOrder && (
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              key={`${row.videoId}-${visibleOrder}`}
+                              type="number"
+                              min={1}
+                              max={playlistOrderRows.length}
+                              defaultValue={visibleOrder}
+                              onBlur={(event) => applyPlaylistOrder(row.videoId, Number(event.target.value))}
+                              className="admin-input w-16 px-2 py-1.5"
+                              aria-label={`Order for ${row.title}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => applyPlaylistOrder(row.videoId, visibleOrder - 1)}
+                              disabled={visibleOrder <= 1}
+                              className="text-[10px] font-medium text-[var(--accent)] disabled:text-[var(--muted)]"
+                            >
+                              Up
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyPlaylistOrder(row.videoId, visibleOrder + 1)}
+                              disabled={visibleOrder >= playlistOrderRows.length}
+                              className="text-[10px] font-medium text-[var(--accent)] disabled:text-[var(--muted)]"
+                            >
+                              Down
+                            </button>
+                          </div>
+                        </td>
+                      )}
                       <td className="px-3 py-3 text-[var(--muted)]">{formatDuration(row.duration)}</td>
                       <td className="px-3 py-3">
                         <StatusBadge status={row.status} hasCategory={selectedCategories.length > 0} />

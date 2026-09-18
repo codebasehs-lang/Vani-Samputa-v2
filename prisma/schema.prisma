@@ -154,6 +154,7 @@ model YoutubeStagingVideo {
   ytPlaylistId     String?
   ytPlaylistTitle  String?
   ytPlaylistPosition Int?
+  customSortOrder  Int?
   detectedLanguage String
   detectedCategory String
   language         String?
