@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 export type Track = {
   id: string
@@ -169,6 +169,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: "vs-player",
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (s) => ({
         currentTrack: s.currentTrack,
         positionS: s.positionS,
