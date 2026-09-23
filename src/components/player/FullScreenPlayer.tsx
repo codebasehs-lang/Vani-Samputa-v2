@@ -96,7 +96,7 @@ export function FullScreenPlayer() {
     if (!currentTrack) return
     const path = currentTrack.mediaType === "AUDIO" ? "audio" : "video"
     const url = new URL(`/${path}/playlist/${currentTrack.playlistId ?? ""}`, window.location.origin)
-    url.searchParams.set("lectureId", currentTrack.id)
+    url.searchParams.set(currentTrack.mediaType === "AUDIO" ? "lecture" : "video", currentTrack.id)
     url.searchParams.set("t", String(Math.floor(positionS)))
     const shareData = { title: currentTrack.title, url: url.toString() }
     const canShare = "share" in navigator

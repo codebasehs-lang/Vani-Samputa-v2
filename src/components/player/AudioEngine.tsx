@@ -12,16 +12,23 @@ export function AudioEngine() {
     let sourceRequest = 0
     let loadedTrackId: string | null = null
     let loadingTrackId: string | null = null
-    let historyTrackId: string | null = null
+    let lastSavedAt = 0
 
     async function recordPlayback(trackId: string, positionS: number) {
-      if (historyTrackId === trackId) return
-      historyTrackId = trackId
+      if (Date.now() - lastSavedAt < 10_000) return
+      lastSavedAt = Date.now()
       await fetch("/api/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lectureId: trackId, positionS, completed: false }),
       }).catch(() => {})
+    }
+
+    async function getResumePosition(trackId: string, fallback: number) {
+      const response = await fetch(`/api/progress?lectureId=${encodeURIComponent(trackId)}`)
+      if (!response.ok) return fallback
+      const data = await response.json() as { positionS?: number }
+      return typeof data.positionS === "number" && data.positionS > 0 ? data.positionS : fallback
     }
 
     async function setAudioSource(
@@ -61,7 +68,10 @@ export function AudioEngine() {
           audio.load()
         })
         if (requestId !== sourceRequest) return
-        audio.currentTime = Math.min(positionS, Number.isFinite(audio.duration) ? audio.duration : positionS)
+        const resumePosition = await getResumePosition(track.id, positionS)
+        if (requestId !== sourceRequest) return
+        usePlayerStore.getState().setPosition(resumePosition)
+        audio.currentTime = Math.min(resumePosition, Number.isFinite(audio.duration) ? audio.duration : resumePosition)
         audio.playbackRate = usePlayerStore.getState().speed
         audio.volume = usePlayerStore.getState().volume
         const currentTrack = usePlayerStore.getState().currentTrack
@@ -88,7 +98,6 @@ export function AudioEngine() {
       // Track change
       if (s.currentTrack?.id !== prev.currentTrack?.id) {
         sourceRequest += 1
-        historyTrackId = null
         audio.pause()
         usePlayerStore.getState().setDuration(0)
         if (s.currentTrack) {
@@ -111,8 +120,12 @@ export function AudioEngine() {
             void setAudioSource(s.currentTrack, s.positionS, sourceRequest)
           }
         } else {
+          if (s.currentTrack) void recordPlayback(s.currentTrack.id, s.positionS)
           audio.pause()
         }
+      }
+      if (s.positionS !== prev.positionS && s.isPlaying && s.currentTrack) {
+        void recordPlayback(s.currentTrack.id, s.positionS)
       }
       // User-initiated seek
       if (s.requestedPositionS !== null && s.requestedPositionS !== prev.requestedPositionS) {
