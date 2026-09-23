@@ -1,8 +1,10 @@
 "use client"
 
+import { useEffect } from "react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { OfflineDownloadButton } from "@/components/audio/OfflineDownloadButton"
 import { FavoriteButton } from "@/components/FavoriteButton"
+import { ShareButton } from "@/components/ShareButton"
 import { Play, Pause, Plus } from "lucide-react"
 
 type Lecture = {
@@ -26,31 +28,43 @@ function formatDuration(s: number | null) {
     : `${m}:${sec.toString().padStart(2, "0")}`
 }
 
+function toTrack(lecture: Lecture, playlistId: string): Track {
+  return {
+    id: lecture.id,
+    title: lecture.title,
+    url: lecture.mediaType === "AUDIO" ? `/api/audio/${lecture.id}` : lecture.url,
+    mediaType: lecture.mediaType,
+    duration: lecture.duration ?? undefined,
+    thumbnail: lecture.thumbnail ?? undefined,
+    playlistId,
+  }
+}
+
 export function PlaylistTrackList({
   lectures,
   playlistId,
+  initialLectureId,
 }: {
   lectures: Lecture[]
   playlistId: string
+  initialLectureId?: string
 }) {
   const { play, addToQueue, currentTrack, isPlaying, pause, resume } = usePlayerStore()
 
-  function toTrack(l: Lecture): Track {
-    return {
-      id: l.id,
-      title: l.title,
-      url: l.mediaType === "AUDIO" ? `/api/audio/${l.id}` : l.url,
-      mediaType: l.mediaType as "AUDIO" | "VIDEO",
-      duration: l.duration ?? undefined,
-      thumbnail: l.thumbnail ?? undefined,
-      playlistId,
-    }
-  }
+  useEffect(() => {
+    if (!initialLectureId) return
+    const lecture = lectures.find((item) => item.id === initialLectureId)
+    if (!lecture) return
+
+    const state = usePlayerStore.getState()
+    if (state.currentTrack?.id === lecture.id) state.resume()
+    else state.play(toTrack(lecture, playlistId))
+  }, [initialLectureId, lectures, playlistId])
 
   function playAll() {
     if (!lectures.length) return
-    play(toTrack(lectures[0]))
-    lectures.slice(1).forEach((l) => addToQueue(toTrack(l)))
+    play(toTrack(lectures[0], playlistId))
+    lectures.slice(1).forEach((lecture) => addToQueue(toTrack(lecture, playlistId)))
   }
 
   if (lectures.length === 0) {
@@ -71,7 +85,7 @@ export function PlaylistTrackList({
       <div className="flex flex-col divide-y divide-[var(--border)]">
         {lectures.map((lecture, idx) => {
           const isActive = currentTrack?.id === lecture.id
-          const track = toTrack(lecture)
+          const track = toTrack(lecture, playlistId)
 
           return (
             <div
@@ -116,6 +130,11 @@ export function PlaylistTrackList({
               >
                 <Plus size={16} />
               </button>
+              <ShareButton
+                href={`/audio/playlist/${playlistId}?lecture=${encodeURIComponent(lecture.id)}`}
+                title={lecture.title}
+                className="shrink-0 p-1 text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+              />
               <FavoriteButton lectureId={lecture.id} />
               {lecture.mediaType === "AUDIO" && (
                 <OfflineDownloadButton lectureId={lecture.id} title={lecture.title} />
