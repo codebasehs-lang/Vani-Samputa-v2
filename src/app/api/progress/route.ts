@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ ok: false }, { status: 404 })
 
+  const existingProgress = await prisma.userProgress.findUnique({
+    where: { userId_lectureId: { userId: user.id, lectureId } },
+    select: { id: true },
+  })
+
   await prisma.userProgress.upsert({
     where: { userId_lectureId: { userId: user.id, lectureId } },
     create: { userId: user.id, lectureId, positionS, completed: completed ?? false },
@@ -39,9 +44,9 @@ export async function POST(req: NextRequest) {
   })
 
   // Log to history
-  await prisma.userHistory.create({
-    data: { userId: user.id, lectureId },
-  })
+  if (!existingProgress) {
+    await prisma.userHistory.create({ data: { userId: user.id, lectureId } })
+  }
 
   return NextResponse.json({ ok: true })
 }
