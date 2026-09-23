@@ -85,6 +85,39 @@ body {
 .font-devanagari { font-family: var(--font-devanagari); }
 .font-iast { font-family: var(--font-iast); }
 
+.hero-song-line {
+  display: inline-block;
+  max-width: 100%;
+  font-family: var(--font-iast);
+  font-size: clamp(0.9rem, 2.2vw, 1.25rem);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  line-height: 1.4;
+}
+
+.hero-song-line > span {
+  display: inline-block;
+  width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid transparent;
+  animation:
+    hero-song-write 4s steps(47, end) 0.35s forwards,
+    hero-song-caret 0.72s step-end 0.35s 6;
+}
+
+@keyframes hero-song-write {
+  from { width: 0; }
+  to { width: 47ch; }
+}
+
+@keyframes hero-song-caret {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--gold); }
+}
+
 /* Glassmorphism card utility */
 .glass {
   background: rgba(255, 255, 255, 0.08);
@@ -437,6 +470,11 @@ textarea:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .hero-song-line > span {
+    width: auto;
+    border-right: 0;
   }
 }
 

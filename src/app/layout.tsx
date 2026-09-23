@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Crimson_Text, Inter, Noto_Serif_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -30,7 +30,6 @@ export const metadata: Metadata = {
   },
   description:
     "Spiritual lectures by HH Haladhara Svāmī Mahārāja — audio, video & transcriptions in Odia, Hindi, English and Sanskrit.",
-  themeColor: "#FFF8F0",
   metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
   appleWebApp: {
     capable: true,
@@ -45,6 +44,10 @@ export const metadata: Metadata = {
     apple: "/branding/logo-192.png",
   },
   formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FFF8F0",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
