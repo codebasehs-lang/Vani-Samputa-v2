@@ -24,10 +24,10 @@ export function HeroSection() {
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="mb-3 text-base tracking-widest text-[var(--gold)] opacity-80"
-          style={{ fontFamily: "var(--font-devanagari)" }}
+          className="hero-song-line mb-3 text-[var(--gold)]"
+          aria-label="guru-mukha-padma-vakya, cittete koriya aikya..."
         >
-          sri-guru-carana-padma, kevala-bhakati-sadma
+          <span aria-hidden="true">guru-mukha-padma-vakya, cittete koriya aikya...</span>
         </motion.p>
 
         <motion.h1

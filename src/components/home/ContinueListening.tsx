@@ -1,6 +1,7 @@
 "use client"
 
-import { usePlayerStore } from "@/store/playerStore"
+import Link from "next/link"
+import { usePlayerStore, type Track } from "@/store/playerStore"
 import { Pause, Play } from "lucide-react"
 
 export function ContinueListening() {
@@ -10,6 +11,9 @@ export function ContinueListening() {
 
   const percent = duration > 0 ? Math.round((positionS / duration) * 100) : 0
   const isAudio = currentTrack.mediaType === "AUDIO"
+  const playlistHref = currentTrack.playlistId
+    ? `/${isAudio ? "audio" : "video"}/playlist/${currentTrack.playlistId}${isAudio ? "" : `?video=${encodeURIComponent(currentTrack.id)}`}`
+    : null
 
   return (
     <section className="px-4 py-6">
@@ -17,38 +21,20 @@ export function ContinueListening() {
         <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">Continue Listening</h2>
 
         <div className="surface-card flex items-center gap-4 p-4">
-          {/* Thumbnail */}
-          {currentTrack.thumbnail ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={currentTrack.thumbnail}
-              alt=""
-              className="h-14 w-14 shrink-0 rounded-lg object-cover"
-            />
-          ) : (
-            <div
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-2xl"
-              style={{ background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)" }}
+          {playlistHref ? (
+            <Link
+              href={playlistHref}
+              onClick={resume}
+              className="flex min-w-0 flex-1 items-center gap-4 text-left"
+              aria-label={`Open playlist for ${currentTrack.title}`}
             >
-              {isAudio ? "🎙️" : "🎬"}
+              <TrackInfo track={currentTrack} isAudio={isAudio} percent={percent} positionS={positionS} />
+            </Link>
+          ) : (
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <TrackInfo track={currentTrack} isAudio={isAudio} percent={percent} positionS={positionS} />
             </div>
           )}
-
-          {/* Info + progress */}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-              {currentTrack.title}
-            </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border)]">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{ width: `${percent}%`, background: "var(--accent)" }}
-              />
-            </div>
-            <p className="mt-1 text-[10px] text-[var(--muted)]">
-              {formatTime(positionS)} · {percent}% complete
-            </p>
-          </div>
 
           {/* Play button */}
           <button
@@ -62,6 +48,41 @@ export function ContinueListening() {
         </div>
       </div>
     </section>
+  )
+}
+
+function TrackInfo({
+  track,
+  isAudio,
+  percent,
+  positionS,
+}: {
+  track: Track
+  isAudio: boolean
+  percent: number
+  positionS: number
+}) {
+  return (
+    <>
+      {track.thumbnail ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={track.thumbnail} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+      ) : (
+        <div
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-2xl"
+          style={{ background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)" }}
+        >
+          {isAudio ? "🎙️" : "🎬"}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{track.title}</p>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border)]">
+          <div className="h-full rounded-full transition-all" style={{ width: `${percent}%`, background: "var(--accent)" }} />
+        </div>
+        <p className="mt-1 text-[10px] text-[var(--muted)]">{formatTime(positionS)} · {percent}% complete</p>
+      </div>
+    </>
   )
 }
 

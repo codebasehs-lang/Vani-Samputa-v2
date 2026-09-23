@@ -5,6 +5,7 @@ type Playlist = {
   category: string
   mediaType: "AUDIO" | "VIDEO"
   coverUrl: string | null
+  lectures: { thumbnail: string | null; url: string; mediaType: "AUDIO" | "VIDEO" }[]
 }
 
 const LANGUAGE_FLAGS: Record<string, string> = {
@@ -58,22 +59,32 @@ function SectionHeader({ title, href }: { title: string; href?: string }) {
 function PlaylistCard({ playlist }: { playlist: Playlist }) {
   const flag = LANGUAGE_FLAGS[playlist.language] ?? "🔘"
   const href = playlist.mediaType === "AUDIO" ? `/audio/playlist/${playlist.id}` : `/video/playlist/${playlist.id}`
+  const firstLecture = playlist.lectures[0]
+  const videoThumbnail = firstLecture?.mediaType === "VIDEO"
+    ? firstLecture.thumbnail ?? `https://img.youtube.com/vi/${firstLecture.url}/mqdefault.jpg`
+    : null
+  const coverUrl = playlist.coverUrl ?? videoThumbnail
 
   return (
     <a
       href={href}
-      className="surface-card group flex-shrink-0 w-36 sm:w-44 overflow-hidden transition-transform hover:-translate-y-1"
+      className="surface-card group w-60 flex-shrink-0 overflow-hidden transition-transform hover:-translate-y-1 sm:w-64"
     >
       {/* Cover */}
       <div
-        className="flex h-36 sm:h-44 items-center justify-center text-4xl"
+        className="flex aspect-video w-full items-center justify-center overflow-hidden text-4xl"
         style={{
           background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)",
         }}
       >
-        {playlist.coverUrl ? (
+        {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={playlist.coverUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          <img
+            src={coverUrl}
+            alt=""
+            className={`h-full w-full ${playlist.coverUrl ? "object-contain" : "object-cover"}`}
+            loading="lazy"
+          />
         ) : playlist.mediaType === "AUDIO" ? "🎙️" : "🎬"}
       </div>
 
