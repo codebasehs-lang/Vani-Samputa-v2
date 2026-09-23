@@ -7,6 +7,7 @@ import { useState } from "react"
 import { Menu, X, LogOut, CircleUserRound } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { ADMIN_COLORS } from "@/lib/adminColors"
+import { usePlayerStore } from "@/store/playerStore"
 
 const navLinks = [
   { href: "/",         label: "Home"     },
@@ -23,9 +24,17 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { currentTrack, resume } = usePlayerStore()
   const [open, setOpen] = useState(false)
   const isAdminRoute = pathname.startsWith("/admin")
   const isActiveLink = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href))
+  const logoHref = currentTrack?.playlistId
+    ? `/${currentTrack.mediaType === "AUDIO" ? "audio" : "video"}/playlist/${currentTrack.playlistId}`
+    : "/"
+
+  function handleLogoClick() {
+    if (currentTrack) resume()
+  }
 
   if (isAdminRoute) {
     return (
@@ -78,7 +87,7 @@ export function Header() {
     <header className="nav-surface sticky top-0 z-50 border-b border-[var(--border)]">
       <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-5">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3.5 font-serif text-xl font-semibold">
+        <Link href={logoHref} onClick={handleLogoClick} className="flex items-center gap-3.5 font-serif text-xl font-semibold">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/branding/logo-192.png" alt="Vani Samputa" className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16" />
           <span className="font-iast tracking-[0.06em] text-[var(--foreground)]">Vāṇī Saṃpuṭa</span>

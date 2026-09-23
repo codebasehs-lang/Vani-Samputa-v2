@@ -25,19 +25,32 @@ export function BottomTabBar() {
             <li key={href} className="flex-1">
               <Link
                 href={href}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                className={`relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] transition-colors ${
                   active
-                    ? "text-[var(--accent)]"
-                    : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                    ? "font-bold text-[var(--accent)]"
+                    : "font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
                 }`}
               >
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                  style={active ? { background: "color-mix(in oklab, var(--accent) 16%, transparent)" } : undefined}
+                  className="flex h-8 w-8 items-center justify-center rounded-full transition-all"
+                  style={active ? {
+                    background: "color-mix(in oklab, var(--accent) 24%, var(--surface))",
+                    boxShadow: "inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 60%, transparent), 0 2px 8px color-mix(in oklab, var(--accent) 22%, transparent)",
+                  } : undefined}
                 >
-                  <Icon size={20} fill={active ? "currentColor" : "none"} />
+                  <Icon
+                    size={20}
+                    strokeWidth={active ? 2.5 : 2}
+                    fill={active ? "color-mix(in oklab, var(--accent) 38%, var(--surface))" : "none"}
+                  />
                 </span>
                 {label}
+                {active && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute bottom-0 h-0.5 w-7 rounded-full bg-[var(--accent)]"
+                  />
+                )}
               </Link>
             </li>
           )
