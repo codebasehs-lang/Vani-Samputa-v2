@@ -14,9 +14,16 @@ export async function generateMetadata(
 }
 
 export default async function PlaylistPage(
-  { params }: { params: Promise<{ id: string }> }
+  {
+    params,
+    searchParams,
+  }: {
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ lecture?: string }>
+  }
 ) {
   const { id } = await params
+  const { lecture } = await searchParams
 
   const playlist = await prisma.playlist.findUnique({
     where: { id },
@@ -70,6 +77,7 @@ export default async function PlaylistPage(
       <PlaylistTrackList
         lectures={playlist.lectures}
         playlistId={playlist.id}
+        initialLectureId={lecture}
       />
       <TranscriptSearch lectures={playlist.lectures} playlistId={playlist.id} />
     </div>
