@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { formatDuration } from "@/lib/duration"
 import { isDocumentPiPSupported, registerVideoDock, requestDocumentPiP } from "@/lib/videoDock"
+import { ShareButton } from "@/components/ShareButton"
 import { Play, PictureInPicture2, Volume2, VolumeX, FileText, ChevronDown, ChevronUp } from "lucide-react"
 
 type Lecture = {
@@ -193,6 +194,12 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                   </div>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
+                  <ShareButton
+                    href={`/video/playlist/${playlistId}?video=${encodeURIComponent(activeLecture.id)}`}
+                    title={activeLecture.title}
+                    className="chip flex items-center gap-1.5 px-3 py-1.5 text-xs"
+                    showLabel
+                  />
                   <button
                     onClick={() => setAudioOnly((v) => !v)}
                     className="chip flex items-center gap-1.5 px-3 py-1.5 text-xs"
@@ -367,4 +374,3 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
     </div>
   )
 }
-
