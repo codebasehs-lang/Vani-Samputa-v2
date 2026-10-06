@@ -1,24 +1,24 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useSession, signOut } from "next-auth/react"
-import { useState } from "react"
-import { Menu, X, LogOut, CircleUserRound } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { ADMIN_COLORS } from "@/lib/adminColors"
 import { usePlayerStore } from "@/store/playerStore"
+import { CircleUserRound, LogOut, Menu, X } from "lucide-react"
+import { signOut, useSession } from "next-auth/react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 const navLinks = [
-  { href: "/",         label: "Home"     },
-  { href: "/audio",    label: "Audio"    },
-  { href: "/video",    label: "Video"    },
+  { href: "/", label: "Home" },
+  { href: "/audio", label: "Audio" },
+  { href: "/video", label: "Video" },
   { href: "/lectures", label: "Lectures" },
   { href: "/articles", label: "Articles" },
-  { href: "/events",   label: "Programs" },
-  { href: "/live",     label: "🔴 Live"  },
+  { href: "/events", label: "Programs" },
+  { href: "/live", label: "🔴 Live" },
   { href: "https://books.vanisamputa.com", label: "Books", external: true },
-  { href: "/about",    label: "About"    },
+  { href: "/about", label: "About" },
 ]
 
 export function Header() {
@@ -97,11 +97,10 @@ export function Header() {
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 lg:flex xl:gap-7">
           {navLinks.map(({ href, label, external }) => {
             const active = isActiveLink(href)
-            const className = `whitespace-nowrap text-sm font-medium transition-colors ${
-              active
+            const className = `whitespace-nowrap text-sm font-medium transition-colors ${active
                 ? "text-[var(--foreground)]"
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
-            }`
+              }`
             const style = active ? { textShadow: "0 0 0.01px currentColor", borderBottom: "2px solid var(--accent)", paddingBottom: "2px" } : {}
             return external ? (
               <a key={href} href={href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
@@ -186,11 +185,10 @@ export function Header() {
             <nav className="flex flex-col gap-2">
               {navLinks.map(({ href, label, external }) => {
                 const active = isActiveLink(href)
-                const className = `rounded-lg px-3 py-2 text-base font-medium transition-colors ${
-                  active
+                const className = `rounded-lg px-3 py-2 text-base font-medium transition-colors ${active
                     ? "text-[var(--foreground)]"
                     : "text-[var(--foreground)]/90 hover:bg-black/5 dark:hover:bg-white/5"
-                }`
+                  }`
                 const style = active ? { background: "color-mix(in oklab, var(--accent) 14%, transparent 86%)" } : {}
                 return external ? (
                   <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className={className} style={style}>

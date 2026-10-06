@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation"
-import { prisma } from "@/lib/prisma"
-import type { Metadata } from "next"
 import { PlaylistTrackList } from "@/components/audio/PlaylistTrackList"
 import { TranscriptSearch } from "@/components/player/TranscriptSearch"
 import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
+import { prisma } from "@/lib/prisma"
+import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }

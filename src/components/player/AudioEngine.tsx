@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
 import { usePlayerStore } from "@/store/playerStore"
+import { useEffect } from "react"
 
 export function AudioEngine() {
   // All audio control is done via raw store subscriptions — no React re-render cycle
@@ -21,7 +21,7 @@ export function AudioEngine() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lectureId: trackId, positionS, completed: false }),
-      }).catch(() => {})
+      }).catch(() => { })
     }
 
     async function getResumePosition(trackId: string, fallback: number) {
@@ -111,7 +111,7 @@ export function AudioEngine() {
         if (s.isPlaying && s.currentTrack?.mediaType === "AUDIO") {
           if (loadedTrackId === s.currentTrack.id) {
             void recordPlayback(s.currentTrack.id, s.positionS)
-            audio.play().catch(() => {})
+            audio.play().catch(() => { })
           } else if (loadingTrackId === s.currentTrack.id) {
             return
           } else {

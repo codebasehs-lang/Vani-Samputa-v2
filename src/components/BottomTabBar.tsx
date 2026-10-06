@@ -1,15 +1,15 @@
 "use client"
 
+import { BookOpen, Headphones, House, User, Video } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { House, Headphones, Video, BookOpen, User } from "lucide-react"
 
 const tabs = [
-  { href: "/",        label: "Home",    Icon: House      },
-  { href: "/audio",   label: "Audio",   Icon: Headphones },
-  { href: "/video",   label: "Video",   Icon: Video      },
-  { href: "/articles",label: "Articles",Icon: BookOpen   },
-  { href: "/profile", label: "Profile", Icon: User       },
+  { href: "/", label: "Home", Icon: House },
+  { href: "/audio", label: "Audio", Icon: Headphones },
+  { href: "/video", label: "Video", Icon: Video },
+  { href: "/articles", label: "Articles", Icon: BookOpen },
+  { href: "/profile", label: "Profile", Icon: User },
 ]
 
 export function BottomTabBar() {
@@ -25,11 +25,10 @@ export function BottomTabBar() {
             <li key={href} className="flex-1">
               <Link
                 href={href}
-                className={`relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] transition-colors ${
-                  active
+                className={`relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] transition-colors ${active
                     ? "font-bold text-[var(--accent)]"
                     : "font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
-                }`}
+                  }`}
               >
                 <span
                   className="flex h-8 w-8 items-center justify-center rounded-full transition-all"

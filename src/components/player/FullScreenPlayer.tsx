@@ -1,24 +1,33 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useSession } from "next-auth/react"
+import { NotebookOverlay } from "@/components/player/NotebookOverlay"
+import { ThemeToggle } from "@/components/ThemeToggle"
+import { usePlayerStore, type Track } from "@/store/playerStore"
 import {
-  X, Play, Pause, SkipBack, SkipForward,
-  RotateCcw, RotateCw,
-  ListMusic, Moon, Volume2, Share2,
-} from "lucide-react"
-import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  closestCenter,
+  DndContext,
+  PointerSensor, useSensor, useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core"
 import {
-  SortableContext, verticalListSortingStrategy, useSortable,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { usePlayerStore, type Track } from "@/store/playerStore"
-import { NotebookOverlay } from "@/components/player/NotebookOverlay"
-import { ThemeToggle } from "@/components/ThemeToggle"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+  ListMusic, Moon,
+  Pause,
+  Play,
+  RotateCcw, RotateCw,
+  Share2,
+  SkipBack, SkipForward,
+  Volume2,
+  X,
+} from "lucide-react"
+import { useSession } from "next-auth/react"
+import { useEffect, useRef, useState } from "react"
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const SLEEP_OPTIONS = [15, 30, 45, 60]
@@ -172,219 +181,219 @@ export function FullScreenPlayer() {
             className="flex flex-1 flex-col overflow-y-auto"
             style={{ display: view === "player" ? "flex" : "none" }}
           >
-          {/* Waveform canvas */}
-          <div className="mx-auto w-full max-w-sm px-6">
-            <div
-              className="relative flex h-40 items-center justify-center overflow-hidden rounded-2xl"
-              style={{ background: "color-mix(in oklab, var(--surface) 90%, var(--foreground) 10%)" }}
-            >
-              <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-              <span className="relative z-10 text-5xl select-none">
-                {currentTrack.mediaType === "AUDIO" ? "🎙️" : "🎬"}
-              </span>
+            {/* Waveform canvas */}
+            <div className="mx-auto w-full max-w-sm px-6">
+              <div
+                className="relative flex h-40 items-center justify-center overflow-hidden rounded-2xl"
+                style={{ background: "color-mix(in oklab, var(--surface) 90%, var(--foreground) 10%)" }}
+              >
+                <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+                <span className="relative z-10 text-5xl select-none">
+                  {currentTrack.mediaType === "AUDIO" ? "🎙️" : "🎬"}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Track info */}
-          <div className="px-6 pt-5 text-center">
-            <h2 className="text-lg font-bold text-[var(--foreground)] leading-tight line-clamp-2">
-              {currentTrack.title}
-            </h2>
-            <p className="font-iast mt-1 text-sm text-[var(--foreground)]/50">HH Haladhara Svāmī Mahārāja</p>
-          </div>
-
-          {/* Scrubber */}
-          <div className="mx-auto w-full max-w-sm px-6 pt-5">
-            <input
-              type="range"
-              min={0}
-              max={duration || 1}
-              step={1}
-              value={positionS}
-              onChange={(e) => seek(Number(e.target.value))}
-              className="w-full accent-[var(--accent)]"
-              aria-label="Seek"
-            />
-            <div className="flex justify-between text-[11px] text-[var(--foreground)]/40">
-              <span>{formatTime(positionS)}</span>
-              <span>-{formatTime(duration - positionS)}</span>
+            {/* Track info */}
+            <div className="px-6 pt-5 text-center">
+              <h2 className="text-lg font-bold text-[var(--foreground)] leading-tight line-clamp-2">
+                {currentTrack.title}
+              </h2>
+              <p className="font-iast mt-1 text-sm text-[var(--foreground)]/50">HH Haladhara Svāmī Mahārāja</p>
             </div>
-          </div>
 
-          {/* Main controls */}
-          <div className="mx-auto flex w-full max-w-sm items-center justify-between px-6 py-3">
-            <button
-              onClick={() => seek(Math.max(0, positionS - 30))}
-              className="flex flex-col items-center gap-0.5 text-[var(--foreground)]/60"
-              aria-label="Back 30s"
-            >
-              <RotateCcw size={22} strokeWidth={2.5} />
-              <span className="text-[9px]">30</span>
-            </button>
+            {/* Scrubber */}
+            <div className="mx-auto w-full max-w-sm px-6 pt-5">
+              <input
+                type="range"
+                min={0}
+                max={duration || 1}
+                step={1}
+                value={positionS}
+                onChange={(e) => seek(Number(e.target.value))}
+                className="w-full accent-[var(--accent)]"
+                aria-label="Seek"
+              />
+              <div className="flex justify-between text-[11px] text-[var(--foreground)]/40">
+                <span>{formatTime(positionS)}</span>
+                <span>-{formatTime(duration - positionS)}</span>
+              </div>
+            </div>
 
-            <button
-              className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--foreground)]/60"
-              onClick={() => seek(0)}
-              aria-label="Previous"
-            >
-              <SkipBack size={26} fill="currentColor" />
-            </button>
+            {/* Main controls */}
+            <div className="mx-auto flex w-full max-w-sm items-center justify-between px-6 py-3">
+              <button
+                onClick={() => seek(Math.max(0, positionS - 30))}
+                className="flex flex-col items-center gap-0.5 text-[var(--foreground)]/60"
+                aria-label="Back 30s"
+              >
+                <RotateCcw size={22} strokeWidth={2.5} />
+                <span className="text-[9px]">30</span>
+              </button>
 
-            <button
-              onClick={() => (isPlaying ? pause() : resume())}
-              className="flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" />}
-            </button>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--foreground)]/60"
+                onClick={() => seek(0)}
+                aria-label="Previous"
+              >
+                <SkipBack size={26} fill="currentColor" />
+              </button>
 
-            <button
-              onClick={playNext}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--foreground)]/60"
-              aria-label="Next"
-            >
-              <SkipForward size={26} fill="currentColor" />
-            </button>
+              <button
+                onClick={() => (isPlaying ? pause() : resume())}
+                className="flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+                aria-label={isPlaying ? "Pause" : "Play"}
+              >
+                {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" />}
+              </button>
 
-            <button
-              onClick={() => seek(Math.min(duration, positionS + 30))}
-              className="flex flex-col items-center gap-0.5 text-[var(--foreground)]/60"
-              aria-label="Forward 30s"
-            >
-              <RotateCw size={22} strokeWidth={2.5} />
-              <span className="text-[9px]">30</span>
-            </button>
-          </div>
+              <button
+                onClick={playNext}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--foreground)]/60"
+                aria-label="Next"
+              >
+                <SkipForward size={26} fill="currentColor" />
+              </button>
 
-          {/* Speed + Sleep + Queue + Volume */}
-          <div className="mx-auto w-full max-w-sm px-6 pb-4 space-y-3">
-            {/* Speed */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-[var(--foreground)]/40 w-10">Speed</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {SPEEDS.map((s) => (
+              <button
+                onClick={() => seek(Math.min(duration, positionS + 30))}
+                className="flex flex-col items-center gap-0.5 text-[var(--foreground)]/60"
+                aria-label="Forward 30s"
+              >
+                <RotateCw size={22} strokeWidth={2.5} />
+                <span className="text-[9px]">30</span>
+              </button>
+            </div>
+
+            {/* Speed + Sleep + Queue + Volume */}
+            <div className="mx-auto w-full max-w-sm px-6 pb-4 space-y-3">
+              {/* Speed */}
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[var(--foreground)]/40 w-10">Speed</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {SPEEDS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSpeed(s)}
+                      className="rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors"
+                      style={
+                        speed === s
+                          ? { background: "var(--accent)", color: "var(--accent-fg)" }
+                          : { background: "color-mix(in oklab, var(--foreground) 8%, transparent)", color: "color-mix(in oklab, var(--foreground) 60%, transparent)" }
+                      }
+                    >
+                      {s}×
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Volume */}
+              <div className="flex items-center gap-2">
+                <Volume2 size={14} className="text-[var(--foreground)]/40 w-10 shrink-0" />
+                <input
+                  type="range" min={0} max={1} step={0.05}
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="flex-1 accent-[var(--accent)]"
+                  aria-label="Volume"
+                />
+              </div>
+
+              {/* Sleep timer + Queue row */}
+              <div className="flex gap-2">
+                <div className="relative">
                   <button
-                    key={s}
-                    onClick={() => setSpeed(s)}
-                    className="rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors"
+                    onClick={() => { setShowSleep((v) => !v); setShowQueue(false) }}
+                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
                     style={
-                      speed === s
-                        ? { background: "var(--accent)", color: "var(--accent-fg)" }
+                      remaining
+                        ? { background: "rgba(255,215,0,0.15)", color: "#CCA800" }
                         : { background: "color-mix(in oklab, var(--foreground) 8%, transparent)", color: "color-mix(in oklab, var(--foreground) 60%, transparent)" }
                     }
                   >
-                    {s}×
+                    <Moon size={14} />
+                    {remaining ? `${remaining}m` : "Sleep"}
                   </button>
-                ))}
-              </div>
-            </div>
+                  {showSleep && (
+                    <div
+                      className="absolute bottom-full left-0 mb-2 flex gap-1.5 rounded-xl border border-[var(--border)] p-2 shadow-xl"
+                      style={{ background: "var(--surface)" }}
+                    >
+                      {SLEEP_OPTIONS.map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => { setSleepTimer(m); setShowSleep(false) }}
+                          className="rounded-lg px-2.5 py-1 text-xs text-[var(--foreground)]/70 hover:bg-[var(--foreground)]/10"
+                        >
+                          {m}m
+                        </button>
+                      ))}
+                      {remaining && (
+                        <button
+                          onClick={() => { setSleepTimer(null); setShowSleep(false) }}
+                          className="rounded-lg px-2 py-1 text-xs text-red-500 hover:bg-[var(--foreground)]/10"
+                        >
+                          Off
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-            {/* Volume */}
-            <div className="flex items-center gap-2">
-              <Volume2 size={14} className="text-[var(--foreground)]/40 w-10 shrink-0" />
-              <input
-                type="range" min={0} max={1} step={0.05}
-                value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                className="flex-1 accent-[var(--accent)]"
-                aria-label="Volume"
-              />
-            </div>
-
-            {/* Sleep timer + Queue row */}
-            <div className="flex gap-2">
-              <div className="relative">
                 <button
-                  onClick={() => { setShowSleep((v) => !v); setShowQueue(false) }}
+                  onClick={() => { setShowQueue((v) => !v); setShowSleep(false) }}
                   className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
                   style={
-                    remaining
-                      ? { background: "rgba(255,215,0,0.15)", color: "#CCA800" }
+                    showQueue
+                      ? { background: "color-mix(in oklab, var(--accent) 24%, transparent)", color: "var(--accent)" }
                       : { background: "color-mix(in oklab, var(--foreground) 8%, transparent)", color: "color-mix(in oklab, var(--foreground) 60%, transparent)" }
                   }
                 >
-                  <Moon size={14} />
-                  {remaining ? `${remaining}m` : "Sleep"}
+                  <ListMusic size={14} />
+                  Queue {queue.length > 0 && `(${queue.length})`}
                 </button>
-                {showSleep && (
-                  <div
-                    className="absolute bottom-full left-0 mb-2 flex gap-1.5 rounded-xl border border-[var(--border)] p-2 shadow-xl"
-                    style={{ background: "var(--surface)" }}
-                  >
-                    {SLEEP_OPTIONS.map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => { setSleepTimer(m); setShowSleep(false) }}
-                        className="rounded-lg px-2.5 py-1 text-xs text-[var(--foreground)]/70 hover:bg-[var(--foreground)]/10"
-                      >
-                        {m}m
-                      </button>
-                    ))}
-                    {remaining && (
-                      <button
-                        onClick={() => { setSleepTimer(null); setShowSleep(false) }}
-                        className="rounded-lg px-2 py-1 text-xs text-red-500 hover:bg-[var(--foreground)]/10"
-                      >
-                        Off
-                      </button>
-                    )}
-                  </div>
-                )}
+
+                <button
+                  onClick={shareTrack}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--foreground)]/60 transition-colors hover:text-[var(--foreground)]"
+                >
+                  <Share2 size={14} /> {shareLabel}
+                </button>
               </div>
 
-              <button
-                onClick={() => { setShowQueue((v) => !v); setShowSleep(false) }}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-                style={
-                  showQueue
-                    ? { background: "color-mix(in oklab, var(--accent) 24%, transparent)", color: "var(--accent)" }
-                    : { background: "color-mix(in oklab, var(--foreground) 8%, transparent)", color: "color-mix(in oklab, var(--foreground) 60%, transparent)" }
-                }
-              >
-                <ListMusic size={14} />
-                Queue {queue.length > 0 && `(${queue.length})`}
-              </button>
-
-              <button
-                onClick={shareTrack}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--foreground)]/60 transition-colors hover:text-[var(--foreground)]"
-              >
-                <Share2 size={14} /> {shareLabel}
-              </button>
-            </div>
-
-            {/* Queue panel (dnd-kit) */}
-            {showQueue && (
-              <div
-                className="max-h-48 overflow-y-auto rounded-xl p-2"
-                style={{ background: "color-mix(in oklab, var(--surface) 90%, var(--foreground) 10%)" }}
-              >
-                {queue.length === 0 ? (
-                  <p className="py-3 text-center text-xs text-[var(--foreground)]/30">Queue is empty</p>
-                ) : (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={queue.map((t) => t.id)}
-                      strategy={verticalListSortingStrategy}
+              {/* Queue panel (dnd-kit) */}
+              {showQueue && (
+                <div
+                  className="max-h-48 overflow-y-auto rounded-xl p-2"
+                  style={{ background: "color-mix(in oklab, var(--surface) 90%, var(--foreground) 10%)" }}
+                >
+                  {queue.length === 0 ? (
+                    <p className="py-3 text-center text-xs text-[var(--foreground)]/30">Queue is empty</p>
+                  ) : (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
                     >
-                      {queue.map((track) => (
-                        <SortableQueueItem
-                          key={track.id}
-                          track={track}
-                          onRemove={() => removeFromQueue(track.id)}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                )}
-              </div>
-            )}
-          </div>
+                      <SortableContext
+                        items={queue.map((t) => t.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {queue.map((track) => (
+                          <SortableQueueItem
+                            key={track.id}
+                            track={track}
+                            onRemove={() => removeFromQueue(track.id)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {session && (

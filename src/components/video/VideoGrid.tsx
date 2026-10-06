@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
-import { usePlayerStore, type Track } from "@/store/playerStore"
+import { ShareButton } from "@/components/ShareButton"
 import { formatDuration } from "@/lib/duration"
 import { isDocumentPiPSupported, registerVideoDock, requestDocumentPiP } from "@/lib/videoDock"
-import { ShareButton } from "@/components/ShareButton"
-import { Play, PictureInPicture2, Volume2, VolumeX, FileText, ChevronDown, ChevronUp } from "lucide-react"
+import { usePlayerStore, type Track } from "@/store/playerStore"
+import { ChevronDown, ChevronUp, FileText, PictureInPicture2, Play, Volume2, VolumeX } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 type Lecture = {
   id: string

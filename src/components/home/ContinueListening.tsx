@@ -1,8 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { Pause, Play } from "lucide-react"
+import Link from "next/link"
 
 export function ContinueListening() {
   const { currentTrack, positionS, duration, pause, resume, isPlaying } = usePlayerStore()
