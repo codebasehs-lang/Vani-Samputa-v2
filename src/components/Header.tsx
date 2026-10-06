@@ -17,7 +17,7 @@ const navLinks = [
   { href: "/articles", label: "Articles" },
   { href: "/events",   label: "Programs" },
   { href: "/live",     label: "🔴 Live"  },
-  { href: "https://ggs.books.vanisamputa.com", label: "Books", external: true },
+  { href: "https://books.vanisamputa.com", label: "Books", external: true },
   { href: "/about",    label: "About"    },
 ]
 
