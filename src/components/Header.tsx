@@ -141,12 +141,14 @@ export function Header() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/login"
-              className="btn-accent hidden items-center px-5 py-2 text-sm lg:inline-flex"
-            >
-              Sign in
-            </Link>
+            <>
+              {/* <Link
+                href="/login"
+                className="btn-accent hidden items-center px-5 py-2 text-sm lg:inline-flex"
+              >
+                Sign in
+              </Link> */}
+            </>
           )}
 
           {/* Mobile hamburger */}
@@ -210,13 +212,15 @@ export function Header() {
                   Sign out
                 </button>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setOpen(false)}
-                  className="btn-accent inline-flex w-full items-center justify-center px-4 py-2 text-sm"
-                >
-                  Sign in
-                </Link>
+                <>
+                  {/* <Link
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="btn-accent inline-flex w-full items-center justify-center px-4 py-2 text-sm"
+                  >
+                    Sign in
+                  </Link> */}
+                </>
               )}
             </div>
           </aside>
