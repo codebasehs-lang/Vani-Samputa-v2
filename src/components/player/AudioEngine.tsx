@@ -24,7 +24,9 @@ export function AudioEngine() {
       }).catch(() => { })
     }
 
-    async function getResumePosition(trackId: string, fallback: number) {
+    async function getResumePosition(trackId: string, fallback: number, hasLocalProgress: boolean) {
+      // Local progress is newer than the throttled server checkpoint.
+      if (hasLocalProgress || fallback > 0) return fallback
       const response = await fetch(`/api/progress?lectureId=${encodeURIComponent(trackId)}`)
       if (!response.ok) return fallback
       const data = await response.json() as { positionS?: number }
@@ -36,6 +38,7 @@ export function AudioEngine() {
       positionS: number,
       requestId: number,
     ) {
+      const hasLocalProgress = Boolean(usePlayerStore.getState().trackProgress[track.id])
       if (objectUrl) URL.revokeObjectURL(objectUrl)
       objectUrl = null
       loadedTrackId = null
@@ -68,7 +71,7 @@ export function AudioEngine() {
           audio.load()
         })
         if (requestId !== sourceRequest) return
-        const resumePosition = await getResumePosition(track.id, positionS)
+        const resumePosition = await getResumePosition(track.id, positionS, hasLocalProgress)
         if (requestId !== sourceRequest) return
         usePlayerStore.getState().setPosition(resumePosition)
         audio.currentTime = Math.min(resumePosition, Number.isFinite(audio.duration) ? audio.duration : resumePosition)
@@ -86,23 +89,29 @@ export function AudioEngine() {
     }
 
     // Wire DOM events → store
-    audio.addEventListener("timeupdate", () =>
-      usePlayerStore.getState().setPosition(audio.currentTime)
-    )
-    audio.addEventListener("durationchange", () =>
-      usePlayerStore.getState().setDuration(audio.duration)
-    )
+    audio.addEventListener("timeupdate", () => {
+      if (loadedTrackId) usePlayerStore.getState().setPosition(audio.currentTime, loadedTrackId)
+    })
+    audio.addEventListener("durationchange", () => {
+      const trackId = loadedTrackId ?? loadingTrackId
+      if (trackId) usePlayerStore.getState().setDuration(audio.duration, trackId)
+    })
     audio.addEventListener("ended", () => usePlayerStore.getState().playNext())
     // Wire store changes → DOM
     const unsub = usePlayerStore.subscribe((s, prev) => {
       // Track change
       if (s.currentTrack?.id !== prev.currentTrack?.id) {
+        if (loadedTrackId) {
+          usePlayerStore.getState().setPosition(audio.currentTime, loadedTrackId)
+        }
+        loadedTrackId = null
         sourceRequest += 1
         audio.pause()
-        usePlayerStore.getState().setDuration(0)
         if (s.currentTrack) {
-          void recordPlayback(s.currentTrack.id, s.positionS)
           void setAudioSource(s.currentTrack, s.positionS, sourceRequest)
+        } else {
+          loadingTrackId = null
+          audio.src = ""
         }
         return
       }
@@ -116,7 +125,6 @@ export function AudioEngine() {
             return
           } else {
             sourceRequest += 1
-            void recordPlayback(s.currentTrack.id, s.positionS)
             void setAudioSource(s.currentTrack, s.positionS, sourceRequest)
           }
         } else {
@@ -128,7 +136,8 @@ export function AudioEngine() {
         void recordPlayback(s.currentTrack.id, s.positionS)
       }
       // User-initiated seek
-      if (s.requestedPositionS !== null && s.requestedPositionS !== prev.requestedPositionS) {
+      if (s.currentTrack?.mediaType === "AUDIO" && loadedTrackId === s.currentTrack.id &&
+          s.requestedPositionS !== null && s.requestedPositionS !== prev.requestedPositionS) {
         audio.currentTime = s.requestedPositionS
         usePlayerStore.getState().clearSeekRequest()
       }
@@ -171,6 +180,7 @@ export function AudioEngine() {
     }, 5_000)
 
     return () => {
+      if (loadedTrackId) usePlayerStore.getState().setPosition(audio.currentTime, loadedTrackId)
       audio.pause()
       if (objectUrl) URL.revokeObjectURL(objectUrl)
       unsub()

@@ -3,9 +3,10 @@
 import { createPortal } from "react-dom"
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { usePathname } from "next/navigation"
-import { X, Maximize2, PictureInPicture2 } from "lucide-react"
+import { X, Maximize2, Minimize2, PictureInPicture2, Scaling } from "lucide-react"
 import Link from "next/link"
 import { usePlayerStore } from "@/store/playerStore"
+import { formatDuration } from "@/lib/duration"
 import {
   YouTubePlayer,
   type YouTubePlayerHandle,
@@ -24,8 +25,13 @@ type PiPWindow = (Window & { document: Document }) | null
 // Document Picture-in-Picture window — so switching between them (or leaving
 // the tab/app) never restarts playback or loses the current position.
 export function VideoStage() {
-  const { currentTrack, setPosition, setVideoProgress, playNext, setVideoMini, isVideoMini } =
+  const { currentTrack, setPosition, setDuration, setVideoProgress, playNext, setVideoMini, isVideoMini,
+    positionS, duration: liveDuration, trackProgress } =
     usePlayerStore()
+  const [pipLarge, setPipLarge] = useState(false)
+  const pipDuration =
+    liveDuration || (currentTrack ? trackProgress[currentTrack.id]?.duration || currentTrack.duration || 0 : 0)
+  const pipPct = pipDuration > 0 ? Math.min(100, (positionS / pipDuration) * 100) : 0
   const pathname = usePathname()
   const isAdminRoute = pathname.startsWith("/admin")
 
@@ -55,13 +61,20 @@ export function VideoStage() {
 
   const handlePosition = useCallback(
     (s: number) => {
-      setPosition(s)
       if (currentTrack) {
+        setPosition(s, currentTrack.id)
         const pct = currentTrack.duration ? Math.round((s / currentTrack.duration) * 100) : 0
         setVideoProgress(currentTrack.id, pct)
       }
     },
     [currentTrack, setPosition, setVideoProgress]
+  )
+
+  const handleDuration = useCallback(
+    (duration: number) => {
+      if (currentTrack) setDuration(duration, currentTrack.id)
+    },
+    [currentTrack, setDuration]
   )
 
   // Resolve and apply the current target parent for the shared player node.
@@ -158,6 +171,7 @@ export function VideoStage() {
           startSeconds="live"
           autoplay
           onPositionUpdate={handlePosition}
+          onDurationUpdate={handleDuration}
           onEnded={playNext}
           className="relative h-full w-full"
         />,
@@ -166,38 +180,70 @@ export function VideoStage() {
 
       {isFloatingVisible && currentTrack && (
         <div
-          className="fixed bottom-20 right-3 z-50 overflow-hidden rounded-xl border border-white/10 shadow-2xl"
-          style={{ width: 240, height: 135 + 36 }}
+          className="vpip fixed bottom-20 right-3 z-50 md:bottom-5 md:right-5"
+          data-size={pipLarge ? "lg" : "sm"}
+          role="region"
+          aria-label="Floating video player"
         >
-          <div className="flex items-center justify-between px-2 py-1.5" style={{ background: "#1a1a3e" }}>
-            <p className="max-w-[140px] truncate text-[10px] font-medium text-white/70">{currentTrack.title}</p>
+          <div className="vpip-glow" aria-hidden="true" />
+
+          <div className="vpip-head">
+            <span className="vpip-badge">
+              <span className="vpip-dot" aria-hidden="true" />
+              Video
+            </span>
+            <p className="vpip-title truncate" title={currentTrack.title}>{currentTrack.title}</p>
+          </div>
+
+          <div className="vpip-frame">
+            <div ref={floatingSlotRef} className="absolute inset-0" />
+            <div className="vpip-progress" aria-hidden="true">
+              <span style={{ width: `${pipPct}%` }} />
+            </div>
+          </div>
+
+          <div className="vpip-bar">
+            <span className="vpip-time tabular-nums">
+              {formatDuration(positionS)}
+              {pipDuration > 0 && <span className="vpip-time-muted"> / {formatDuration(pipDuration)}</span>}
+            </span>
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPipLarge((v) => !v)}
+                className="vpip-btn hidden sm:inline-flex"
+                aria-label={pipLarge ? "Make player smaller" : "Make player larger"}
+                title={pipLarge ? "Smaller" : "Larger"}
+              >
+                {pipLarge ? <Minimize2 size={14} /> : <Scaling size={14} />}
+              </button>
               {isDocumentPiPSupported() && (
                 <button
                   onClick={() => void openDocumentPiP()}
-                  className="p-0.5 text-white/50 transition-colors hover:text-white"
+                  className="vpip-btn"
                   aria-label="Picture in Picture"
+                  title="Pop out"
                 >
                   <PictureInPicture2 size={14} />
                 </button>
               )}
               <Link
                 href={`/video/playlist/${currentTrack.playlistId ?? ""}`}
-                className="p-0.5 text-white/50 transition-colors hover:text-white"
+                className="vpip-btn vpip-btn-gold"
                 aria-label="Expand"
+                title="Open video page"
               >
                 <Maximize2 size={14} />
               </Link>
               <button
                 onClick={() => setVideoMini(false)}
-                className="p-0.5 text-white/50 transition-colors hover:text-white"
+                className="vpip-btn"
                 aria-label="Close"
+                title="Close"
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             </div>
           </div>
-          <div ref={floatingSlotRef} className="relative" style={{ height: 135 }} />
         </div>
       )}
     </>

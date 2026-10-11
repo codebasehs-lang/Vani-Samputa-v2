@@ -1,6 +1,8 @@
 import { PlaylistTrackList } from "@/components/audio/PlaylistTrackList"
 import { TranscriptSearch } from "@/components/player/TranscriptSearch"
 import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
+import { PageHeader } from "@/components/PageHeader"
+import { Clock, Headphones, ListMusic } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -40,38 +42,40 @@ export default async function PlaylistPage(
 
   if (!playlist) notFound()
 
+  const totalSeconds = playlist.lectures.reduce((sum, l) => sum + (l.duration ?? 0), 0)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.round((totalSeconds % 3600) / 60)
+  const languagePath = playlist.language.toLowerCase()
+  const hasLanguagePage = ["odia", "hindi", "english"].includes(languagePath)
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      {/* Header */}
-      <div className="mb-8 flex gap-5">
-        <div
-          className="hidden sm:flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl text-5xl"
-          style={{ background: "linear-gradient(135deg, #1a1a3e 0%, #2d2d5e 100%)" }}
-        >
-          {playlist.coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={playlist.coverUrl} alt="" className="h-full w-full object-cover" />
-          ) : "🎙️"}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
-            {playlist.category} · {playlist.language}
-          </p>
-          <h1
-            className="text-2xl font-bold text-[var(--foreground)]"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            {playlist.title}
-          </h1>
-          {playlist.description && (
-            <p className="mt-1 text-sm text-[var(--muted)] line-clamp-2">{playlist.description}</p>
-          )}
-          <p className="mt-2 text-xs text-[var(--muted)]">
-            {playlist.lectures.length} lecture{playlist.lectures.length !== 1 ? "s" : ""}
-          </p>
-        </div>
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <PageHeader
+        eyebrow={`${playlist.category} · ${playlist.language}`}
+        title={playlist.title}
+        description={playlist.description ?? undefined}
+        crumbs={[
+          { label: "Audio", href: "/audio" },
+          { label: playlist.language, href: hasLanguagePage ? `/audio/${languagePath}` : undefined },
+          { label: "Playlist" },
+        ]}
+        media={
+          <span className="pl-cover">
+            {playlist.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={playlist.coverUrl} alt="" />
+            ) : (
+              <Headphones size={44} />
+            )}
+          </span>
+        }
+        meta={[
+          { label: `${playlist.lectures.length} lecture${playlist.lectures.length !== 1 ? "s" : ""}`, icon: ListMusic },
+          ...(totalSeconds > 0 ? [{ label: hours ? `${hours} h ${minutes} min` : `${minutes} min`, icon: Clock }] : []),
+        ]}
+      >
         <PlaylistFavoriteButton playlistId={playlist.id} />
-      </div>
+      </PageHeader>
 
       {/* Track list — client component for play buttons */}
       <PlaylistTrackList

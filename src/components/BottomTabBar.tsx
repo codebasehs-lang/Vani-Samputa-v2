@@ -17,39 +17,22 @@ export function BottomTabBar() {
   if (pathname.startsWith("/admin")) return null
 
   return (
-    <nav className="nav-surface fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-[var(--border)]">
-      <ul className="flex">
+    <nav className="tabbar nav-surface fixed bottom-0 inset-x-0 z-40 md:hidden" aria-label="Primary">
+      <ul className="flex px-1">
         {tabs.map(({ href, label, Icon }) => {
           const active = pathname === href || (href !== "/" && pathname.startsWith(href))
           return (
             <li key={href} className="flex-1">
               <Link
                 href={href}
-                className={`relative flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] transition-colors ${active
-                    ? "font-bold text-[var(--accent)]"
-                    : "font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
-                  }`}
+                aria-current={active ? "page" : undefined}
+                className={`tabbar-item${active ? " is-active" : ""}`}
               >
-                <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full transition-all"
-                  style={active ? {
-                    background: "color-mix(in oklab, var(--accent) 24%, var(--surface))",
-                    boxShadow: "inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 60%, transparent), 0 2px 8px color-mix(in oklab, var(--accent) 22%, transparent)",
-                  } : undefined}
-                >
-                  <Icon
-                    size={20}
-                    strokeWidth={active ? 2.5 : 2}
-                    fill={active ? "color-mix(in oklab, var(--accent) 38%, var(--surface))" : "none"}
-                  />
+                {active && <span aria-hidden="true" className="tabbar-notch" />}
+                <span className="tabbar-icon">
+                  <Icon size={19} strokeWidth={active ? 2.3 : 1.9} />
                 </span>
-                {label}
-                {active && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute bottom-0 h-0.5 w-7 rounded-full bg-[var(--accent)]"
-                  />
-                )}
+                <span className="tabbar-label">{label}</span>
               </Link>
             </li>
           )

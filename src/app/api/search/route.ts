@@ -5,12 +5,13 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim()
   if (!q || q.length < 2) return NextResponse.json([])
 
-  const like = `%${q}%`
-
   const [lectures, playlists] = await Promise.all([
     prisma.lecture.findMany({
       where: { title: { contains: q } },
-      select: { id: true, title: true, language: true, mediaType: true },
+      select: {
+        id: true, title: true, language: true, mediaType: true,
+        playlistId: true, url: true, duration: true, thumbnail: true,
+      },
       take: 8,
       orderBy: { playCount: "desc" },
     }),

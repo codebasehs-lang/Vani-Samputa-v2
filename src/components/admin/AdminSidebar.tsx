@@ -9,6 +9,7 @@ import {
   ListMusic, Menu, X,
 } from "lucide-react"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { BrandLogo } from "@/components/BrandLogo"
 
 const NAV = [
   { href: "/admin",            label: "Dashboard",    Icon: LayoutDashboard, color: ADMIN_COLORS.dashboard  },
@@ -26,8 +27,7 @@ const NAV = [
 function Brand() {
   return (
     <div className="flex items-center gap-3">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/branding/logo-192.png" alt="Vani Samputa" className="h-11 w-11 rounded-full object-cover" />
+      <BrandLogo animated={false} className="h-11 w-11" />
       <div>
         <p className="font-iast text-lg font-semibold tracking-[0.03em] text-[var(--foreground)]">Vāṇī Saṃpuṭa</p>
         <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--muted)]">Admin Console</p>

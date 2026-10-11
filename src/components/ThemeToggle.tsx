@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { Moon, Sun } from "lucide-react"
 
 type Theme = "light" | "dark"
@@ -8,7 +8,7 @@ type Theme = "light" | "dark"
 // Shared across every mounted ThemeToggle (header, admin bar, full-screen player…)
 // so toggling one instance updates all the others immediately.
 let currentTheme: Theme | null = null
-const listeners = new Set<(theme: Theme) => void>()
+const listeners = new Set<() => void>()
 
 function resolveInitialTheme(): Theme {
   if (typeof window === "undefined") return "light"
@@ -21,21 +21,25 @@ function applyTheme(theme: Theme) {
   currentTheme = theme
   document.documentElement.setAttribute("data-theme", theme)
   localStorage.setItem("vs-theme", theme)
-  listeners.forEach((notify) => notify(theme))
+  listeners.forEach((notify) => notify())
 }
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => currentTheme ?? resolveInitialTheme())
+function subscribe(notify: () => void) {
+  if (currentTheme === null) {
+    currentTheme = resolveInitialTheme()
+    document.documentElement.setAttribute("data-theme", currentTheme)
+  }
+  listeners.add(notify)
+  return () => { listeners.delete(notify) }
+}
 
-  useEffect(() => {
-    if (currentTheme === null) {
-      currentTheme = resolveInitialTheme()
-      document.documentElement.setAttribute("data-theme", currentTheme)
-    }
-    setTheme(currentTheme)
-    listeners.add(setTheme)
-    return () => { listeners.delete(setTheme) }
-  }, [])
+const getSnapshot = (): Theme => currentTheme ?? resolveInitialTheme()
+// The server can't know the user's theme; React renders this during hydration
+// and then switches to the client snapshot, avoiding a hydration mismatch.
+const getServerSnapshot = (): Theme => "light"
+
+export function ThemeToggle({ className = "icon-btn" }: { className?: string }) {
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   const dark = theme === "dark"
 
@@ -43,12 +47,12 @@ export function ThemeToggle() {
     <button
       onClick={() => applyTheme(dark ? "light" : "dark")}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="icon-btn inline-flex items-center justify-center p-2"
+      className={`${className} inline-flex items-center justify-center p-2`}
     >
       {dark ? (
-        <Sun size={20} className="text-[var(--gold)]" />
+        <Sun key="sun" size={20} className="theme-icon text-[var(--gold)]" />
       ) : (
-        <Moon size={20} className="text-[var(--deep-blue)]" />
+        <Moon key="moon" size={20} className="theme-icon text-[var(--deep-blue)]" />
       )}
     </button>
   )

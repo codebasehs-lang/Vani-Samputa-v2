@@ -126,7 +126,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
           {/* Main column: player, details, transcript */}
           <div className="lg:col-span-2">
             <div
-              className="yt-iframe relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-xl"
+              className="yt-iframe video-stage-frame relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-xl"
               style={audioOnly ? { opacity: 0, width: 1, height: 1, overflow: "hidden" } : {}}
             >
               {isActivePlayback ? (
@@ -147,11 +147,8 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover"
                   />
-                  <span
-                    className="relative flex h-14 w-14 items-center justify-center rounded-full"
-                    style={{ background: "var(--accent)" }}
-                  >
-                    <Play size={22} fill="currentColor" className="text-[var(--accent-fg)]" />
+                  <span className="btn-gold relative flex h-16 w-16 items-center justify-center rounded-full">
+                    <Play size={24} fill="currentColor" className="ml-1" />
                   </span>
                 </button>
               )}
@@ -267,7 +264,10 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
 
           {/* Sidebar: up next in this playlist */}
           <aside className="mt-6 lg:col-span-1 lg:mt-0">
-            <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">Up next in this playlist</p>
+            <div className="mb-3 flex items-baseline justify-between gap-2">
+              <p className="section-eyebrow">Up next in this playlist</p>
+              <span className="text-[11px] font-semibold text-[var(--muted)]">{lectures.length} videos</span>
+            </div>
             <div className="flex flex-col gap-2">
               {lectures.map((lecture) => {
                 const thumb = lecture.thumbnail ?? `https://img.youtube.com/vi/${lecture.url}/mqdefault.jpg`
@@ -298,7 +298,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                           <div
                             className="h-full"
-                            style={{ width: `${progress}%`, background: "var(--accent)" }}
+                            style={{ width: `${progress}%`, background: "linear-gradient(90deg, #f6d77a, #d4a437)" }}
                           />
                         </div>
                       )}
@@ -316,7 +316,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
         </div>
       ) : (
         /* Browse grid — nothing selected yet */
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="playlist-grid">
           {lectures.map((lecture) => {
             const thumb = lecture.thumbnail ?? `https://img.youtube.com/vi/${lecture.url}/mqdefault.jpg`
             const progress = videoProgressMap[lecture.id] ?? 0
@@ -325,7 +325,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
               <button
                 key={lecture.id}
                 onClick={() => selectVideo(lecture)}
-                className="surface-card group overflow-hidden text-left transition-transform hover:-translate-y-1"
+                className="playlist-card group text-left"
               >
                 {/* Thumbnail */}
                 <div className="relative overflow-hidden">
@@ -338,11 +338,8 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                   />
                   {/* Play overlay */}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-full"
-                      style={{ background: "var(--accent)" }}
-                    >
-                      <Play size={18} fill="currentColor" className="text-[var(--accent-fg)]" />
+                    <div className="btn-gold flex h-11 w-11 items-center justify-center rounded-full">
+                      <Play size={18} fill="currentColor" className="ml-0.5" />
                     </div>
                   </div>
                   {/* Duration badge */}
@@ -356,7 +353,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                       <div
                         className="h-full"
-                        style={{ width: `${progress}%`, background: "var(--accent)" }}
+                        style={{ width: `${progress}%`, background: "linear-gradient(90deg, #f6d77a, #d4a437)" }}
                       />
                     </div>
                   )}

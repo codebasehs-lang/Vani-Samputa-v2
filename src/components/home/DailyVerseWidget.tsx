@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { Check, Copy, Quote } from "lucide-react"
+import { toast } from "sonner"
 
 type Verse = {
   sanskrit: string | null
@@ -23,15 +26,17 @@ const SAMPLE_VERSE = {
 }
 
 const LANGS: { key: Lang; label: string }[] = [
-  { key: "english",    label: "Quote" },
-  { key: "odia",       label: "ଓଡ଼ିଆ" },
-  { key: "hindi",      label: "हिंदी" },
+  { key: "english", label: "English" },
+  { key: "odia",    label: "ଓଡ଼ିଆ" },
+  { key: "hindi",   label: "हिंदी" },
 ]
 
 export function DailyVerseWidget({ verse }: { verse: Verse }) {
   const [lang, setLang] = useState<Lang>("english")
+  const [copied, setCopied] = useState(false)
 
   const activeVerse = verse ?? SAMPLE_VERSE
+  const source = activeVerse.source || "HH Haladhara Svāmī Mahārāja"
 
   const text =
     activeVerse[lang] ??
@@ -40,54 +45,89 @@ export function DailyVerseWidget({ verse }: { verse: Verse }) {
     activeVerse.odia ??
     ""
 
-  return (
-    <section className="px-4 py-10">
-      <div className="mx-auto max-w-2xl">
-        <h2
-          className="mb-5 text-center text-xs font-semibold uppercase tracking-widest"
-          style={{ color: "var(--accent)" }}
-        >
-          ✦ Quote of the Day ✦
-        </h2>
+  const isIndic = lang === "hindi" || lang === "odia"
 
-        <div className="surface-panel p-6 text-center">
-          {/* Language tabs */}
-          <div className="mb-5 flex justify-center gap-1">
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(`“${text}”\n— ${source}`)
+      setCopied(true)
+      toast.success("Quote copied")
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      toast.error("Couldn't copy the quote")
+    }
+  }
+
+  return (
+    <section className="px-4 pb-6 pt-14 sm:pt-16">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="mx-auto max-w-3xl"
+      >
+        <div className="quote-heading">
+          <span className="quote-rule" aria-hidden="true" />
+          <h2>Quote of the Day</h2>
+          <span className="quote-rule" aria-hidden="true" />
+        </div>
+
+        <figure className="quote-card">
+          <Quote className="quote-mark" aria-hidden="true" />
+
+          <button onClick={copy} className="quote-action" aria-label={copied ? "Quote copied" : "Copy quote"}>
+            {copied ? <Check size={14} strokeWidth={2.6} /> : <Copy size={14} strokeWidth={2.4} />}
+            <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+          </button>
+
+          <div className="quote-tabs" role="tablist" aria-label="Quote language">
             {LANGS.map(({ key, label }) => (
               <button
                 key={key}
+                role="tab"
+                aria-selected={lang === key}
                 onClick={() => setLang(key)}
+                className="quote-tab"
                 data-active={lang === key}
-                className="chip px-3 py-1 text-xs"
               >
-                {label}
+                {lang === key && (
+                  <motion.span
+                    layoutId="quote-tab-pill"
+                    className="quote-tab-pill"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative">{label}</span>
               </button>
             ))}
           </div>
 
-          {/* Verse text */}
-          <p
-            className={`leading-relaxed text-[var(--foreground)] ${
-              lang === "hindi"
-                ? "text-xl"
-                : lang === "odia"
-                ? "text-lg"
-                : "text-base italic"
-            }`}
-            style={
-              lang === "hindi" || lang === "odia"
-                ? { fontFamily: "var(--font-devanagari)" }
-                : { fontFamily: "var(--font-serif)" }
-            }
-          >
-            {text}
-          </p>
+          <div className="relative flex min-h-[5.5rem] items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.blockquote
+                key={lang}
+                initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+                transition={{ duration: 0.35 }}
+                className={`quote-text ${isIndic ? "quote-text-indic" : ""}`}
+                style={{ fontFamily: isIndic ? "var(--font-devanagari)" : "var(--font-serif)" }}
+              >
+                {text}
+              </motion.blockquote>
+            </AnimatePresence>
+          </div>
 
-          <p className="mt-4 text-xs font-medium text-[var(--muted)]">
-            {activeVerse.source || "HH Haladhara Svāmī Mahārāja"}
-          </p>
-        </div>
-      </div>
+          <div className="quote-divider" aria-hidden="true">
+            <span />✦<span />
+          </div>
+
+          <figcaption className="quote-footer">
+            <span className="quote-source">{source}</span>
+          </figcaption>
+        </figure>
+      </motion.div>
     </section>
   )
 }

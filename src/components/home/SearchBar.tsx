@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useRef, useEffect, useTransition } from "react"
-import { Search, X, LoaderCircle } from "lucide-react"
+import { ArrowRight, ArrowUpRight, Headphones, ListMusic, LoaderCircle, PlayCircle, Search, SearchX, X } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { usePlayerStore } from "@/store/playerStore"
+
+const MIN_QUERY_LENGTH = 2
 
 type Result = {
   id: string
@@ -10,99 +13,258 @@ type Result = {
   type: "lecture" | "playlist"
   language: string
   mediaType: "AUDIO" | "VIDEO"
+  playlistId?: string | null
+  url?: string
+  duration?: number | null
+  thumbnail?: string | null
 }
 
-export function SearchBar() {
+export function SearchBar({ className = "" }: { className?: string }) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Result[]>([])
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [activeIndex, setActiveIndex] = useState(-1)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  const play = usePlayerStore((s) => s.play)
+
+  const trimmed = query.trim()
+  const searchable = trimmed.length >= MIN_QUERY_LENGTH
 
   useEffect(() => {
-    if (!query.trim()) return
     if (timerRef.current) clearTimeout(timerRef.current)
+    if (!searchable) return
     timerRef.current = setTimeout(() => {
       startTransition(async () => {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
         if (res.ok) {
           const data: Result[] = await res.json()
           setResults(data)
+          setActiveIndex(-1)
           setOpen(true)
         }
       })
     }, 300)
-  }, [query])
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [trimmed, searchable])
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(e: PointerEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [open])
+
+  // "/" focuses search from anywhere on the page (unless already typing).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return
+      const el = e.target as HTMLElement | null
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return
+      e.preventDefault()
+      inputRef.current?.focus()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [])
 
   function clear() {
     setQuery("")
     setResults([])
+    setActiveIndex(-1)
     setOpen(false)
   }
 
   function goTo(r: Result) {
     clear()
-    const base = r.type === "playlist"
-      ? `/${r.mediaType === "AUDIO" ? "audio" : "video"}/playlist/${r.id}`
-      : `/${r.mediaType === "AUDIO" ? "audio" : "video"}/lecture/${r.id}`
-    router.push(base)
+    const section = r.mediaType === "AUDIO" ? "audio" : "video"
+
+    if (r.type === "playlist") {
+      router.push(`/${section}/playlist/${r.id}`)
+      return
+    }
+
+    // Lectures have no page of their own — open them inside their playlist,
+    // which auto-plays the selected lecture via the query param.
+    if (r.playlistId) {
+      const param = r.mediaType === "AUDIO" ? "lecture" : "video"
+      router.push(`/${section}/playlist/${r.playlistId}?${param}=${encodeURIComponent(r.id)}`)
+      return
+    }
+
+    // Standalone lecture: play it directly in the global player.
+    play({
+      id: r.id,
+      title: r.title,
+      url: r.mediaType === "AUDIO" ? `/api/audio/${r.id}` : (r.url ?? ""),
+      mediaType: r.mediaType,
+      duration: r.duration ?? undefined,
+      thumbnail: r.thumbnail ?? undefined,
+    })
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      setOpen(false)
+      return
+    }
+    if (!showResults || !ordered.length) {
+      if (e.key === "ArrowDown" && results.length) setOpen(true)
+      return
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActiveIndex((i) => (i + 1) % ordered.length)
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setActiveIndex((i) => (i <= 0 ? ordered.length - 1 : i - 1))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      goTo(ordered[activeIndex >= 0 ? activeIndex : 0])
+    }
+  }
+
+  const showResults = open && searchable
+  const playlists = results.filter((r) => r.type === "playlist")
+  const lectures = results.filter((r) => r.type === "lecture")
+  const ordered = [...playlists, ...lectures]
+
+  function renderGroup(label: string, items: Result[], offset: number) {
+    if (!items.length) return null
+    return (
+      <div role="group" aria-label={label}>
+        <p className="search-group-label">{label}</p>
+        {items.map((r, i) => {
+          const index = offset + i
+          const Icon = r.type === "playlist" ? ListMusic : r.mediaType === "AUDIO" ? Headphones : PlayCircle
+          return (
+            <button
+              key={r.id}
+              id={`search-option-${r.id}`}
+              role="option"
+              aria-selected={activeIndex === index}
+              data-active={activeIndex === index}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => goTo(r)}
+              className="search-option"
+            >
+              <span className="search-option-icon" data-media={r.mediaType}>
+                <Icon size={16} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-[var(--foreground)]">
+                  <Highlight text={r.title} query={trimmed} />
+                </span>
+                <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
+                  <span className="search-chip">{r.mediaType === "AUDIO" ? "Audio" : "Video"}</span>
+                  <span>{r.language}</span>
+                </span>
+              </span>
+              <ArrowUpRight size={15} className="search-option-arrow" />
+            </button>
+          )
+        })}
+      </div>
+    )
   }
 
   return (
-    <div className="px-4 py-4" style={{ background: "var(--surface)" }}>
-      <div className="relative mx-auto max-w-2xl">
-        <div className="field-input flex items-center gap-2 px-4 py-2.5">
+    <div className={`relative z-20 text-left ${className}`}>
+      <div ref={rootRef} className="relative mx-auto max-w-2xl">
+        <div className="search-shell" data-open={showResults}>
           {isPending ? (
-            <LoaderCircle size={18} className="shrink-0 animate-spin text-[var(--muted)]" />
+            <LoaderCircle size={19} className="shrink-0 animate-spin text-[var(--accent)]" />
           ) : (
-            <Search size={18} className="shrink-0 text-[var(--muted)]" />
+            <Search size={19} className="search-icon shrink-0" />
           )}
           <input
+            ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setActiveIndex(-1)
+              if (e.target.value.trim().length < MIN_QUERY_LENGTH) {
+                setResults([])
+                setOpen(false)
+              }
+            }}
+            onFocus={() => { if (results.length) setOpen(true) }}
+            onKeyDown={onKeyDown}
             placeholder="Search lectures, playlists…"
-            className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
+            aria-label="Search lectures and playlists"
+            role="combobox"
+            aria-expanded={showResults}
+            aria-controls="search-results"
+            aria-autocomplete="list"
+            aria-activedescendant={activeIndex >= 0 && ordered[activeIndex] ? `search-option-${ordered[activeIndex].id}` : undefined}
+            className="search-input"
           />
-          {query && (
-            <button
-              onClick={clear}
-              aria-label="Clear"
-              className="icon-btn inline-flex items-center justify-center rounded-full p-1"
-            >
-              <X size={16} />
+          {query ? (
+            <button onClick={() => { clear(); inputRef.current?.focus() }} aria-label="Clear search" className="search-clear">
+              <X size={15} />
             </button>
+          ) : (
+            <span className="search-hint hidden md:inline-flex" aria-hidden="true">
+              Press <kbd className="search-kbd">/</kbd> to search
+            </span>
           )}
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => {
+              if (showResults && ordered.length) goTo(ordered[activeIndex >= 0 ? activeIndex : 0])
+              else inputRef.current?.focus()
+            }}
+            className="search-submit"
+          >
+            <ArrowRight size={18} strokeWidth={2.4} />
+          </button>
         </div>
 
-        {/* Results dropdown */}
-        {open && query.trim() && results.length > 0 && (
-          <ul className="surface-panel absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto">
-            {results.map((r) => (
-              <li key={r.id}>
-                <button
-                  onClick={() => goTo(r)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--accent)]/10"
-                >
-                  <span className="text-lg">{r.mediaType === "AUDIO" ? "🎙️" : "🎬"}</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--foreground)]">{r.title}</p>
-                    <p className="text-[10px] text-[var(--muted)]">
-                      {r.type === "playlist" ? "Playlist" : "Lecture"} · {r.language}
-                    </p>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {open && results.length === 0 && !isPending && query.trim() && (
-          <div className="surface-panel absolute left-0 right-0 top-full z-50 mt-1 px-4 py-5 text-center text-sm text-[var(--muted)]">
-            No results for &quot;{query}&quot;
+        {showResults && (
+          <div id="search-results" role="listbox" className="search-panel">
+            {ordered.length > 0 ? (
+              <>
+                {renderGroup("Playlists", playlists, 0)}
+                {renderGroup("Lectures", lectures, playlists.length)}
+                <p className="search-footer">
+                  <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+                  <span><kbd>Enter</kbd> open</span>
+                  <span><kbd>Esc</kbd> close</span>
+                </p>
+              </>
+            ) : !isPending ? (
+              <div className="px-6 py-8 text-center">
+                <SearchX size={26} className="mx-auto mb-2 text-[var(--muted)] opacity-70" />
+                <p className="text-sm font-medium text-[var(--foreground)]">No matches for &ldquo;{trimmed}&rdquo;</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">Try a shorter word, e.g. &ldquo;Gita&rdquo; or &ldquo;Bhagavatam&rdquo;.</p>
+              </div>
+            ) : (
+              <p className="px-6 py-6 text-center text-xs text-[var(--muted)]">Searching…</p>
+            )}
           </div>
         )}
       </div>
     </div>
+  )
+}
+
+function Highlight({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>
+  const idx = text.toLowerCase().indexOf(query.toLowerCase())
+  if (idx < 0) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="search-mark">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
   )
 }

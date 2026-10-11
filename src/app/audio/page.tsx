@@ -1,16 +1,11 @@
-import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
+import { Headphones, Languages, Library, ListMusic, Video } from "lucide-react"
 import { PageHeader } from "@/components/PageHeader"
+import { ExploreTile, LanguageCards } from "@/components/browse/LanguageCards"
 
 export const metadata: Metadata = { title: "Audio Lectures" }
 export const dynamic = "force-dynamic"
-
-const LANGUAGES = [
-  { key: "Odia",    label: "Odia",    native: "ଓଡ଼ିଆ",  color: "#4A5D8F", glyph: "ଓ" },
-  { key: "Hindi",   label: "Hindi",   native: "हिंदी",    color: "#E8A4C8", glyph: "ह" },
-  { key: "English", label: "English", native: "English", color: "#FFD700", glyph: "E" },
-]
 
 async function getCounts() {
   const counts = await prisma.playlist.groupBy({
@@ -23,43 +18,27 @@ async function getCounts() {
 
 export default async function AudioPage() {
   const counts = await getCounts()
+  const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <PageHeader title="Audio Lectures" description="Teachings of HH Haladhara Svāmī Mahārāja" />
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <PageHeader
+        icon={Headphones}
+        eyebrow="Śravaṇam · Hear the teachings"
+        title="Audio Lectures"
+        description="Kathās, Bhāgavatam classes and bhajans of HH Haladhara Svāmī Mahārāja — choose a language to begin."
+        crumbs={[{ label: "Home", href: "/" }, { label: "Audio" }]}
+        meta={[
+          { label: `${total} playlist${total !== 1 ? "s" : ""}`, icon: ListMusic },
+          { label: "3 languages", icon: Languages },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {LANGUAGES.map(({ key, label, native, color, glyph }) => (
-          <Link
-            key={key}
-            href={`/audio/${key.toLowerCase()}`}
-            className="surface-card group relative overflow-hidden p-6 transition-transform hover:-translate-y-1"
-          >
-            {/* Accent glow */}
-            <div
-              className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full opacity-20 blur-xl"
-              style={{ background: color }}
-            />
-            <div className="relative">
-              <div
-                className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
-                style={{
-                  background: `color-mix(in oklab, ${color} 16%, transparent)`,
-                  border: `1px solid color-mix(in oklab, ${color} 30%, transparent)`,
-                }}
-              >
-                <span className="text-2xl font-bold leading-none" style={{ color }}>{glyph}</span>
-              </div>
-              <h2 className="text-xl font-bold" style={{ color }}>
-                {label}
-              </h2>
-              <p className="text-sm font-medium text-[var(--muted)]">{native}</p>
-              <p className="mt-2 text-xs text-[var(--muted)]">
-                {counts[key] ?? 0} playlist{counts[key] !== 1 ? "s" : ""}
-              </p>
-            </div>
-          </Link>
-        ))}
+      <LanguageCards base="/audio" counts={counts} />
+
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        <ExploreTile href="/video" icon={Video} title="Prefer to watch?" text="Browse video lectures" />
+        <ExploreTile href="/lectures" icon={Library} title="Standalone lectures" text="Talks outside any playlist" />
       </div>
     </div>
   )

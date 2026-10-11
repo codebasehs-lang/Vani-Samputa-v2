@@ -4,6 +4,8 @@ import type { Metadata } from "next"
 import { VideoGrid } from "@/components/video/VideoGrid"
 import { TranscriptSearch } from "@/components/player/TranscriptSearch"
 import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
+import { PageHeader } from "@/components/PageHeader"
+import { ListVideo, Video } from "lucide-react"
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
@@ -34,24 +36,25 @@ export default async function VideoPlaylistPage(
 
   if (!playlist) notFound()
 
+  const languagePath = playlist.language.toLowerCase()
+  const hasLanguagePage = ["odia", "hindi", "english"].includes(languagePath)
+
   return (
     <div className="mx-auto max-w-screen-2xl px-4 py-10 lg:px-8">
-      <div className="mb-8">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
-          {playlist.category} · {playlist.language}
-        </p>
-        <h1
-          className="text-2xl font-bold text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          {playlist.title}
-        </h1>
-        {playlist.description && (
-          <p className="mt-1 text-sm text-[var(--muted)] line-clamp-2">{playlist.description}</p>
-        )}
-        <p className="mt-2 text-xs text-[var(--muted)]">{playlist.lectures.length} videos</p>
+      <PageHeader
+        icon={Video}
+        eyebrow={`${playlist.category} · ${playlist.language}`}
+        title={playlist.title}
+        description={playlist.description ?? undefined}
+        crumbs={[
+          { label: "Video", href: "/video" },
+          { label: playlist.language, href: hasLanguagePage ? `/video/${languagePath}` : undefined },
+          { label: "Playlist" },
+        ]}
+        meta={[{ label: `${playlist.lectures.length} video${playlist.lectures.length !== 1 ? "s" : ""}`, icon: ListVideo }]}
+      >
         <PlaylistFavoriteButton playlistId={playlist.id} />
-      </div>
+      </PageHeader>
 
       <VideoGrid lectures={playlist.lectures} playlistId={id} initialVideoId={video} />
       <TranscriptSearch lectures={playlist.lectures} playlistId={id} />

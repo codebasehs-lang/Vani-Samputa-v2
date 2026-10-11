@@ -1,31 +1,69 @@
 "use client"
 
+import { BrandLogo } from "@/components/BrandLogo"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { ADMIN_COLORS } from "@/lib/adminColors"
 import { usePlayerStore } from "@/store/playerStore"
-import { CircleUserRound, LogOut, Menu, X } from "lucide-react"
+import {
+  BookOpen, CalendarDays, ChevronRight, CircleUserRound, ExternalLink, Headphones, House,
+  Info, Library, LogIn, LogOut, Menu, Newspaper, Radio, Video, X,
+  type LucideIcon,
+} from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
 import { signOut, useSession } from "next-auth/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
+import { createPortal } from "react-dom"
 
-const navLinks = [
+type NavLink = { href: string; label: string; external?: boolean; live?: boolean }
+
+const NAV_ICONS: Record<string, LucideIcon> = {
+  Home: House,
+  Audio: Headphones,
+  Video: Video,
+  Lectures: Library,
+  Articles: Newspaper,
+  Programs: CalendarDays,
+  Live: Radio,
+  Books: BookOpen,
+  About: Info,
+}
+
+const navLinks: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/audio", label: "Audio" },
   { href: "/video", label: "Video" },
   { href: "/lectures", label: "Lectures" },
   { href: "/articles", label: "Articles" },
   { href: "/events", label: "Programs" },
-  { href: "/live", label: "🔴 Live" },
+  { href: "/live", label: "Live", live: true },
   { href: "https://books.vanisamputa.com", label: "Books", external: true },
   { href: "/about", label: "About" },
 ]
+
+function noopSubscribe() {
+  return () => {}
+}
+
+function NavLabel({ label, live }: { label: string; live?: boolean }) {
+  if (!live) return <>{label}</>
+  return (
+    <span className="nav-live">
+      <span className="hero-live-dot" aria-hidden="true" />
+      {label}
+    </span>
+  )
+}
 
 export function Header() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { currentTrack, resume } = usePlayerStore()
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
+  const isHome = pathname === "/"
   const isAdminRoute = pathname.startsWith("/admin")
   const isActiveLink = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href))
   const logoHref = currentTrack?.playlistId
@@ -35,6 +73,25 @@ export function Header() {
   function handleLogoClick() {
     if (currentTrack) resume()
   }
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false) }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener("keydown", onKey)
+    }
+  }, [open])
 
   if (isAdminRoute) {
     return (
@@ -70,7 +127,7 @@ export function Header() {
               </Link>
               <button
                 onClick={() => signOut()}
-                aria-label="Sign out"
+                aria-label="Log out"
                 className="rounded-full p-2 transition-opacity hover:opacity-80"
                 style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.youtube} 14%, transparent)` }}
               >
@@ -84,31 +141,52 @@ export function Header() {
   }
 
   return (
-    <header className="nav-surface sticky top-0 z-50 border-b border-[var(--border)]">
-      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-5">
+    <header
+      className="site-header sticky top-0 z-50"
+      data-over-hero={isHome && !scrolled ? "true" : undefined}
+      data-scrolled={scrolled ? "true" : undefined}
+    >
+      <div className="relative flex h-20 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href={logoHref} onClick={handleLogoClick} className="flex items-center gap-3.5 font-serif text-xl font-semibold">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/branding/logo-192.png" alt="Vani Samputa" className="h-14 w-14 rounded-full object-cover sm:h-16 sm:w-16" />
-          <span className="font-iast tracking-[0.06em] text-[var(--foreground)]">Vāṇī Saṃpuṭa</span>
+        <Link
+          href={logoHref}
+          onClick={handleLogoClick}
+          className="brand-link flex items-center gap-3.5 rounded-full font-serif font-semibold sm:gap-4"
+        >
+          <BrandLogo className="h-[52px] w-[52px] sm:h-[62px] sm:w-[62px]" />
+          <span className="flex flex-col leading-tight">
+            <span className="header-title font-iast text-lg tracking-[0.06em] sm:text-[1.35rem]">
+              Vāṇī Saṃpuṭa
+            </span>
+            <span className="header-subtitle font-iast text-[9px] font-medium uppercase tracking-[0.2em] sm:text-[10px]">
+              HH Haladhara Svāmī
+            </span>
+          </span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 lg:flex xl:gap-7">
-          {navLinks.map(({ href, label, external }) => {
-            const active = isActiveLink(href)
-            const className = `whitespace-nowrap text-sm font-medium transition-colors ${active
-                ? "text-[var(--foreground)]"
-                : "text-[var(--muted)] hover:text-[var(--foreground)]"
-              }`
-            const style = active ? { textShadow: "0 0 0.01px currentColor", borderBottom: "2px solid var(--accent)", paddingBottom: "2px" } : {}
+        <nav className="ml-8 mr-auto hidden items-center gap-1 lg:flex xl:ml-12 xl:gap-2">
+          {navLinks.map(({ href, label, external, live }) => {
+            const active = !external && isActiveLink(href)
+            const content = (
+              <>
+                <NavLabel label={label} live={live} />
+                {active && (
+                  <motion.span
+                    layoutId="nav-underline"
+                    className="nav-underline"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+              </>
+            )
             return external ? (
-              <a key={href} href={href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
-                {label}
+              <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="nav-link">
+                {content}
               </a>
             ) : (
-              <Link key={href} href={href} className={className} style={style}>
-                {label}
+              <Link key={href} href={href} className="nav-link" data-active={active ? "true" : undefined} aria-current={active ? "page" : undefined}>
+                {content}
               </Link>
             )
           })}
@@ -116,7 +194,7 @@ export function Header() {
 
         {/* Right controls */}
         <div className="flex items-center gap-2.5">
-          <ThemeToggle />
+          <ThemeToggle className="theme-toggle" />
 
           {session ? (
             <div className="hidden items-center gap-2 lg:flex">
@@ -134,21 +212,20 @@ export function Header() {
               </Link>
               <button
                 onClick={() => signOut()}
-                aria-label="Sign out"
+                aria-label="Log out"
                 className="icon-btn inline-flex items-center justify-center p-2"
               >
                 <LogOut size={18} />
               </button>
             </div>
           ) : (
-            <>
-              {/* <Link
-                href="/login"
-                className="btn-accent hidden items-center px-5 py-2 text-sm lg:inline-flex"
-              >
-                Sign in
-              </Link> */}
-            </>
+            <Link
+              href="/login"
+              className="btn-gold hidden items-center gap-2 px-5 py-2 text-sm lg:inline-flex"
+            >
+              <LogIn size={16} />
+              Log in
+            </Link>
           )}
 
           {/* Mobile hamburger */}
@@ -162,69 +239,110 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile menu drawer */}
-      {open && (
-        <div className="fixed inset-0 z-60 lg:hidden">
-          <button
-            aria-label="Close menu"
-            className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
-            onClick={() => setOpen(false)}
-          />
-          <aside
-            aria-label="Mobile navigation"
-            className="nav-surface absolute inset-y-0 right-0 flex w-[min(21rem,88vw)] flex-col border-l border-[var(--border)] px-5 py-5 shadow-2xl"
-          >
-            <div className="mb-7 flex items-center justify-between">
-              <span className="font-iast text-lg font-semibold tracking-[0.06em] text-[var(--foreground)]">Vāṇī Saṃpuṭa</span>
+      {/* Mobile menu drawer — portalled to <body>: the header's backdrop-filter
+          would otherwise become the containing block for this fixed overlay. */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              key="mobile-drawer"
+              className="fixed inset-0 z-[70] lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
               <button
-                onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="icon-btn inline-flex items-center justify-center p-2"
+                className="drawer-backdrop absolute inset-0"
+                onClick={() => setOpen(false)}
+              />
+              <motion.aside
+                aria-label="Mobile navigation"
+                className="drawer-panel absolute inset-y-0 right-0 flex w-[min(20rem,86vw)] flex-col"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
               >
-                <X size={22} />
-              </button>
-            </div>
-            <nav className="flex flex-col gap-2">
-              {navLinks.map(({ href, label, external }) => {
-                const active = isActiveLink(href)
-                const className = `rounded-lg px-3 py-2 text-base font-medium transition-colors ${active
-                    ? "text-[var(--foreground)]"
-                    : "text-[var(--foreground)]/90 hover:bg-black/5 dark:hover:bg-white/5"
-                  }`
-                const style = active ? { background: "color-mix(in oklab, var(--accent) 14%, transparent 86%)" } : {}
-                return external ? (
-                  <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className={className} style={style}>
-                    {label}
-                  </a>
-                ) : (
-                  <Link key={href} href={href} onClick={() => setOpen(false)} className={className} style={style}>
-                    {label}
-                  </Link>
-                )
-              })}
-            </nav>
-            <div className="mt-auto pt-6">
-              {session ? (
-                <button
-                  onClick={() => { signOut(); setOpen(false) }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-base font-medium text-[var(--muted)] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-                >
-                  Sign out
-                </button>
-              ) : (
-                <>
-                  {/* <Link
-                    href="/login"
+                <div className="drawer-glow" aria-hidden="true" />
+
+                <div className="drawer-head relative flex items-center justify-between gap-3 px-5 pb-5 pt-6">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <BrandLogo className="h-11 w-11 shrink-0" />
+                    <span className="flex min-w-0 flex-col leading-tight">
+                      <span className="drawer-title font-iast truncate">Vāṇī Saṃpuṭa</span>
+                      <span className="drawer-sub font-iast truncate">HH Haladhara Svāmī</span>
+                    </span>
+                  </div>
+                  <button
                     onClick={() => setOpen(false)}
-                    className="btn-accent inline-flex w-full items-center justify-center px-4 py-2 text-sm"
+                    aria-label="Close menu"
+                    className="drawer-close"
                   >
-                    Sign in
-                  </Link> */}
-                </>
-              )}
-            </div>
-          </aside>
-        </div>
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <p className="drawer-eyebrow relative px-6 pb-2 pt-4">Explore</p>
+                <nav className="relative flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4">
+                  {navLinks.map(({ href, label, external, live }) => {
+                    const active = !external && isActiveLink(href)
+                    const Icon = NAV_ICONS[label] ?? Info
+                    const content = (
+                      <>
+                        <span className="drawer-icon"><Icon size={17} /></span>
+                        <span className="flex-1"><NavLabel label={label} live={live} /></span>
+                        {external
+                          ? <ExternalLink size={14} className="drawer-chev" />
+                          : <ChevronRight size={16} className="drawer-chev" />}
+                      </>
+                    )
+                    return external ? (
+                      <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className="drawer-link">
+                        {content}
+                      </a>
+                    ) : (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => setOpen(false)}
+                        className="drawer-link"
+                        data-active={active ? "true" : undefined}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        {content}
+                      </Link>
+                    )
+                  })}
+                </nav>
+
+                <div className="drawer-foot relative px-5 pb-6 pt-4">
+                  {session ? (
+                    <div className="flex items-center gap-2">
+                      <Link href="/profile" onClick={() => setOpen(false)} className="drawer-chip flex-1">
+                        <CircleUserRound size={16} /> Profile
+                      </Link>
+                      <button onClick={() => { signOut(); setOpen(false) }} className="drawer-chip flex-1">
+                        <LogOut size={16} /> Log out
+                      </button>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/login"
+                      onClick={() => setOpen(false)}
+                      className="btn-gold inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
+                    >
+                      <LogIn size={16} />
+                      Log in
+                    </Link>
+                  )}
+                </div>
+              </motion.aside>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
       )}
     </header>
   )

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { ABOUT_SLUGS } from "@/lib/aboutContent"
 import { PageHeader } from "@/components/PageHeader"
+import { ExternalLink, Flower2 } from "lucide-react"
 
 export const metadata: Metadata = { title: "About" }
 
@@ -37,7 +38,14 @@ export default async function AboutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <PageHeader eyebrow="Spiritual Legacy" title="About" align="center" />
+      <PageHeader
+        align="center"
+        icon={Flower2}
+        eyebrow="Spiritual legacy"
+        title="About"
+        description="The life, mission and teachings of HH Haladhara Svāmī Mahārāja — in service of Śrī Guru and Gaurāṅga."
+        crumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
+      />
 
       {ordered.length === 0 && (
         <div className="empty-state py-16 text-center text-sm text-[var(--muted)]">
@@ -51,35 +59,34 @@ export default async function AboutPage() {
           const paragraphs = splitParagraphs(article.body)
 
           return (
-            <section key={article.slug} className="surface-panel overflow-hidden">
-              <div className={`grid gap-0 md:grid-cols-2 ${reverse ? "md:[&>*:first-child]:order-2" : ""}`}>
-                <div className="p-6 sm:p-8">
-                  <h2 className="mb-4 text-2xl font-semibold text-[var(--foreground)]" style={{ fontFamily: "var(--font-serif)" }}>
-                    {article.title}
-                  </h2>
-                  <div className="space-y-4 text-[15px] leading-7 text-[var(--muted)]">
-                    {paragraphs.map((paragraph, paragraphIndex) => (
-                      <p key={`${article.slug}-paragraph-${paragraphIndex}`}>{paragraph}</p>
-                    ))}
-                    {article.slug === "about-founder-of-taptajivanam" && (
-                      <a
-                        href="https://www.taptajivanam.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-accent inline-flex items-center px-4 py-2 text-sm"
-                      >
-                        Visit Taptajivanam {"->"}
-                      </a>
-                    )}
-                  </div>
+            <section key={article.slug} className="about-section" data-reverse={reverse}>
+              <div className="min-w-0">
+                <h2 className="about-title">{article.title}</h2>
+                <div className="reading-rule" />
+                <div className="about-body">
+                  {paragraphs.map((paragraph, paragraphIndex) => (
+                    <p key={`${article.slug}-paragraph-${paragraphIndex}`}>{paragraph}</p>
+                  ))}
                 </div>
+                {article.slug === "about-founder-of-taptajivanam" && (
+                  <a
+                    href="https://www.taptajivanam.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm"
+                  >
+                    Visit Taptajivanam <ExternalLink size={14} />
+                  </a>
+                )}
+              </div>
 
-                <div className="relative min-h-[260px] bg-[var(--background)]">
+              <div className="about-figure">
+                <div className="about-frame">
                   {article.coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={article.coverUrl} alt={article.title} className="h-full w-full object-cover" />
+                    <img src={article.coverUrl} alt={article.title} loading="lazy" />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-[var(--muted)]">Add Gurudeva image</div>
+                    <Flower2 size={48} />
                   )}
                 </div>
               </div>
@@ -87,6 +94,10 @@ export default async function AboutPage() {
           )
         })}
       </div>
+
+      {ordered.length > 0 && (
+        <div className="about-divider mt-12 text-lg italic" style={{ fontFamily: "var(--font-crimson), Georgia, serif" }} aria-hidden="true">✦ śrī guru-gaurāṅga jayataḥ ✦</div>
+      )}
     </div>
   )
 }

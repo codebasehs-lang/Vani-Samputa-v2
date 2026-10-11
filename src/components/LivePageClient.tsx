@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Play, LoaderCircle } from "lucide-react"
+import Link from "next/link"
+import { Bell, CalendarDays, Clock, LoaderCircle, MonitorPlay, Play, Radio, Video } from "lucide-react"
 import { NotifyMeButton } from "@/components/NotifyMeButton"
+import { PageHeader } from "@/components/PageHeader"
 
 interface LiveStatus {
   isLive: boolean
@@ -22,35 +24,33 @@ export function LivePageClient() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="mb-6 flex items-center gap-3">
-        <h1
-          className="text-3xl font-bold text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          Live Satsang
-        </h1>
-        {status?.isLive && (
-          <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white" style={{ background: "#e53e3e" }}>
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-white" />
-            LIVE
-          </span>
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <PageHeader
+        icon={Radio}
+        eyebrow="Saṅga from anywhere"
+        title="Live Satsang"
+        description="Join HH Haladhara Svāmī Mahārāja live for kīrtana, kathā and festival broadcasts streamed on YouTube."
+        crumbs={[{ label: "Home", href: "/" }, { label: "Live" }]}
+      >
+        {loading ? (
+          <span className="page-hero-chip"><LoaderCircle size={13} className="animate-spin" /> Checking status…</span>
+        ) : status?.isLive ? (
+          <span className="live-badge"><span className="hero-live-dot" aria-hidden="true" /> LIVE NOW</span>
+        ) : (
+          <span className="page-hero-chip"><Clock size={13} /> Offline right now</span>
         )}
-      </div>
+      </PageHeader>
 
       {loading && (
-        <div className="flex h-64 flex-col items-center justify-center gap-3">
-          <LoaderCircle size={28} className="animate-spin text-[var(--muted)]" />
-          <p className="text-[var(--muted)]">Checking live status…</p>
+        <div className="live-frame flex aspect-video flex-col items-center justify-center gap-3 text-[#f4ecd8]">
+          <LoaderCircle size={30} className="animate-spin text-[#e9c977]" />
+          <p className="text-sm opacity-80">Checking live status…</p>
         </div>
       )}
 
       {!loading && status?.isLive && status.videoId && (
         <div>
-          {status.title && (
-            <p className="mb-3 text-lg font-medium text-[var(--foreground)]">{status.title}</p>
-          )}
-          <div className="overflow-hidden rounded-2xl shadow-2xl">
+          <div className="live-frame">
             <div className="relative w-full pb-[56.25%]">
               <iframe
                 className="absolute inset-0 h-full w-full"
@@ -61,31 +61,40 @@ export function LivePageClient() {
               />
             </div>
           </div>
+          {status.title && (
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <span className="live-badge"><span className="hero-live-dot" aria-hidden="true" /> LIVE</span>
+              <h2 className="article-title">{status.title}</h2>
+            </div>
+          )}
         </div>
       )}
 
       {!loading && !status?.isLive && (
-        <div className="empty-state flex flex-col items-center justify-center gap-4 py-20">
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-full shadow-lg"
-            style={{ background: "linear-gradient(135deg, var(--gold) 0%, var(--saffron) 55%, var(--lotus-pink) 100%)" }}
-          >
-            <Play size={26} fill="white" className="translate-x-0.5 text-white" />
-          </div>
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">Not live right now</h2>
-          <p className="text-sm text-[var(--muted)]">
-            Satsangs are streamed on YouTube. Subscribe to get notified when we go live.
+        <div className="live-empty">
+          <span className="live-orb">
+            <Play size={30} fill="currentColor" className="ml-1" />
+          </span>
+          <h2 className="article-title">Not live right now</h2>
+          <p className="max-w-md text-sm text-[var(--muted)]">
+            Satsangs are streamed on YouTube. Subscribe to the channel or turn on notifications so you never miss a broadcast.
           </p>
-          <a
-            href={`https://youtube.com/channel/${process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID ?? ""}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full px-5 py-2.5 text-sm font-semibold text-white"
-            style={{ background: "#FF0000" }}
-          >
-            Subscribe on YouTube
-          </a>
-          <NotifyMeButton />
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href={`https://youtube.com/channel/${process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID ?? ""}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-youtube"
+            >
+              <MonitorPlay size={17} /> Subscribe on YouTube
+            </a>
+            <NotifyMeButton />
+          </div>
+          <div className="live-steps">
+            <div className="live-step"><Bell size={18} /> Get notified when we go live</div>
+            <Link href="/events" className="live-step hover:border-[var(--brand-gold)]"><CalendarDays size={18} /> See upcoming programs</Link>
+            <Link href="/video" className="live-step hover:border-[var(--brand-gold)]"><Video size={18} /> Watch past satsangs</Link>
+          </div>
         </div>
       )}
     </div>

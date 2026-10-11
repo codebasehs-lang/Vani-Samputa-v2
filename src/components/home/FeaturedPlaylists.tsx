@@ -1,3 +1,7 @@
+import { Headphones, ListMusic, Play, PlayCircle } from "lucide-react"
+import { PlaylistScroller } from "./PlaylistScroller"
+import { SectionHeading } from "./SectionHeading"
+
 type Playlist = {
   id: string
   title: string
@@ -8,19 +12,19 @@ type Playlist = {
   lectures: { thumbnail: string | null; url: string; mediaType: "AUDIO" | "VIDEO" }[]
 }
 
-const LANGUAGE_FLAGS: Record<string, string> = {
-  Odia: "🟠",
-  Hindi: "🔵",
-  English: "🟢",
-  Sanskrit: "🟡",
+const LANGUAGE_COLORS: Record<string, string> = {
+  Odia: "#f97316",
+  Hindi: "#3b82f6",
+  English: "#22c55e",
+  Sanskrit: "#eab308",
 }
 
 export function FeaturedPlaylists({ playlists }: { playlists: Playlist[] }) {
   if (!playlists.length) {
     return (
-      <section className="px-4 py-10">
+      <section className="px-4 py-8">
         <div className="mx-auto max-w-6xl">
-          <SectionHeader title="Playlists" />
+          <SectionHeading eyebrow="Curated series" title="Playlists" icon={ListMusic} />
           <p className="mt-6 text-center text-sm text-[var(--muted)]">
             Playlists will appear here once content is imported.
           </p>
@@ -30,35 +34,24 @@ export function FeaturedPlaylists({ playlists }: { playlists: Playlist[] }) {
   }
 
   return (
-    <section className="px-4 py-10">
+    <section className="px-4 py-8">
       <div className="mx-auto max-w-6xl">
-        <SectionHeader title="Playlists" href="/audio" />
-        <div className="mt-5 flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
+        <SectionHeading eyebrow="Curated series" title="Playlists" icon={ListMusic} href="/audio" />
+        <PlaylistScroller>
           {playlists.map((pl) => (
             <PlaylistCard key={pl.id} playlist={pl} />
           ))}
-        </div>
+        </PlaylistScroller>
       </div>
     </section>
   )
 }
 
-function SectionHeader({ title, href }: { title: string; href?: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <h2 className="text-lg font-semibold text-[var(--foreground)]">{title}</h2>
-      {href && (
-        <a href={href} className="text-sm font-medium" style={{ color: "var(--accent)" }}>
-          See all →
-        </a>
-      )}
-    </div>
-  )
-}
-
 function PlaylistCard({ playlist }: { playlist: Playlist }) {
-  const flag = LANGUAGE_FLAGS[playlist.language] ?? "🔘"
-  const href = playlist.mediaType === "AUDIO" ? `/audio/playlist/${playlist.id}` : `/video/playlist/${playlist.id}`
+  const isAudio = playlist.mediaType === "AUDIO"
+  const TypeIcon = isAudio ? Headphones : PlayCircle
+  const dot = LANGUAGE_COLORS[playlist.language] ?? "#94a3b8"
+  const href = isAudio ? `/audio/playlist/${playlist.id}` : `/video/playlist/${playlist.id}`
   const firstLecture = playlist.lectures[0]
   const videoThumbnail = firstLecture?.mediaType === "VIDEO"
     ? firstLecture.thumbnail ?? `https://img.youtube.com/vi/${firstLecture.url}/mqdefault.jpg`
@@ -66,33 +59,39 @@ function PlaylistCard({ playlist }: { playlist: Playlist }) {
   const coverUrl = playlist.coverUrl ?? videoThumbnail
 
   return (
-    <a
-      href={href}
-      className="surface-card group w-60 flex-shrink-0 overflow-hidden transition-transform hover:-translate-y-1 sm:w-64"
-    >
-      {/* Cover */}
-      <div
-        className="flex aspect-video w-full items-center justify-center overflow-hidden text-4xl"
-        style={{
-          background: "linear-gradient(135deg, var(--deep-blue) 0%, var(--deep-blue-mid) 100%)",
-        }}
-      >
+    <a href={href} className="playlist-card group">
+      <div className="playlist-cover">
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
             alt=""
-            className={`h-full w-full ${playlist.coverUrl ? "object-contain" : "object-cover"}`}
+            className={`playlist-cover-img ${playlist.coverUrl ? "object-contain" : "object-cover"}`}
             loading="lazy"
           />
-        ) : playlist.mediaType === "AUDIO" ? "🎙️" : "🎬"}
+        ) : (
+          <TypeIcon size={40} className="text-[#e9c977]" />
+        )}
+        <span className="playlist-badge">
+          <TypeIcon size={11} />
+          {isAudio ? "Audio" : "Video"}
+        </span>
+        <span className="playlist-play" aria-hidden="true">
+          <Play size={16} fill="currentColor" className="ml-0.5" />
+        </span>
       </div>
 
-      <div className="p-2.5">
-        <p className="truncate text-xs font-semibold text-[var(--foreground)]">{playlist.title}</p>
-        <p className="mt-0.5 text-[10px] text-[var(--muted)]">
-          {flag} {playlist.language} · {playlist.category}
+      <div className="px-3.5 pb-3.5 pt-3">
+        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-[var(--foreground)]">
+          {playlist.title}
         </p>
+        <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--muted)]">
+          <span className="playlist-lang">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: dot }} />
+            {playlist.language}
+          </span>
+          <span className="truncate">{playlist.category}</span>
+        </div>
       </div>
     </a>
   )

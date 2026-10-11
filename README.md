@@ -4,6 +4,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 - Admin lecture upload guide: [docs/admin-lecture-upload-guide.md](docs/admin-lecture-upload-guide.md)
 
+## Playback history
+
+Recently Played shows each audio/video track's last playback time and completion
+percentage when its duration is known. Selecting a recent track resumes from that
+time. Positions are updated during playback, seeking, and player teardown, and
+saved with the player history in session storage (surviving reloads in the same
+browser tab). Older history entries without saved progress start at 0:00.
+
 ## Getting Started
 
 First, run the development server:

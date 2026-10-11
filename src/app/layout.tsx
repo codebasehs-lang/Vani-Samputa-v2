@@ -56,8 +56,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className={`${inter.variable} ${crimson.variable} ${devanagari.variable} min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]`}>
         <Providers>
           <Header />
-          {/* pb-32 = tab bar (64px) + mini-player (72px) on mobile; md:pb-20 = mini-player only */}
-          <main className="app-main-bg flex-1 pb-32 md:pb-20">
+          {/* pb-36 = tab bar (64px) + floating mini-player dock (~76px) on mobile; md:pb-24 = dock only */}
+          <main className="app-main-bg flex-1 pb-36 md:pb-24">
             <UserShell>{children}</UserShell>
           </main>
           <BottomTabBar />

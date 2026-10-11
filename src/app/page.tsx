@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma"
 import { HeroSection } from "@/components/home/HeroSection"
-import { SearchBar } from "@/components/home/SearchBar"
 import { StatsStrip } from "@/components/home/StatsStrip"
 import { DailyVerseWidget } from "@/components/home/DailyVerseWidget"
 import { ContinueListening } from "@/components/home/ContinueListening"
@@ -42,7 +41,6 @@ export default async function HomePage() {
   return (
     <div>
       <HeroSection />
-      <SearchBar />
       <StatsStrip audioCount={audioCount} videoCount={videoCount} playlistCount={playlistCount} />
       <DailyVerseWidget verse={todayVerse} />
       <ContinueListening />

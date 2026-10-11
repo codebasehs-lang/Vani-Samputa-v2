@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation"
+import Link from "next/link"
+import { ArrowLeft, CalendarDays, Clock } from "lucide-react"
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { isAboutSlug } from "@/lib/aboutContent"
@@ -39,20 +41,36 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   })
   if (!article) notFound()
 
+  const words = article.body.split(/\s+/).filter(Boolean).length
+  const readMinutes = Math.max(1, Math.round(words / 200))
+
   return (
     <article className="mx-auto max-w-3xl px-4 py-10">
+      <Link href="/articles" className="section-action mb-5">
+        <ArrowLeft size={14} /> All articles
+      </Link>
       {article.coverUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={article.coverUrl} alt="" className="mb-8 h-64 w-full rounded-2xl object-cover sm:h-80" />
+        <div className="reading-cover">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={article.coverUrl} alt="" />
+        </div>
       )}
-      <header className="mb-8">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">Teachings</p>
-        <h1 className="text-4xl font-bold leading-tight text-[var(--foreground)]" style={{ fontFamily: "var(--font-serif)" }}>
-          {article.title}
-        </h1>
-        {article.publishedAt && <p className="mt-3 text-xs text-[var(--muted)]">{new Date(article.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>}
+      <header className={`reading-head ${article.coverUrl ? "" : "reading-head-plain"}`}>
+        <p className="section-eyebrow mb-2">Teachings</p>
+        <h1 className="reading-title">{article.title}</h1>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {article.publishedAt && (
+            <span className="event-meta">
+              <CalendarDays size={13} />
+              {new Date(article.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+            </span>
+          )}
+          <span className="event-meta"><Clock size={13} />{readMinutes} min read</span>
+        </div>
+        <div className="reading-rule" />
       </header>
-      <div className="text-[var(--foreground)]">{renderMarkdown(article.body)}</div>
+      <div className="prose-vani px-1 sm:px-2">{renderMarkdown(article.body)}</div>
+      <div className="about-divider mt-12" aria-hidden="true">✦</div>
     </article>
   )
 }

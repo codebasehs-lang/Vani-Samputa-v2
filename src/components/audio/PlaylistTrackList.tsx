@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useSyncExternalStore } from "react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { OfflineDownloadButton } from "@/components/audio/OfflineDownloadButton"
 import { FavoriteButton } from "@/components/FavoriteButton"
 import { ShareButton } from "@/components/ShareButton"
 import { Play, Pause, Plus } from "lucide-react"
+
+const noopSubscribe = () => () => {}
 
 type Lecture = {
   id: string
@@ -49,7 +51,9 @@ export function PlaylistTrackList({
   playlistId: string
   initialLectureId?: string
 }) {
-  const { play, addToQueue, currentTrack, isPlaying, pause, resume } = usePlayerStore()
+  const { play, addToQueue, currentTrack, isPlaying, pause, resume, trackProgress } = usePlayerStore()
+  // Progress lives in sessionStorage; only show it after hydration.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
 
   useEffect(() => {
     if (!initialLectureId) return
@@ -69,76 +73,90 @@ export function PlaylistTrackList({
 
   if (lectures.length === 0) {
     return (
-      <p className="py-10 text-center text-sm text-[var(--muted)]">
+      <p className="empty-state py-10 text-center text-sm text-[var(--muted)]">
         No lectures in this playlist yet.
       </p>
     )
   }
 
+  const totalSeconds = lectures.reduce((sum, l) => sum + (l.duration ?? 0), 0)
+
   return (
     <div>
-      {/* Play all */}
-      <button onClick={playAll} className="btn-accent mb-4 inline-flex items-center gap-2 px-5 py-2 text-sm">
-        <Play size={14} fill="currentColor" /> Play All
-      </button>
+      <div className="track-toolbar">
+        <button onClick={playAll} className="btn-gold inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+          <Play size={15} fill="currentColor" /> Play all
+        </button>
+        <p className="text-xs font-semibold text-[var(--muted)]">
+          {lectures.length} lecture{lectures.length !== 1 ? "s" : ""}
+          {totalSeconds > 0 && ` · ${formatDuration(totalSeconds)}`}
+        </p>
+      </div>
 
-      <div className="flex flex-col divide-y divide-[var(--border)]">
+      <div className="track-list">
         {lectures.map((lecture, idx) => {
           const isActive = currentTrack?.id === lecture.id
           const track = toTrack(lecture, playlistId)
+          const saved = mounted ? trackProgress[lecture.id] : undefined
+          const total = saved?.duration || lecture.duration || 0
+          const pct = saved && total ? Math.min(100, (saved.positionS / total) * 100) : 0
+          const done = pct >= 97
 
           return (
-            <div
-              key={lecture.id}
-              className={`group flex items-center gap-3 py-3 ${isActive ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}
-            >
+            <div key={lecture.id} data-active={isActive} className="track-row group">
               <button
                 onClick={() => (isActive ? (isPlaying ? pause() : resume()) : play(track))}
-                aria-label={isActive ? "Play/Pause" : `Play ${lecture.title}`}
+                aria-label={isActive ? (isPlaying ? "Pause" : "Resume") : `Play ${lecture.title}`}
                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
               >
-                {/* Track number / play indicator */}
-                <div className="flex w-6 shrink-0 justify-center">
+                <span className="track-num">
                   {isActive ? (
                     isPlaying
-                      ? <Pause size={16} fill="currentColor" />
-                      : <Play size={16} fill="currentColor" />
+                      ? <Pause size={14} fill="currentColor" />
+                      : <Play size={14} fill="currentColor" className="ml-0.5" />
                   ) : (
                     <>
-                      <span className="text-xs text-[var(--muted)] group-hover:hidden">{idx + 1}</span>
-                      <Play size={16} fill="currentColor" className="hidden text-[var(--accent)] group-hover:block" />
+                      <span className="track-num-idx">{idx + 1}</span>
+                      <Play size={14} fill="currentColor" className="track-num-play ml-0.5" />
                     </>
                   )}
-                </div>
+                </span>
 
-                {/* Title */}
-                <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-medium ${isActive ? "text-[var(--accent)]" : ""}`}>
-                    {lecture.title}
-                  </p>
-                  {lecture.duration && (
-                    <p className="text-[10px] text-[var(--muted)]">{formatDuration(lecture.duration)}</p>
-                  )}
-                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="track-title block truncate">{lecture.title}</span>
+                  <span className="track-meta">
+                    {lecture.duration ? <span>{formatDuration(lecture.duration)}</span> : null}
+                    {done ? (
+                      <span className="track-done">✓ Listened</span>
+                    ) : pct > 1 ? (
+                      <>
+                        <span className="track-bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>
+                        <span>{Math.round(pct)}%</span>
+                      </>
+                    ) : null}
+                  </span>
+                </span>
               </button>
 
-              {/* Add to queue */}
-              <button
-                onClick={() => addToQueue(track)}
-                className="shrink-0 p-1 text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--foreground)]"
-                aria-label="Add to queue"
-              >
-                <Plus size={16} />
-              </button>
-              <ShareButton
-                href={`/audio/playlist/${playlistId}?lecture=${encodeURIComponent(lecture.id)}`}
-                title={lecture.title}
-                className="shrink-0 p-1 text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
-              />
-              <FavoriteButton lectureId={lecture.id} />
-              {lecture.mediaType === "AUDIO" && (
-                <OfflineDownloadButton lectureId={lecture.id} title={lecture.title} />
-              )}
+              <div className="track-actions">
+                <button
+                  onClick={() => addToQueue(track)}
+                  className="track-add icon-btn p-1.5"
+                  aria-label="Add to queue"
+                  title="Add to queue"
+                >
+                  <Plus size={16} />
+                </button>
+                <ShareButton
+                  href={`/audio/playlist/${playlistId}?lecture=${encodeURIComponent(lecture.id)}`}
+                  title={lecture.title}
+                  className="icon-btn p-1.5"
+                />
+                <FavoriteButton lectureId={lecture.id} />
+                {lecture.mediaType === "AUDIO" && (
+                  <OfflineDownloadButton lectureId={lecture.id} title={lecture.title} />
+                )}
+              </div>
             </div>
           )
         })}

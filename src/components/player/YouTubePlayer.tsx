@@ -25,6 +25,7 @@ interface Props {
   className?: string
   style?: CSSProperties
   onPositionUpdate?: (s: number) => void
+  onDurationUpdate?: (s: number) => void
   onEnded?: () => void
 }
 
@@ -56,6 +57,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
     className,
     style,
     onPositionUpdate,
+    onDurationUpdate,
     onEnded,
   }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -63,12 +65,14 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
   const playerRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef = useRef(true)
+  const readyRef = useRef(false)
   // Only used as the initial seek position — later prop updates (e.g. live position
   // reporting) must not re-trigger player creation, so it's frozen at mount time.
   const startSecondsRef = useRef(startSeconds)
 
   useImperativeHandle(ref, () => ({
     getCurrentTime() {
+      if (!readyRef.current) return null
       const position = playerRef.current?.getCurrentTime?.()
       return typeof position === "number" && Number.isFinite(position) ? position : null
     },
@@ -99,6 +103,11 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
         playsinline: 1,
       },
       events: {
+        onReady: () => {
+          readyRef.current = true
+          playerRef.current?.seekTo?.(resolvedStart, true)
+          onDurationUpdate?.(playerRef.current?.getDuration?.())
+        },
         onStateChange: (e: { data: number }) => {
           if (e.data === 0) onEnded?.() // 0 = ended
         },
@@ -107,11 +116,11 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
 
     timerRef.current = setInterval(() => {
       const pos = playerRef.current?.getCurrentTime?.()
-      if (typeof pos === "number" && Number.isFinite(pos)) {
+      if (readyRef.current && typeof pos === "number" && Number.isFinite(pos)) {
         onPositionUpdate?.(pos)
       }
     }, 1_000)
-  }, [videoId, autoplay, onPositionUpdate, onEnded])
+  }, [videoId, autoplay, onPositionUpdate, onDurationUpdate, onEnded])
 
   useEffect(() => {
     mountedRef.current = true
@@ -122,11 +131,12 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
       // Flush the real position before teardown (e.g. switching to the mini player)
       // so the store never lags behind by up to a full poll interval.
       const pos = playerRef.current?.getCurrentTime?.()
-      if (typeof pos === "number" && Number.isFinite(pos)) {
+      if (readyRef.current && typeof pos === "number" && Number.isFinite(pos)) {
         onPositionUpdate?.(pos)
       }
       playerRef.current?.destroy()
       playerRef.current = null
+      readyRef.current = false
     }
   }, [init, onPositionUpdate])
 

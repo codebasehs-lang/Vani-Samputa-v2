@@ -20,6 +20,7 @@ type PlayerState = {
   volume: number
   queue: Track[]
   history: Track[]
+  trackProgress: Record<string, { positionS: number; duration: number }>
   isFullScreen: boolean
   isMiniPlayer: boolean
   isVideoMini: boolean
@@ -27,14 +28,14 @@ type PlayerState = {
   requestedPositionS: number | null  // consumed by AudioEngine to seek the audio element
   sleepTimerEnd: number | null       // epoch ms; AudioEngine pauses when reached
 
-  play: (track: Track) => void
+  play: (track: Track, positionS?: number) => void
   pause: () => void
   stop: () => void
   resume: () => void
   seek: (positionS: number) => void
   clearSeekRequest: () => void
-  setDuration: (duration: number) => void
-  setPosition: (positionS: number) => void
+  setDuration: (duration: number, trackId?: string) => void
+  setPosition: (positionS: number, trackId?: string) => void
   setSpeed: (speed: number) => void
   setVolume: (volume: number) => void
   setSleepTimer: (minutes: number | null) => void
@@ -61,6 +62,7 @@ export const usePlayerStore = create<PlayerState>()(
       volume: 1,
       queue: [],
       history: [],
+      trackProgress: {},
       isFullScreen: false,
       isMiniPlayer: false,
       isVideoMini: false,
@@ -68,11 +70,13 @@ export const usePlayerStore = create<PlayerState>()(
       requestedPositionS: null,
       sleepTimerEnd: null,
 
-      play(track) {
+      play(track, positionS = 0) {
         set((s) => ({
           currentTrack: track,
           isPlaying: true,
-          positionS: 0,
+          positionS,
+          duration: s.trackProgress[track.id]?.duration || track.duration || 0,
+          requestedPositionS: null,
           isMiniPlayer: true,
           isVideoMini: track.mediaType === "VIDEO",
           // prepend to history, dedup by id, cap at 20
@@ -101,16 +105,37 @@ export const usePlayerStore = create<PlayerState>()(
         }))
       },
       seek(positionS) {
+        get().setPosition(positionS)
         set({ positionS, requestedPositionS: positionS })
       },
       clearSeekRequest() {
         set({ requestedPositionS: null })
       },
-      setDuration(duration) {
-        set({ duration })
+      setDuration(duration, trackId = get().currentTrack?.id) {
+        if (!trackId || !Number.isFinite(duration) || duration <= 0) return
+        set((s) => ({
+          ...(s.currentTrack?.id === trackId ? { duration } : {}),
+          trackProgress: {
+            ...s.trackProgress,
+            [trackId]: {
+              positionS: s.trackProgress[trackId]?.positionS ?? (s.currentTrack?.id === trackId ? s.positionS : 0),
+              duration,
+            },
+          },
+        }))
       },
-      setPosition(positionS) {
-        set({ positionS })
+      setPosition(positionS, trackId = get().currentTrack?.id) {
+        if (!trackId || !Number.isFinite(positionS) || positionS < 0) return
+        set((s) => ({
+          ...(s.currentTrack?.id === trackId ? { positionS } : {}),
+          trackProgress: {
+            ...s.trackProgress,
+            [trackId]: {
+              positionS,
+              duration: s.trackProgress[trackId]?.duration ?? (s.currentTrack?.id === trackId ? s.duration : 0),
+            },
+          },
+        }))
       },
       setSpeed(speed) {
         set({ speed })
@@ -139,14 +164,8 @@ export const usePlayerStore = create<PlayerState>()(
         const { queue } = get()
         if (!queue.length) return
         const [next, ...rest] = queue
-        set({
-          currentTrack: next,
-          isPlaying: true,
-          positionS: 0,
-          isMiniPlayer: next.mediaType === "AUDIO",
-          isVideoMini: next.mediaType === "VIDEO",
-          queue: rest,
-        })
+        set({ queue: rest })
+        get().play(next)
       },
       openFullScreen() {
         set({ isFullScreen: true })
@@ -177,6 +196,7 @@ export const usePlayerStore = create<PlayerState>()(
         volume: s.volume,
         queue: s.queue,
         history: s.history,
+        trackProgress: s.trackProgress,
       }),
     }
   )
