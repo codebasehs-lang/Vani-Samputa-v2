@@ -14,6 +14,10 @@ browser tab). Older history entries without saved progress start at 0:00.
 
 ## Getting Started
 
+The home hero keeps side portraits at viewport widths of 1024px and above,
+with a scaled laptop layout below 1360px. Below 1024px, portraits appear in a
+compact row above the title. Browser zoom changes the effective viewport width.
+
 First, run the development server:
 
 ```bash

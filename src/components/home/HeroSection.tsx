@@ -17,7 +17,7 @@ export function HeroSection() {
       <HeroLotus />
       <HeroFigures />
 
-      <div className="relative z-10 mx-auto max-w-2xl">
+      <div className="hero-content relative z-10 mx-auto max-w-2xl">
         <ParamparaRow />
         {/* Devanagari subtitle */}
         <motion.p

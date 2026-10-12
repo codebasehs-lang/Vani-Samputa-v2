@@ -586,11 +586,28 @@ body {
   color: #f6d77a;
   text-shadow: 0 0 8px rgba(246, 215, 122, 0.7);
 }
-@media (max-width: 1359px) {
+@media (1024px <= width < 1360px) {
+  .hero-content { max-width: min(42rem, calc(100% - 28rem)); }
+  .hero-deity {
+    left: calc((100% - 42rem) / 4);
+    width: 8.5rem;
+    height: 8.5rem;
+  }
+  .hero-gurus {
+    left: auto;
+    right: 1.5rem;
+    transform: scale(0.65);
+    transform-origin: top right;
+  }
+  .hero-lotus {
+    width: 17rem;
+    top: 4rem;
+  }
+  .hero-lotus-left { left: calc((100% - 42rem) / 4); }
+}
+@media (width < 1024px) {
   .hero-figures { display: none; }
   .hero-parampara { display: flex; }
-}
-@media (max-width: 1359px) {
   .hero-lotus { width: 18rem; top: auto; bottom: 4.5rem; opacity: 0.55; }
   .hero-lotus-left { left: 0; }
 }
