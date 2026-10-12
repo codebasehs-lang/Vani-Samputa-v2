@@ -1,4 +1,6 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { selectRecurringQuotes } from "@/lib/dailyQuotes"
 import { HeroSection } from "@/components/home/HeroSection"
 import { StatsStrip } from "@/components/home/StatsStrip"
 import { DailyVerseWidget } from "@/components/home/DailyVerseWidget"
@@ -7,16 +9,14 @@ import { RecentlyPlayed } from "@/components/home/RecentlyPlayed"
 import { FeaturedPlaylists } from "@/components/home/FeaturedPlaylists"
 
 async function getHomeData() {
+  await connection()
   const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
 
-  const [audioCount, videoCount, playlistCount, todayVerse, featuredPlaylists] = await Promise.all([
+  const [audioCount, videoCount, playlistCount, quotes, featuredPlaylists] = await Promise.all([
     prisma.lecture.count({ where: { mediaType: "AUDIO" } }),
     prisma.lecture.count({ where: { mediaType: "VIDEO" } }),
     prisma.playlist.count(),
-    prisma.dailyVerse.findFirst({ where: { date: { gte: today, lt: tomorrow } } }),
+    prisma.dailyVerse.findMany(),
     prisma.playlist.findMany({
       where: { lectures: { some: {} } },
       orderBy: { sortOrder: "asc" },
@@ -31,6 +31,7 @@ async function getHomeData() {
     }),
   ])
 
+  const todayVerse = selectRecurringQuotes(quotes, today.getMonth() + 1, today.getDate())[0] ?? null
   return { audioCount, videoCount, playlistCount, todayVerse, featuredPlaylists }
 }
 

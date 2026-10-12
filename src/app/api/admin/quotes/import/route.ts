@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
+import { formatQuoteDay, parseQuoteDay, quoteStorageDate, selectRecurringQuotes, storedQuoteDay } from "@/lib/dailyQuotes"
 
-type Row = Record<string, string>
+type Row = Record<string, string | number>
 
 type ImportResponse = {
   created: number
@@ -19,32 +20,16 @@ function getCol(row: Row, ...keys: string[]) {
   return ""
 }
 
-function parseDate(value: string) {
-  const raw = value.trim()
-  if (!raw) return null
-
-  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (iso) {
-    const [, y, m, d] = iso
-    return new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12, 0, 0))
-  }
-
-  const dmy = raw.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/)
-  if (dmy) {
-    const [, d, m, y] = dmy
-    return new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12, 0, 0))
-  }
-
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime())) return null
-  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate(), 12, 0, 0))
-}
-
 export async function POST(req: NextRequest) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
 
   const { rows } = await req.json() as { rows: Row[] }
+  if (!Array.isArray(rows) || rows.length > 366 || rows.some((row) => !row || typeof row !== "object" || Array.isArray(row))) {
+    return NextResponse.json({ error: "Provide up to 366 quote rows." }, { status: 400 })
+  }
+  const existingQuotes = selectRecurringQuotes(await prisma.dailyVerse.findMany({ select: { date: true } }))
+  const dates = new Map(existingQuotes.map((quote) => [formatQuoteDay(storedQuoteDay(quote.date)), quote.date]))
 
   const result: ImportResponse = {
     created: 0,
@@ -55,11 +40,11 @@ export async function POST(req: NextRequest) {
 
   for (const [index, row] of rows.entries()) {
     try {
-      const dateText = getCol(row, "date", "day")
-      const date = parseDate(dateText)
-      if (!date) {
+      const dateColumn = Object.keys(row).find((column) => ["date", "day"].includes(column.toLowerCase()))
+      const quoteDay = parseQuoteDay(dateColumn ? row[dateColumn] : undefined)
+      if (!quoteDay) {
         result.skipped++
-        result.errors.push(`Row ${index + 2}: invalid or missing date`)
+        result.errors.push(`Row ${index + 2}: invalid or missing date; use MM-DD, YYYY-MM-DD or DD/MM/YYYY`)
         continue
       }
 
@@ -74,7 +59,9 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      const existing = await prisma.dailyVerse.findUnique({ where: { date } })
+      const key = formatQuoteDay(quoteDay)
+      const existing = dates.get(key)
+      const date = existing ?? quoteStorageDate(quoteDay)
 
       await prisma.dailyVerse.upsert({
         where: { date },
@@ -84,7 +71,9 @@ export async function POST(req: NextRequest) {
 
       if (existing) result.updated++
       else result.created++
+      dates.set(key, date)
     } catch (error) {
+      result.skipped++
       result.errors.push(`Row ${index + 2}: ${String(error)}`)
     }
   }

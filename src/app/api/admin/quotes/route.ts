@@ -1,25 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
+import { formatQuoteDay, selectRecurringQuotes, storedQuoteDay } from "@/lib/dailyQuotes"
 
 export async function GET(req: NextRequest) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
 
-  const year = Number(req.nextUrl.searchParams.get("year"))
   const month = Number(req.nextUrl.searchParams.get("month"))
-  if (!year || !month || month < 1 || month > 12) {
-    return NextResponse.json({ error: "Invalid year/month" }, { status: 400 })
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return NextResponse.json({ error: "Invalid month" }, { status: 400 })
   }
 
-  const start = new Date(Date.UTC(year, month - 1, 1))
-  const end = new Date(Date.UTC(year, month, 1))
-
-  const quotes = await prisma.dailyVerse.findMany({
-    where: { date: { gte: start, lt: end } },
-    orderBy: { date: "asc" },
-  })
-  return NextResponse.json(quotes)
+  const quotes = await prisma.dailyVerse.findMany()
+  return NextResponse.json(selectRecurringQuotes(quotes, month).map((quote) => ({
+    ...quote,
+    date: formatQuoteDay(storedQuoteDay(quote.date)),
+  })))
 }
 
 export async function PATCH(req: NextRequest) {
@@ -38,7 +35,7 @@ export async function PATCH(req: NextRequest) {
       source: source || null,
     },
   })
-  return NextResponse.json(updated)
+  return NextResponse.json({ ...updated, date: formatQuoteDay(storedQuoteDay(updated.date)) })
 }
 
 export async function DELETE(req: NextRequest) {
@@ -46,6 +43,12 @@ export async function DELETE(req: NextRequest) {
   if (guard.response) return guard.response
   const id = req.nextUrl.searchParams.get("id")
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
-  await prisma.dailyVerse.delete({ where: { id } })
+  await prisma.$transaction(async (tx) => {
+    const quote = await tx.dailyVerse.findUniqueOrThrow({ where: { id }, select: { date: true } })
+    const key = formatQuoteDay(storedQuoteDay(quote.date))
+    const quotes = await tx.dailyVerse.findMany({ select: { id: true, date: true } })
+    const ids = quotes.filter((item) => formatQuoteDay(storedQuoteDay(item.date)) === key).map((item) => item.id)
+    await tx.dailyVerse.deleteMany({ where: { id: { in: ids } } })
+  })
   return NextResponse.json({ ok: true })
 }

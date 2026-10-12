@@ -14,6 +14,26 @@ browser tab). Older history entries without saved progress start at 0:00.
 
 ## Getting Started
 
+The homepage queries its data at request time rather than at build time, so
+daily quote imports and edits are reflected on the next page load. Only a quote
+scheduled for today's month and day (using the server's timezone) is selected;
+the year is ignored and quotes repeat annually. The sample quote is shown when
+no matching entry exists in the connected database.
+
+Daily Quotes admin uses a month selector and MM-DD template dates, including
+February 29. Imports accept MM-DD, YYYY-MM-DD with optional time, YYYY/MM/DD,
+DD/MM/YYYY (also dots/hyphens and two-digit years), English month names, and Excel
+date cells/serials. Ambiguous numeric year-last dates are day-first. Invalid
+month/day combinations are reported as row errors rather than rolled forward.
+The preview, list, and edit dialog show month/day without a year.
+
+Existing stored dates remain compatible without a database migration. When
+different years contain the same month/day, the latest stored year wins.
+Re-importing updates that entry regardless of the incoming year; new entries use
+the leap year 2000 internally solely to fit the existing date column. Deleting a
+day removes all its historical versions so an older quote cannot reappear.
+February 29 is shown only on February 29, not substituted on non-leap years.
+
 The home hero keeps side portraits at viewport widths of 1024px and above,
 with a scaled laptop layout below 1360px. Below 1024px, portraits appear in a
 compact row above the title. Browser zoom changes the effective viewport width.

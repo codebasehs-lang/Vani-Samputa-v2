@@ -1,13 +1,16 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useSyncExternalStore } from "react"
 import * as XLSX from "xlsx"
 import { toast } from "sonner"
 import { Quote, Download, Upload, CircleCheck, CircleAlert, RefreshCw, Pencil, Trash2, X } from "lucide-react"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
+import { buildQuoteMonthRows, formatQuoteDay, parseQuoteDay } from "@/lib/dailyQuotes"
 
 type Row = Record<string, string>
+
+const noopSubscribe = () => () => {}
 
 type ImportResult = {
   created: number
@@ -29,21 +32,10 @@ function two(n: number) {
   return String(n).padStart(2, "0")
 }
 
-function buildMonthRows(year: number, month: number) {
-  const daysInMonth = new Date(year, month, 0).getDate()
-  return Array.from({ length: daysInMonth }, (_, i) => ({
-    Date: `${year}-${two(month)}-${two(i + 1)}`,
-    Source: "",
-    Odia: "",
-    Hindi: "",
-    English: "",
-  }))
-}
-
 export default function AdminQuotesPage() {
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1)
+  const currentMonth = useSyncExternalStore(noopSubscribe, () => new Date().getMonth() + 1, () => 1)
+  const [selectedMonth, setMonth] = useState<number | null>(null)
+  const month = selectedMonth ?? currentMonth
   const [rows, setRows] = useState<Row[]>([])
   const [result, setResult] = useState<ImportResult | null>(null)
   const [busy, setBusy] = useState(false)
@@ -59,26 +51,37 @@ export default function AdminQuotesPage() {
 
   function downloadTemplate() {
     const wb = XLSX.utils.book_new()
-    const ws = XLSX.utils.json_to_sheet(buildMonthRows(year, month))
+    const ws = XLSX.utils.json_to_sheet(buildQuoteMonthRows(month))
     XLSX.utils.book_append_sheet(wb, ws, "DailyQuotes")
-    XLSX.writeFile(wb, `daily-quotes-${year}-${two(month)}.xlsx`)
+    XLSX.writeFile(wb, `daily-quotes-${two(month)}.xlsx`)
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const ab = await file.arrayBuffer()
-    const wb = XLSX.read(ab)
-    const ws = wb.Sheets[wb.SheetNames[0]]
-    const parsed = XLSX.utils.sheet_to_json<Row>(ws, {
-      defval: "",
-      raw: false,
-      dateNF: "yyyy-mm-dd",
-    })
-
-    setRows(parsed.slice(0, 366))
     setResult(null)
+    setRows([])
+    try {
+      const ab = await file.arrayBuffer()
+      const wb = XLSX.read(ab)
+      const ws = wb.Sheets[wb.SheetNames[0]]
+      const parsed = XLSX.utils.sheet_to_json<Record<string, string | number>>(ws, {
+        defval: "",
+        raw: true,
+      })
+      if (parsed.length > 366) {
+        toast.error("A quote file can contain at most 366 rows.")
+        return
+      }
+      setRows(parsed.map((row) => Object.fromEntries(Object.entries(row).map(([column, value]) => {
+        const isDate = ["date", "day"].includes(column.toLowerCase())
+        const date = isDate ? parseQuoteDay(value, Boolean(wb.Workbook?.WBProps?.date1904)) : null
+        return [column, date ? formatQuoteDay(date) : String(value)]
+      }))))
+    } catch {
+      toast.error("Could not read the spreadsheet. Upload a valid .xlsx or .xls file.")
+    }
   }
 
   async function importQuotes() {
@@ -86,28 +89,39 @@ export default function AdminQuotesPage() {
     setBusy(true)
     setResult(null)
 
-    const res = await fetch("/api/admin/quotes/import", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rows }),
-    })
-
-    const data = await res.json() as ImportResult
-    setResult(data)
-    setBusy(false)
-    if (!res.ok) {
-      toast.error("Failed to import quotes.")
-      return
+    try {
+      const res = await fetch("/api/admin/quotes/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows }),
+      })
+      if (!res.ok) {
+        toast.error("Failed to import quotes.")
+        return
+      }
+      const data = await res.json() as ImportResult
+      setResult(data)
+      if (data.errors.length) toast.error(`Import has ${data.errors.length} errors. Review the results below.`)
+      else toast.success(`Imported: ${data.created} created, ${data.updated} updated.`)
+      await fetchQuotes()
+    } catch {
+      toast.error("Could not complete the import. Check your connection and refresh the quotes before retrying.")
+    } finally {
+      setBusy(false)
     }
-    toast.success(`Imported: ${data.created} created, ${data.updated} updated.`)
   }
 
   async function fetchQuotes() {
     setLoadingQuotes(true)
-    const res = await fetch(`/api/admin/quotes?year=${year}&month=${month}`)
-    if (res.ok) setQuotes(await res.json())
-    else toast.error("Failed to load quotes.")
-    setLoadingQuotes(false)
+    try {
+      const res = await fetch(`/api/admin/quotes?month=${month}`)
+      if (res.ok) setQuotes(await res.json())
+      else toast.error("Failed to load quotes.")
+    } catch {
+      toast.error("Could not load quotes. Check your connection.")
+    } finally {
+      setLoadingQuotes(false)
+    }
   }
 
   function startEdit(q: DailyVerseRow) {
@@ -143,7 +157,8 @@ export default function AdminQuotesPage() {
   }
 
   function fmtDate(iso: string) {
-    return new Date(iso).toISOString().slice(0, 10)
+    const date = parseQuoteDay(iso)
+    return date ? formatQuoteDay(date) : iso
   }
 
   const headers = rows.length > 0 ? Object.keys(rows[0]) : []
@@ -157,26 +172,22 @@ export default function AdminQuotesPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Daily Quotes Import</h1>
       </div>
       <p className="mb-6 text-sm text-[var(--muted)]">
-        Download a month template, fill in the verse text date-wise, and upload. Re-uploading the same dates updates existing entries.
+        Quotes repeat every year by month and day. Download a month template and upload the filled file.
+        Re-uploading the same month and day updates the existing quote; any year in the file is ignored.
       </p>
 
       <div className="admin-panel mb-5 p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">1) Download monthly template</p>
         <div className="flex flex-wrap items-end gap-3">
           <label className="text-sm text-[var(--muted)]">
-            Year
-            <input
-              type="number"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
-              className="admin-input mt-1 block w-28 px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="text-sm text-[var(--muted)]">
             Month
             <select
               value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
+              disabled={busy || loadingQuotes}
+              onChange={(e) => {
+                setMonth(Number(e.target.value))
+                setQuotes(null)
+              }}
               className="admin-select mt-1 block px-3 py-2 text-sm"
             >
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -196,7 +207,9 @@ export default function AdminQuotesPage() {
 
       <div className="admin-panel mb-4 border-dashed p-6 text-center">
         <p className="mb-2 text-sm text-[var(--muted)]">
-          2) Upload the filled file (.xlsx) with at least <code>Date</code> and one of <code>Odia</code>/<code>Hindi</code>/<code>English</code> columns.
+          2) Upload the filled file (.xlsx or .xls) with at least <code>Date</code> and one of <code>Odia</code>/<code>Hindi</code>/<code>English</code> columns.
+          Use MM-DD, YYYY-MM-DD (with or without time), DD/MM/YYYY, or an Excel date cell.
+          Numeric dates with the year last use day/month/year.
         </p>
         <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={handleFile} className="hidden" />
         <button
@@ -275,7 +288,7 @@ export default function AdminQuotesPage() {
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">3) View existing quotes</p>
         <div className="flex flex-wrap items-end gap-3">
           <p className="text-sm text-[var(--muted)]">
-            Using Year <span className="font-semibold text-[var(--foreground)]">{year}</span>, Month{" "}
+            Using Month{" "}
             <span className="font-semibold text-[var(--foreground)]">{two(month)}</span> from above.
           </p>
           <button
@@ -291,13 +304,13 @@ export default function AdminQuotesPage() {
 
         {quotes !== null && (
           quotes.length === 0 ? (
-            <p className="mt-4 text-sm text-[var(--muted)]">No quotes found for {year}-{two(month)}.</p>
+            <p className="mt-4 text-sm text-[var(--muted)]">No quotes found for month {two(month)}.</p>
           ) : (
             <div className="admin-panel mt-4 overflow-x-auto">
               <table className="min-w-full text-xs">
                 <thead className="bg-[var(--surface)]">
                   <tr>
-                    <th className="px-3 py-2 text-left font-semibold text-[var(--muted)]">Date</th>
+                    <th className="px-3 py-2 text-left font-semibold text-[var(--muted)]">Month-Day</th>
                     <th className="px-3 py-2 text-left font-semibold text-[var(--muted)]">Source</th>
                     <th className="px-3 py-2 text-left font-semibold text-[var(--muted)]">Odia</th>
                     <th className="px-3 py-2 text-left font-semibold text-[var(--muted)]">Hindi</th>
@@ -413,7 +426,7 @@ export default function AdminQuotesPage() {
       <ConfirmDialog
         open={deleteId !== null}
         title="Delete this quote?"
-        description="This cannot be undone."
+        description="This removes the quote for this month and day in every year, including older stored versions. This cannot be undone."
         confirmLabel="Delete"
         danger
         busy={deleting}
