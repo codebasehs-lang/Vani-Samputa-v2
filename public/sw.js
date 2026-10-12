@@ -1,4 +1,4 @@
-const VERSION = "vani-samputa-v4"
+const VERSION = "vani-samputa-v5"
 const PRECACHE = `${VERSION}-precache`
 const RUNTIME = `${VERSION}-runtime`
 const AUDIO_CACHE = "vani-samputa-audio-v1"
@@ -21,14 +21,21 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return
+  const url = new URL(request.url)
+  if (request.method !== "GET" || url.origin !== self.location.origin) return
+  // Session, application data, and RSC payloads must always reflect the current user.
+  if (url.pathname.startsWith("/api/") || request.headers.get("RSC") === "1" || url.searchParams.has("_rsc")) return
+  const isPublicPage = APP_SHELL.includes(url.pathname)
 
   if (request.mode === "navigate") {
+    if (!isPublicPage) return
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone()
-          caches.open(RUNTIME).then((cache) => cache.put(request, copy))
+          if (response.ok && !/no-store|private/i.test(response.headers.get("Cache-Control") || "")) {
+            const copy = response.clone()
+            event.waitUntil(caches.open(RUNTIME).then((cache) => cache.put(request, copy)))
+          }
           return response
         })
         .catch(() => caches.match(request).then((cached) => cached || caches.match("/")))
@@ -36,11 +43,17 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
+  const isStaticAsset = url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/_next/image") ||
+    url.pathname.startsWith("/branding/") ||
+    url.pathname.startsWith("/images/") ||
+    url.pathname === "/manifest.webmanifest"
+  if (!isStaticAsset) return
   event.respondWith(
     caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-      if (response.ok) {
+      if (response.ok && !/no-store|private/i.test(response.headers.get("Cache-Control") || "")) {
         const copy = response.clone()
-        caches.open(RUNTIME).then((cache) => cache.put(request, copy))
+        event.waitUntil(caches.open(RUNTIME).then((cache) => cache.put(request, copy)))
       }
       return response
     }))

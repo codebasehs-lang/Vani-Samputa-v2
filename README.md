@@ -6,6 +6,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Playback history
 
+The service worker caches static assets and public offline pages, but never
+API/session responses, RSC payloads, or private pages. A worker version update
+clears old runtime caches while preserving downloaded audio. The header waits
+for the session check before showing Log in.
+
 Recently Played shows each audio/video track's last playback time and completion
 percentage when its duration is known. Selecting a recent track resumes from that
 time. Positions are updated during playback, seeking, and player teardown, and

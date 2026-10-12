@@ -58,7 +58,7 @@ function NavLabel({ label, live }: { label: string; live?: boolean }) {
 
 export function Header() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const { currentTrack, resume } = usePlayerStore()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -218,6 +218,8 @@ export function Header() {
                 <LogOut size={18} />
               </button>
             </div>
+          ) : status === "loading" ? (
+            <span className="hidden h-9 w-9 lg:inline-block" role="status" aria-label="Checking login" />
           ) : (
             <Link
               href="/login"
@@ -327,6 +329,8 @@ export function Header() {
                         <LogOut size={16} /> Log out
                       </button>
                     </div>
+                  ) : status === "loading" ? (
+                    <span className="text-sm text-[var(--muted)]" role="status">Checking login...</span>
                   ) : (
                     <Link
                       href="/login"
