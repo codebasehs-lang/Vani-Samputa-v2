@@ -68,16 +68,17 @@ export function HeroFigures() {
   )
 }
 
-export function ParamparaRow() {
+export function ParamparaRow({ variant = "hero" }: { variant?: "hero" | "splash" }) {
+  const splash = variant === "splash"
   return (
-    <div className="hero-parampara" aria-label="Śrī Mādhava, Śrīla Prabhupāda, Śrīla Gurudeva and Gurudeva">
+    <div className={splash ? "hero-parampara pwa-splash-parampara" : "hero-parampara"} aria-label="Śrī Mādhava, Śrīla Prabhupāda, Śrīla Gurudeva and Gurudeva">
       <span className="hero-parampara-avatar hero-parampara-deity">
-        <Portrait figure={MADHAVA} sizes="56px" />
+        <Portrait figure={MADHAVA} sizes={splash ? "64px" : "56px"} priority={splash} />
       </span>
       <span className="hero-parampara-sep" aria-hidden="true">✦</span>
       {GURUS.map((g) => (
         <span key={g.src} className="hero-parampara-avatar">
-          <Portrait figure={g} sizes="48px" />
+          <Portrait figure={g} sizes={splash ? "56px" : "48px"} priority={splash} />
         </span>
       ))}
     </div>

@@ -31,6 +31,25 @@ app online after deployment so it can receive the update.
 
 ## Getting Started
 
+The installed mobile PWA has a midnight-indigo launch welcome with the brand
+emblem, a gold-and-lotus illustration, and a dedication to Sri Guru and Gauranga.
+The hero's portrait row sits above the emblem: Sri Madhava, Srila Prabhupada,
+Srila Gurudeva, and Gurudeva appear one by one from left to right before the
+welcome fades to the underlying page. Reduced motion shows all portraits immediately.
+It appears on a fresh launch (not on in-app navigation), then gently reveals
+the underlying page with a 900ms eased fade (about 3 seconds total). Enter uses
+the same fade rather than abruptly removing the welcome. Reduced-motion users get a short,
+non-animated welcome. The existing desktop first-visit splash is unchanged;
+ordinary mobile browser visits do not show the PWA welcome. The operating
+system's initial splash remains browser-controlled (manifest logo/background);
+the detailed lotus design appears after the app hydrates.
+
+Home search works in the browser and installed PWA and requires an internet
+connection. It shows loading and connection/request errors with a retry button.
+Changing the query cancels the previous request so slower replies cannot replace
+newer results. On mobile, focusing search scrolls it into view, and the results
+tray uses the available viewport height.
+
 The homepage queries its data at request time rather than at build time, so
 daily quote imports and edits are reflected on the next page load. Only a quote
 scheduled for today's month and day (using the server's timezone) is selected;

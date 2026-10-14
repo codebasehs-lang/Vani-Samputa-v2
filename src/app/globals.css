@@ -330,6 +330,12 @@ body {
   color: var(--muted);
 }
 @media (max-width: 639px) {
+  .search-root { scroll-margin-top: 6rem; }
+  .search-input { font-size: 1rem; }
+  .search-panel {
+    max-height: min(26rem, 55dvh);
+    overscroll-behavior: contain;
+  }
   .search-footer { display: none; }
 }
 
@@ -2711,6 +2717,214 @@ body {
   .splash-loading-dot {
     animation: none;
   }
+}
+
+.pwa-splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 900ms cubic-bezier(0.4, 0, 0.2, 1);
+  padding: max(2rem, env(safe-area-inset-top)) 1.5rem max(6.5rem, calc(env(safe-area-inset-bottom) + 5rem));
+  color: #f5ecd7;
+  background:
+    radial-gradient(ellipse at 50% 33%, rgba(201, 162, 74, 0.15), transparent 48%),
+    radial-gradient(ellipse at 85% 85%, rgba(201, 125, 176, 0.1), transparent 50%),
+    linear-gradient(160deg, #101327, #1a1a3e 58%, #101327);
+}
+.pwa-splash-exiting {
+  opacity: 0;
+}
+.pwa-splash-frame {
+  position: absolute;
+  inset: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  border: 1px solid rgba(233, 201, 119, 0.14);
+  border-radius: 1.5rem;
+  pointer-events: none;
+}
+.pwa-splash-frame::before,
+.pwa-splash-frame::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 3rem;
+  height: 1px;
+  transform: translateX(-50%);
+  background: #c9a24a;
+}
+.pwa-splash-frame::before { top: -1px; }
+.pwa-splash-frame::after { bottom: -1px; }
+.pwa-splash-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 26rem;
+  text-align: center;
+  animation: pwa-splash-arrive 0.8s ease-out both;
+}
+.pwa-splash-eyebrow {
+  margin-bottom: 1.5rem;
+  color: #c6b68f;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.pwa-splash-parampara {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  gap: clamp(0.4rem, 2vw, 0.75rem);
+  margin-bottom: 1.4rem;
+}
+.pwa-splash-parampara .hero-parampara-avatar {
+  width: clamp(2.5rem, 14vw, 3.5rem);
+  height: clamp(2.5rem, 14vw, 3.5rem);
+  border-color: #e9c977;
+  animation: pwa-portrait-reveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.pwa-splash-parampara .hero-parampara-deity {
+  width: clamp(3rem, 16vw, 4rem);
+  height: clamp(3rem, 16vw, 4rem);
+  animation-delay: 0.1s;
+}
+.pwa-splash-parampara .hero-parampara-sep {
+  animation: pwa-portrait-reveal 0.65s ease-out 0.3s both;
+}
+.pwa-splash-parampara .hero-parampara-avatar:nth-child(3) { animation-delay: 0.4s; }
+.pwa-splash-parampara .hero-parampara-avatar:nth-child(4) { animation-delay: 0.7s; }
+.pwa-splash-parampara .hero-parampara-avatar:nth-child(5) { animation-delay: 1s; }
+.pwa-splash-emblem {
+  position: relative;
+  width: min(18rem, 70vw);
+  aspect-ratio: 320 / 310;
+}
+.pwa-splash-emblem::before {
+  content: "";
+  position: absolute;
+  inset: 0 10% 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(233, 201, 119, 0.18), transparent 68%);
+  filter: blur(12px);
+  animation: splash-breathe 3s ease-in-out infinite;
+}
+.pwa-splash-lotus { position: relative; width: 100%; height: 100%; }
+.pwa-splash-halo { stroke: rgba(233, 201, 119, 0.28); stroke-width: 0.7; }
+.pwa-splash-orbit { stroke: rgba(233, 201, 119, 0.55); stroke-width: 1.5; }
+.pwa-splash-arch { stroke: rgba(233, 201, 119, 0.18); stroke-width: 0.6; }
+.pwa-splash-petals {
+  fill: rgba(201, 125, 176, 0.08);
+  stroke: #d4ae78;
+  stroke-width: 0.9;
+  transform-origin: 160px 256px;
+  animation: pwa-lotus-bloom 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.pwa-splash-water { stroke: rgba(233, 201, 119, 0.28); stroke-width: 0.7; }
+.pwa-splash-stars { stroke: #e9c977; stroke-width: 0.9; fill: #e9c977; }
+.pwa-splash-logo {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  width: 49%;
+  height: auto;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45), 0 0 26px rgba(201, 162, 74, 0.12);
+}
+.pwa-splash-wordmark h1 {
+  font-family: var(--font-iast);
+  font-size: clamp(1.8rem, 8.5vw, 2.7rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #f0d89b;
+}
+.pwa-splash-wordmark p {
+  margin-top: 0.65rem;
+  font-family: var(--font-iast);
+  font-size: clamp(0.8rem, 3.5vw, 1rem);
+  color: #d6cbd2;
+}
+.pwa-splash-divider { display: flex; align-items: center; gap: 0.8rem; margin: 1.4rem 0 1rem; }
+.pwa-splash-divider span { width: 2.5rem; height: 1px; background: linear-gradient(90deg, transparent, #c9a24a); }
+.pwa-splash-divider span:last-child { transform: rotate(180deg); }
+.pwa-splash-divider i { width: 4px; height: 4px; transform: rotate(45deg); background: #e9c977; }
+.pwa-splash-dedication { color: #dfc6d5; font-family: var(--font-iast); font-size: 0.9rem; font-style: italic; }
+.pwa-splash-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 2.2rem;
+  color: #b6b1c5;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+}
+.pwa-splash-dots { display: flex; gap: 0.4rem; }
+.pwa-splash-dots i { width: 4px; height: 4px; border-radius: 50%; background: #e9c977; animation: splash-dot 1.3s ease-in-out infinite; }
+.pwa-splash-dots i:nth-child(2) { animation-delay: 0.15s; }
+.pwa-splash-dots i:nth-child(3) { animation-delay: 0.3s; }
+.pwa-splash-footer { position: absolute; z-index: 1; bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1rem)); text-align: center; }
+.pwa-splash-footer p { font-size: 0.6rem; letter-spacing: 0.18em; color: #b7ad91; text-transform: uppercase; }
+.pwa-splash-footer button { display: inline-flex; align-items: center; gap: 0.6rem; min-height: 44px; margin-top: 0.4rem; padding: 0 1rem; font-size: 0.75rem; color: #e9c977; }
+.pwa-splash-footer button:focus-visible { outline: 1px solid #e9c977; outline-offset: 2px; border-radius: 999px; }
+@keyframes pwa-splash-arrive {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pwa-lotus-bloom {
+  from { opacity: 0; transform: scale(0.8, 0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pwa-portrait-reveal {
+  from { opacity: 0; transform: translateX(-12px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@media (max-height: 700px) {
+  .pwa-splash-parampara { margin-bottom: 0.8rem; }
+  .pwa-splash-emblem { width: min(14rem, 56vw); }
+  .pwa-splash-eyebrow { margin-bottom: 0.75rem; }
+  .pwa-splash-loading { margin-top: 1.2rem; }
+  .pwa-splash-divider { margin: 0.9rem 0; }
+}
+@media (max-height: 600px) {
+  .pwa-splash-emblem { width: 8rem; }
+  .pwa-splash-loading { margin-top: 0.75rem; gap: 0.5rem; }
+}
+@media (max-height: 500px) {
+  .pwa-splash-content { padding-bottom: 2.5rem; }
+  .pwa-splash-emblem { width: 8rem; }
+  .pwa-splash-eyebrow, .pwa-splash-loading { display: none; }
+  .pwa-splash-wordmark h1 { font-size: 1.8rem; }
+  .pwa-splash-divider { margin: 0.5rem 0; }
+  .pwa-splash-footer p { display: none; }
+}
+@media (max-height: 400px) {
+  .pwa-splash { padding-top: 1rem; padding-bottom: 4.5rem; }
+  .pwa-splash-content { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1rem; padding-bottom: 0; }
+  .pwa-splash-parampara { width: 100%; margin-bottom: 0; }
+  .pwa-splash-parampara .hero-parampara-avatar { width: 2rem; height: 2rem; }
+  .pwa-splash-parampara .hero-parampara-deity { width: 2.5rem; height: 2.5rem; }
+  .pwa-splash-emblem { width: 6rem; flex-shrink: 0; }
+  .pwa-splash-wordmark h1 { font-size: 1.5rem; }
+  .pwa-splash-wordmark p { max-width: 12rem; font-size: 0.8rem; }
+  .pwa-splash-divider, .pwa-splash-dedication { display: none; }
+  .pwa-splash-footer { bottom: max(1rem, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pwa-splash,
+  .pwa-splash-content,
+  .pwa-splash-petals,
+  .pwa-splash-dots i,
+  .pwa-splash-parampara .hero-parampara-avatar,
+  .pwa-splash-parampara .hero-parampara-sep,
+  .pwa-splash-emblem::before { animation: none; transition: none; }
 }
 
 /* Brand emblem — gold ring, soft halo and a slow glow pulse */

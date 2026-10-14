@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useTransition } from "react"
+import { useState, useRef, useEffect } from "react"
 import { ArrowRight, ArrowUpRight, Headphones, ListMusic, LoaderCircle, PlayCircle, Search, SearchX, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { usePlayerStore } from "@/store/playerStore"
@@ -23,7 +23,9 @@ export function SearchBar({ className = "" }: { className?: string }) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Result[]>([])
   const [open, setOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [retry, setRetry] = useState(0)
   const [activeIndex, setActiveIndex] = useState(-1)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -37,21 +39,37 @@ export function SearchBar({ className = "" }: { className?: string }) {
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
     if (!searchable) return
+    const controller = new AbortController()
     timerRef.current = setTimeout(() => {
-      startTransition(async () => {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
-        if (res.ok) {
+      void (async () => {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, {
+            signal: controller.signal,
+            cache: "no-store",
+          })
+          if (!res.ok) throw new Error(`Search request failed (${res.status})`)
           const data: Result[] = await res.json()
+          if (controller.signal.aborted) return
           setResults(data)
           setActiveIndex(-1)
-          setOpen(true)
+          setError(null)
+        } catch (cause) {
+          if (controller.signal.aborted) return
+          console.error("Could not search lectures and playlists.", cause)
+          setResults([])
+          setError(navigator.onLine
+            ? "Search could not load. Please try again."
+            : "Search needs an internet connection. Connect and try again.")
+        } finally {
+          if (!controller.signal.aborted) setIsPending(false)
         }
-      })
+      })()
     }, 300)
     return () => {
+      controller.abort()
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [trimmed, searchable])
+  }, [trimmed, searchable, retry])
 
   useEffect(() => {
     if (!open) return
@@ -80,6 +98,19 @@ export function SearchBar({ className = "" }: { className?: string }) {
     setResults([])
     setActiveIndex(-1)
     setOpen(false)
+    setIsPending(false)
+    setError(null)
+  }
+
+  function retrySearch() {
+    if (!searchable) {
+      inputRef.current?.focus()
+      return
+    }
+    setError(null)
+    setIsPending(true)
+    setOpen(true)
+    setRetry((value) => value + 1)
   }
 
   function goTo(r: Result) {
@@ -111,11 +142,16 @@ export function SearchBar({ className = "" }: { className?: string }) {
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return
     if (e.key === "Escape") {
       setOpen(false)
       return
     }
     if (!showResults || !ordered.length) {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        retrySearch()
+      }
       if (e.key === "ArrowDown" && results.length) setOpen(true)
       return
     }
@@ -177,7 +213,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
 
   return (
     <div className={`relative z-20 text-left ${className}`}>
-      <div ref={rootRef} className="relative mx-auto max-w-2xl">
+      <div ref={rootRef} className="search-root relative mx-auto max-w-2xl">
         <div className="search-shell" data-open={showResults}>
           {isPending ? (
             <LoaderCircle size={19} className="shrink-0 animate-spin text-[var(--accent)]" />
@@ -189,13 +225,25 @@ export function SearchBar({ className = "" }: { className?: string }) {
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
+              if (e.target.value.trim() === trimmed) return
               setActiveIndex(-1)
-              if (e.target.value.trim().length < MIN_QUERY_LENGTH) {
-                setResults([])
-                setOpen(false)
+              setResults([])
+              setError(null)
+              const canSearch = e.target.value.trim().length >= MIN_QUERY_LENGTH
+              setIsPending(canSearch)
+              setOpen(canSearch)
+            }}
+            onFocus={() => {
+              if (searchable) setOpen(true)
+              if (window.matchMedia("(max-width: 639px)").matches) {
+                rootRef.current?.scrollIntoView({ block: "start" })
               }
             }}
-            onFocus={() => { if (results.length) setOpen(true) }}
+            type="search"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             onKeyDown={onKeyDown}
             placeholder="Search lectures, playlists…"
             aria-label="Search lectures and playlists"
@@ -220,7 +268,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
             aria-label="Search"
             onClick={() => {
               if (showResults && ordered.length) goTo(ordered[activeIndex >= 0 ? activeIndex : 0])
-              else inputRef.current?.focus()
+              else retrySearch()
             }}
             className="search-submit"
           >
@@ -229,8 +277,15 @@ export function SearchBar({ className = "" }: { className?: string }) {
         </div>
 
         {showResults && (
-          <div id="search-results" role="listbox" className="search-panel">
-            {ordered.length > 0 ? (
+          <div id="search-results" role="listbox" aria-busy={isPending} className="search-panel">
+            {error ? (
+              <div className="px-6 py-6 text-center">
+                <p role="alert" className="text-sm text-[var(--foreground)]">{error}</p>
+                <button type="button" onClick={retrySearch} className="mt-3 text-sm font-semibold text-[var(--accent)]">
+                  Try again
+                </button>
+              </div>
+            ) : ordered.length > 0 ? (
               <>
                 {renderGroup("Playlists", playlists, 0)}
                 {renderGroup("Lectures", lectures, playlists.length)}
@@ -247,7 +302,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
                 <p className="mt-1 text-xs text-[var(--muted)]">Try a shorter word, e.g. &ldquo;Gita&rdquo; or &ldquo;Bhagavatam&rdquo;.</p>
               </div>
             ) : (
-              <p className="px-6 py-6 text-center text-xs text-[var(--muted)]">Searching…</p>
+              <p role="status" className="px-6 py-6 text-center text-xs text-[var(--muted)]">Searching…</p>
             )}
           </div>
         )}
