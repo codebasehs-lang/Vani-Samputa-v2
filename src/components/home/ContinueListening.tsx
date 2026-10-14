@@ -1,15 +1,19 @@
 "use client"
 
+import { useSyncExternalStore } from "react"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { formatDuration } from "@/lib/duration"
 import { Headphones, History, Pause, Play, PlayCircle } from "lucide-react"
 import Link from "next/link"
 import { SectionHeading } from "./SectionHeading"
 
+const noopSubscribe = () => () => {}
+
 export function ContinueListening() {
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
   const { currentTrack, positionS, duration: liveDuration, trackProgress, pause, resume, isPlaying } = usePlayerStore()
 
-  if (!currentTrack) return null
+  if (!mounted || !currentTrack) return null
 
   // `duration` isn't persisted across reloads, so fall back to the saved per-track progress
   const duration = liveDuration || trackProgress[currentTrack.id]?.duration || currentTrack.duration || 0

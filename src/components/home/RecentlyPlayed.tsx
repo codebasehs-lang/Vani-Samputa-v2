@@ -1,12 +1,18 @@
 "use client"
 
+import { useSyncExternalStore } from "react"
 import { usePlayerStore } from "@/store/playerStore"
 import { formatDuration } from "@/lib/duration"
 import { Clock3, Headphones, Play, PlayCircle } from "lucide-react"
 import { SectionHeading } from "./SectionHeading"
 
+const noopSubscribe = () => () => {}
+
 export function RecentlyPlayed() {
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
   const { history, currentTrack, trackProgress, play } = usePlayerStore()
+
+  if (!mounted) return null
 
   // exclude the currently-playing track (it belongs in ContinueListening)
   const recent = history.filter((t) => t.id !== currentTrack?.id).slice(0, 6)

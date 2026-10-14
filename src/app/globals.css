@@ -372,7 +372,6 @@ body {
 }
 
 /* ── Hero lotus: blooming line-art lotus, mandala and gold motes ── */
-.hero-surface { isolation: isolate; }
 .hero-lotus-wrap {
   position: absolute;
   inset: 0;

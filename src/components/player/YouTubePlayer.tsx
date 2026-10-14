@@ -82,7 +82,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
   }), [])
 
   const init = useCallback(() => {
-    if (!mountedRef.current || !containerRef.current) return
+    if (!mountedRef.current || !containerRef.current || playerRef.current) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const YT = (window as any).YT
     // Resolved here (not frozen earlier) so "live" reads the store after any
@@ -91,13 +91,16 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
       startSecondsRef.current === "live"
         ? usePlayerStore.getState().positionS
         : startSecondsRef.current
-    playerRef.current = new YT.Player(containerRef.current, {
+    // YouTube replaces its target node with an iframe; keep React's host intact.
+    const target = document.createElement("div")
+    containerRef.current.appendChild(target)
+    playerRef.current = new YT.Player(target, {
       videoId,
       width: "100%",
       height: "100%",
       playerVars: {
         start: Math.floor(resolvedStart),
-        autoplay: autoplay ? 1 : 0,
+        autoplay: autoplay && usePlayerStore.getState().isPlaying ? 1 : 0,
         rel: 0,
         modestbranding: 1,
         playsinline: 1,
@@ -107,9 +110,24 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
           readyRef.current = true
           playerRef.current?.seekTo?.(resolvedStart, true)
           onDurationUpdate?.(playerRef.current?.getDuration?.())
+          if (!usePlayerStore.getState().isPlaying) {
+            playerRef.current?.pauseVideo?.()
+          }
         },
         onStateChange: (e: { data: number }) => {
           if (e.data === 0) onEnded?.() // 0 = ended
+          // Flush the position immediately on state changes like pause (2) or play (1)
+          if (e.data === 1 || e.data === 2) {
+            const pos = playerRef.current?.getCurrentTime?.()
+            if (readyRef.current && typeof pos === "number" && Number.isFinite(pos)) {
+              onPositionUpdate?.(pos)
+            }
+            const state = usePlayerStore.getState()
+            if (state.currentTrack?.mediaType === "VIDEO" && state.currentTrack.url === videoId) {
+              if (e.data === 1 && !state.isPlaying) state.resume()
+              if (e.data === 2 && state.isPlaying) state.pause()
+            }
+          }
         },
       },
     })
@@ -123,6 +141,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
   }, [videoId, autoplay, onPositionUpdate, onDurationUpdate, onEnded])
 
   useEffect(() => {
+    const container = containerRef.current
     mountedRef.current = true
     loadYTApi(init)
     return () => {
@@ -137,20 +156,42 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
       playerRef.current?.destroy()
       playerRef.current = null
       readyRef.current = false
+      container?.replaceChildren()
     }
   }, [init, onPositionUpdate])
+
+  // Flush progress when the page is hidden, backgrounded, or navigating away (especially on mobile/PWA).
+  useEffect(() => {
+    const flush = () => {
+      const pos = playerRef.current?.getCurrentTime?.()
+      if (readyRef.current && typeof pos === "number" && Number.isFinite(pos)) {
+        onPositionUpdate?.(pos)
+      }
+    }
+    document.addEventListener("visibilitychange", flush)
+    window.addEventListener("pagehide", flush)
+    return () => {
+      document.removeEventListener("visibilitychange", flush)
+      window.removeEventListener("pagehide", flush)
+    }
+  }, [onPositionUpdate])
 
   // Honor seeks requested elsewhere (e.g. the Now Playing scrubber) so the store's
   // positionS never drifts from the real playhead — otherwise a later remount
   // (e.g. switching to the mini player) would resume from a stale/wrong position.
   useEffect(() => {
     return usePlayerStore.subscribe((s, prev) => {
+      if (s.currentTrack?.mediaType !== "VIDEO" || s.currentTrack.url !== videoId || !readyRef.current) return
+      if (s.isPlaying !== prev.isPlaying) {
+        if (s.isPlaying) playerRef.current?.playVideo?.()
+        else playerRef.current?.pauseVideo?.()
+      }
       if (s.requestedPositionS !== null && s.requestedPositionS !== prev.requestedPositionS) {
         playerRef.current?.seekTo?.(s.requestedPositionS, true)
         usePlayerStore.getState().clearSeekRequest()
       }
     })
-  }, [])
+  }, [videoId])
 
   return (
     <div className={className ?? "relative w-full aspect-video"} style={style}>

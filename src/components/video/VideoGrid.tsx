@@ -5,7 +5,7 @@ import { formatDuration } from "@/lib/duration"
 import { isDocumentPiPSupported, registerVideoDock, requestDocumentPiP } from "@/lib/videoDock"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import { ChevronDown, ChevronUp, FileText, PictureInPicture2, Play, Volume2, VolumeX } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 
 type Lecture = {
   id: string
@@ -19,6 +19,8 @@ type Lecture = {
 }
 
 type TranscriptLine = { timeS: number | null; text: string }
+
+const noopSubscribe = () => () => {}
 
 // Lines optionally start with a "[MM:SS]" or "MM:SS" marker for seeking.
 function parseTranscript(transcript: string): TranscriptLine[] {
@@ -37,20 +39,18 @@ function parseTranscript(transcript: string): TranscriptLine[] {
 export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: Lecture[]; playlistId: string; initialVideoId?: string }) {
   const { play, seek, videoProgressMap, currentTrack, setVideoMini } =
     usePlayerStore()
-  // Start null on both server and client — the persisted store rehydrates from
-  // localStorage only on the client, so reading it during the initial render
-  // would mismatch the SSR-ed markup and trigger a hydration error.
-  const [activeId, setActiveId] = useState<string | null>(
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
+  const [selectedId, setSelectedId] = useState<string | null>(
     initialVideoId && lectures.some((lecture) => lecture.id === initialVideoId) ? initialVideoId : null
   )
+  const activeId = selectedId ?? (
+    mounted && currentTrack?.mediaType === "VIDEO" && currentTrack.playlistId === playlistId &&
+    lectures.some((lecture) => lecture.id === currentTrack.id) ? currentTrack.id : null
+  )
   const [audioOnly, setAudioOnly] = useState(false)
-  const [showTranscript, setShowTranscript] = useState(false)
+  const [transcriptVideoId, setTranscriptVideoId] = useState<string | null>(null)
+  const showTranscript = activeId !== null && transcriptVideoId === activeId
   const dockRef = useRef<HTMLDivElement>(null)
-
-  // Collapse the transcript panel again whenever the active video changes.
-  useEffect(() => {
-    setShowTranscript(false)
-  }, [activeId])
 
   // Being on this page means the video is "open" again — so leaving it (e.g. to
   // Home) should show the floating PiP player, even if it was closed earlier.
@@ -60,15 +60,6 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
     }
   }, [activeId, currentTrack?.id, setVideoMini])
 
-  // Resume the previously-active video for this playlist after mount (client-only).
-  useEffect(() => {
-    const track = usePlayerStore.getState().currentTrack
-    if (track?.mediaType === "VIDEO" && track.playlistId === playlistId && lectures.some((l) => l.id === track.id)) {
-      setActiveId(track.id)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Arriving via a deep link (?video=...) for a lecture that isn't already the
   // globally active track — register it as "now playing" so the dock/mini-player
   // and position tracking stay in sync with what actually renders here.
@@ -76,7 +67,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
     if (!initialVideoId) return
     const lecture = lectures.find((l) => l.id === initialVideoId)
     if (lecture && usePlayerStore.getState().currentTrack?.id !== lecture.id) {
-      play(toTrack(lecture))
+      play(toTrack(lecture), usePlayerStore.getState().trackProgress[lecture.id]?.positionS ?? 0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -94,8 +85,14 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
   }
 
   function selectVideo(lecture: Lecture) {
-    setActiveId(lecture.id)
-    play(toTrack(lecture))
+    setSelectedId(lecture.id)
+    setTranscriptVideoId(null)
+    const state = usePlayerStore.getState()
+    if (state.currentTrack?.id === lecture.id) {
+      state.resume()
+    } else {
+      play(toTrack(lecture), state.trackProgress[lecture.id]?.positionS ?? 0)
+    }
     // scroll to player
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
@@ -221,7 +218,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
             {/* Transcript — replaces a comments section */}
             <div className="surface-panel mt-5 p-4">
               <button
-                onClick={() => setShowTranscript((v) => !v)}
+                onClick={() => setTranscriptVideoId(showTranscript ? null : activeId)}
                 className="flex w-full items-center justify-between gap-2 text-left"
                 aria-expanded={showTranscript}
               >

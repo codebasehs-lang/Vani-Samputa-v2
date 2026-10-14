@@ -63,7 +63,8 @@ export function VideoStage() {
     (s: number) => {
       if (currentTrack) {
         setPosition(s, currentTrack.id)
-        const pct = currentTrack.duration ? Math.round((s / currentTrack.duration) * 100) : 0
+        const duration = usePlayerStore.getState().trackProgress[currentTrack.id]?.duration || currentTrack.duration || 0
+        const pct = duration > 0 ? Math.min(100, Math.round((s / duration) * 100)) : 0
         setVideoProgress(currentTrack.id, pct)
       }
     },
@@ -227,7 +228,7 @@ export function VideoStage() {
                 </button>
               )}
               <Link
-                href={`/video/playlist/${currentTrack.playlistId ?? ""}`}
+                href={currentTrack.playlistId ? `/video/playlist/${currentTrack.playlistId}?video=${encodeURIComponent(currentTrack.id)}` : "/video"}
                 className="vpip-btn vpip-btn-gold"
                 aria-label="Expand"
                 title="Open video page"

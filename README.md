@@ -13,9 +13,21 @@ for the session check before showing Log in.
 
 Recently Played shows each audio/video track's last playback time and completion
 percentage when its duration is known. Selecting a recent track resumes from that
-time. Positions are updated during playback, seeking, and player teardown, and
-saved with the player history in session storage (surviving reloads in the same
-browser tab). Older history entries without saved progress start at 0:00.
+time. Selecting a video in its playlist also resumes its saved position.
+Positions are updated during playback, seeking, pause, backgrounding, and player
+teardown, and saved with the player history in local storage. This survives
+closing and reopening the browser or installed mobile PWA on the same device
+and site origin. Existing session-storage history is migrated automatically.
+If local storage is unavailable, session storage is used with a console warning.
+Older history entries without saved progress start at 0:00.
+
+Continue Listening and Recently Played appear on mobile after playback on that
+device; desktop history is not synced to a phone or a different site origin.
+Reopening does not autoplay: use Continue Listening to resume. Its play/pause
+button controls both audio and video. Clearing site/app data also clears history.
+The PWA worker version is refreshed for this update to replace old cached app
+pages without deleting playback history or downloaded audio. Open the installed
+app online after deployment so it can receive the update.
 
 ## Getting Started
 

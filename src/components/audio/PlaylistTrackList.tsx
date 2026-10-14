@@ -52,7 +52,7 @@ export function PlaylistTrackList({
   initialLectureId?: string
 }) {
   const { play, addToQueue, currentTrack, isPlaying, pause, resume, trackProgress } = usePlayerStore()
-  // Progress lives in sessionStorage; only show it after hydration.
+  // Progress lives in localStorage; only show it after hydration.
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
 
   useEffect(() => {

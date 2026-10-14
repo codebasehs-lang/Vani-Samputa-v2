@@ -24,7 +24,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       return
     }
 
-    void navigator.serviceWorker.register("/sw.js").catch(() => {})
+    void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch((error) => {
+      console.error("Could not register the PWA service worker.", error)
+    })
   }, [])
 
   return (

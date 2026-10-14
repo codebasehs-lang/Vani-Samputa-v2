@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware"
 
 export type Track = {
   id: string
@@ -102,6 +102,7 @@ export const usePlayerStore = create<PlayerState>()(
         set((s) => ({
           isPlaying: true,
           isMiniPlayer: s.currentTrack?.mediaType === "AUDIO" ? true : s.isMiniPlayer,
+          isVideoMini: s.currentTrack?.mediaType === "VIDEO" ? true : s.isVideoMini,
         }))
       },
       seek(positionS) {
@@ -188,7 +189,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: "vs-player",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(getPlayerStorage),
       partialize: (s) => ({
         currentTrack: s.currentTrack,
         positionS: s.positionS,
@@ -197,7 +198,51 @@ export const usePlayerStore = create<PlayerState>()(
         queue: s.queue,
         history: s.history,
         trackProgress: s.trackProgress,
+        videoProgressMap: s.videoProgressMap,
       }),
     }
   )
 )
+
+function getPlayerStorage(): StateStorage {
+  const dummy: StateStorage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+  }
+
+  if (typeof window === "undefined" && typeof globalThis.localStorage === "undefined") {
+    return dummy
+  }
+
+  let storage: StateStorage
+  try {
+    storage = typeof window !== "undefined" ? window.localStorage : globalThis.localStorage
+    storage.setItem("vs-player-storage-check", "1")
+    storage.removeItem("vs-player-storage-check")
+  } catch (error) {
+    console.warn("Playback history cannot use local storage; app restarts may lose progress.", error)
+    try {
+      storage = typeof window !== "undefined" ? window.sessionStorage : globalThis.sessionStorage
+      storage.setItem("vs-player-storage-check", "1")
+      storage.removeItem("vs-player-storage-check")
+      return storage
+    } catch (sessionError) {
+      console.error("Playback history storage is unavailable.", sessionError)
+      return dummy
+    }
+  }
+
+  try {
+    const session = typeof window !== "undefined" ? window.sessionStorage : globalThis.sessionStorage
+    const legacy = session?.getItem("vs-player")
+    if (!storage.getItem("vs-player") && legacy) {
+      storage.setItem("vs-player", legacy)
+      session.removeItem("vs-player")
+    }
+  } catch (error) {
+    console.warn("Could not migrate playback history from session storage.", error)
+  }
+
+  return storage
+}
