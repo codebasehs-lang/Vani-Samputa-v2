@@ -52,6 +52,7 @@ export function SplashVisual({
               width={192}
               height={192}
               priority
+              unoptimized
               className="pwa-splash-logo"
             />
           </div>

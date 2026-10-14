@@ -2739,6 +2739,10 @@ body {
 .pwa-splash-exiting {
   opacity: 0;
 }
+.pwa-splash-boot { display: none; }
+@media (display-mode: standalone) and (max-width: 767px) {
+  .pwa-splash-boot { display: flex; }
+}
 .pwa-splash-frame {
   position: absolute;
   inset: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));

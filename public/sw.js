@@ -1,11 +1,18 @@
-const VERSION = "vani-samputa-v10"
+const VERSION = "vani-samputa-v11"
 const PRECACHE = `${VERSION}-precache`
 const RUNTIME = `${VERSION}-runtime`
 const AUDIO_CACHE = "vani-samputa-audio-v1"
 const APP_SHELL = ["/", "/audio", "/video", "/events", "/live", "/manifest.webmanifest"]
+const SPLASH_ASSETS = [
+  "/branding/logo-192.png",
+  "/branding/splash/madhava.webp",
+  "/branding/splash/srila-prabhupada.webp",
+  "/branding/splash/srila-gurudeva.webp",
+  "/branding/splash/gurudeva.webp",
+]
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(PRECACHE).then((cache) => cache.addAll(APP_SHELL)))
+  event.waitUntil(caches.open(PRECACHE).then((cache) => cache.addAll([...APP_SHELL, ...SPLASH_ASSETS])))
   self.skipWaiting()
 })
 

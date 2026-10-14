@@ -11,34 +11,35 @@ export function FirstVisitSplash() {
   const [visible, setVisible] = useState(false)
   const [fading, setFading] = useState(false)
   const [isPwa, setIsPwa] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 768px)").matches
     const standalone = window.matchMedia("(display-mode: standalone)").matches ||
       ("standalone" in navigator && navigator.standalone === true)
     const mobilePwa = !isDesktop && standalone
-    if (!isDesktop && !mobilePwa) return
-
-    if (!mobilePwa) {
+    let showSplash = isDesktop || mobilePwa
+    if (isDesktop) {
       const seen = window.localStorage.getItem(FIRST_VISIT_SPLASH_KEY) === "1"
-      if (seen) return
-      window.localStorage.setItem(FIRST_VISIT_SPLASH_KEY, "1")
+      showSplash = !seen
+      if (!seen) window.localStorage.setItem(FIRST_VISIT_SPLASH_KEY, "1")
     }
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const duration = mobilePwa ? (reduceMotion ? 600 : 2600) : FIRST_VISIT_SPLASH_DURATION_MS
     const showTimer = window.setTimeout(() => {
       setIsPwa(mobilePwa)
-      setVisible(true)
+      setVisible(showSplash)
+      setChecking(false)
     }, 0)
 
-    const fadeTimer = window.setTimeout(
+    const fadeTimer = showSplash ? window.setTimeout(
       () => setFading(true),
       mobilePwa && reduceMotion ? duration : duration - FIRST_VISIT_SPLASH_FADE_MS
-    )
+    ) : null
     return () => {
       window.clearTimeout(showTimer)
-      window.clearTimeout(fadeTimer)
+      if (fadeTimer !== null) window.clearTimeout(fadeTimer)
     }
   }, [])
 
@@ -57,17 +58,18 @@ export function FirstVisitSplash() {
     return () => { document.body.style.overflow = overflow }
   }, [visible, isPwa])
 
-  if (!visible) return null
+  if (!visible && !checking) return null
+  const pwa = checking || isPwa
 
   return (
     <SplashVisual
-      variant={isPwa ? "pwa" : "default"}
-      onEnter={isPwa ? () => setFading(true) : undefined}
+      variant={pwa ? "pwa" : "default"}
+      onEnter={pwa ? () => setFading(true) : undefined}
       className={`fixed inset-0 z-[110] ${
-        isPwa
+        pwa
           ? fading ? "pwa-splash-exiting" : ""
           : `transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`
-      }`}
+      } ${checking ? "pwa-splash-boot" : ""}`}
       subtitle="Preparing your experience"
     />
   )

@@ -31,8 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionProvider>
-      {children}
       <FirstVisitSplash />
+      {children}
       <InstallPrompt />
       <Toaster position="top-right" richColors closeButton />
     </SessionProvider>

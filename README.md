@@ -42,7 +42,14 @@ the same fade rather than abruptly removing the welcome. Reduced-motion users ge
 non-animated welcome. The existing desktop first-visit splash is unchanged;
 ordinary mobile browser visits do not show the PWA welcome. The operating
 system's initial splash remains browser-controlled (manifest logo/background);
-the detailed lotus design appears after the app hydrates.
+the detailed lotus design is included in the initial HTML and shown by a
+standalone/mobile CSS media query before hydration. Client startup then manages
+its dismissal without remounting the artwork. Manifest and standalone browser
+chrome use the same indigo as the custom launch screen; ordinary browser chrome
+keeps its cream color. Small, pre-generated WebP portraits and the shared logo
+are precached by the production service worker for faster repeat/offline launches.
+The native splash cannot be disabled, and existing installations may take time
+to refresh their manifest branding.
 
 Home search works in the browser and installed PWA and requires an internet
 connection. It shows loading and connection/request errors with a retry button.

@@ -32,13 +32,14 @@ export const GURUS: Figure[] = [
   },
 ]
 
-export function Portrait({ figure, sizes, priority }: { figure: Figure; sizes: string; priority?: boolean }) {
+export function Portrait({ figure, sizes, priority, splash = false }: { figure: Figure; sizes: string; priority?: boolean; splash?: boolean }) {
   const style: CSSProperties = { objectPosition: figure.position }
   if (figure.zoom) {
     style.transform = `scale(${figure.zoom.scale})`
     style.transformOrigin = figure.zoom.origin
   }
-  return <Image src={figure.src} alt={figure.name} fill sizes={sizes} priority={priority} loading={priority ? undefined : "eager"} style={style} />
+  const src = splash ? figure.src.replace("/images/hero/", "/branding/splash/").replace(".png", ".webp") : figure.src
+  return <Image src={src} alt={figure.name} fill sizes={sizes} priority={priority} unoptimized={splash} loading={priority ? undefined : "eager"} style={style} />
 }
 
 export function HeroFigures() {
@@ -73,12 +74,12 @@ export function ParamparaRow({ variant = "hero" }: { variant?: "hero" | "splash"
   return (
     <div className={splash ? "hero-parampara pwa-splash-parampara" : "hero-parampara"} aria-label="Śrī Mādhava, Śrīla Prabhupāda, Śrīla Gurudeva and Gurudeva">
       <span className="hero-parampara-avatar hero-parampara-deity">
-        <Portrait figure={MADHAVA} sizes={splash ? "64px" : "56px"} priority={splash} />
+        <Portrait figure={MADHAVA} sizes={splash ? "64px" : "56px"} priority={splash} splash={splash} />
       </span>
       <span className="hero-parampara-sep" aria-hidden="true">✦</span>
       {GURUS.map((g) => (
         <span key={g.src} className="hero-parampara-avatar">
-          <Portrait figure={g} sizes={splash ? "56px" : "48px"} priority={splash} />
+          <Portrait figure={g} sizes={splash ? "56px" : "48px"} priority={splash} splash={splash} />
         </span>
       ))}
     </div>
