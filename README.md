@@ -43,7 +43,11 @@ non-animated welcome. The existing desktop first-visit splash is unchanged;
 ordinary mobile browser visits do not show the PWA welcome. The operating
 system's initial splash remains browser-controlled (manifest logo/background);
 the detailed lotus design is included in the initial HTML and shown by a
-standalone/mobile CSS media query before hydration. Client startup then manages
+standalone/mobile CSS media query before hydration. A synchronous head script
+also detects iOS standalone mode and guards the first paint with an indigo
+background and hidden home content until the custom splash takes over.
+The splash sits outside the application/session providers, and the first-paint
+guard is released only after its hydrated state commits. Client startup then manages
 its dismissal without remounting the artwork. Manifest and standalone browser
 chrome use the same indigo as the custom launch screen; ordinary browser chrome
 keeps its cream color. Small, pre-generated WebP portraits and the shared logo

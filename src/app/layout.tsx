@@ -9,6 +9,17 @@ import { AudioEngine } from "@/components/player/AudioEngine";
 import { MiniPlayer } from "@/components/player/MiniPlayer";
 import { FullScreenPlayer } from "@/components/player/FullScreenPlayer";
 import { VideoStage } from "@/components/player/VideoStage";
+import { FirstVisitSplash } from "@/components/FirstVisitSplash";
+
+// Run during HTML parsing, not hydration, to cover the first installed-app paint.
+const pwaLaunchScript = `(function(){var installed=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;if(installed&&window.matchMedia("(max-width: 767px)").matches){document.documentElement.setAttribute("data-pwa-launch","");}})();`;
+const pwaLaunchStyles = `
+html[data-pwa-launch], html[data-pwa-launch] body { background: #101327 !important; overflow: hidden; }
+html[data-pwa-launch] body > :not(.pwa-splash) { visibility: hidden; }
+html[data-pwa-launch] .pwa-splash-boot {
+  display: flex; position: fixed; inset: 0; z-index: 110;
+  width: 100%; height: 100%; background-color: #101327; visibility: visible;
+}`;
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const crimson = Crimson_Text({
@@ -55,8 +66,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: pwaLaunchStyles }} />
+        <script dangerouslySetInnerHTML={{ __html: pwaLaunchScript }} />
+      </head>
       <body className={`${inter.variable} ${crimson.variable} ${devanagari.variable} min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]`}>
+        <FirstVisitSplash />
         <Providers>
           <Header />
           {/* pb-36 = tab bar (64px) + floating mini-player dock (~76px) on mobile; md:pb-24 = dock only */}

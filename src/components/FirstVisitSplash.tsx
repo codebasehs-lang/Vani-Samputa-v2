@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { SplashVisual } from "@/components/SplashVisual"
 
 const FIRST_VISIT_SPLASH_KEY = "vs-first-visit-desktop-splash-v1"
@@ -12,6 +12,10 @@ export function FirstVisitSplash() {
   const [fading, setFading] = useState(false)
   const [isPwa, setIsPwa] = useState(false)
   const [checking, setChecking] = useState(true)
+
+  useLayoutEffect(() => {
+    if (!checking) document.documentElement.removeAttribute("data-pwa-launch")
+  }, [checking])
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 768px)").matches
@@ -51,7 +55,7 @@ export function FirstVisitSplash() {
     return () => window.clearTimeout(timer)
   }, [visible, fading, isPwa])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!visible || !isPwa) return
     const overflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
