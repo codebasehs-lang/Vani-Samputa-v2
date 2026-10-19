@@ -51,7 +51,7 @@ export function PlaylistTrackList({
   playlistId: string
   initialLectureId?: string
 }) {
-  const { play, addToQueue, currentTrack, isPlaying, pause, resume, trackProgress } = usePlayerStore()
+  const { playPlaylist, addToQueue, currentTrack, isPlaying, pause, resume, trackProgress } = usePlayerStore()
   // Progress lives in localStorage; only show it after hydration.
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
 
@@ -61,14 +61,16 @@ export function PlaylistTrackList({
     if (!lecture) return
 
     const state = usePlayerStore.getState()
-    if (state.currentTrack?.id === lecture.id) state.resume()
-    else state.play(toTrack(lecture, playlistId))
+    state.playPlaylist(
+      lectures.map((item) => toTrack(item, playlistId)),
+      lecture.id,
+      state.currentTrack?.id === lecture.id ? state.positionS : 0,
+    )
   }, [initialLectureId, lectures, playlistId])
 
   function playAll() {
     if (!lectures.length) return
-    play(toTrack(lectures[0], playlistId))
-    lectures.slice(1).forEach((lecture) => addToQueue(toTrack(lecture, playlistId)))
+    playPlaylist(lectures.map((lecture) => toTrack(lecture, playlistId)), lectures[0].id)
   }
 
   if (lectures.length === 0) {
@@ -105,7 +107,10 @@ export function PlaylistTrackList({
           return (
             <div key={lecture.id} data-active={isActive} className="track-row group">
               <button
-                onClick={() => (isActive ? (isPlaying ? pause() : resume()) : play(track))}
+                onClick={() => (isActive ? (isPlaying ? pause() : resume()) : playPlaylist(
+                  lectures.map((item) => toTrack(item, playlistId)),
+                  lecture.id,
+                ))}
                 aria-label={isActive ? (isPlaying ? "Pause" : "Resume") : `Play ${lecture.title}`}
                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
               >

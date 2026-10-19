@@ -25,7 +25,7 @@ type PiPWindow = (Window & { document: Document }) | null
 // Document Picture-in-Picture window — so switching between them (or leaving
 // the tab/app) never restarts playback or loses the current position.
 export function VideoStage() {
-  const { currentTrack, setPosition, setDuration, setVideoProgress, playNext, setVideoMini, isVideoMini,
+  const { currentTrack, setPosition, setDuration, setVideoProgress, finishTrack, setVideoMini, isVideoMini,
     positionS, duration: liveDuration, trackProgress } =
     usePlayerStore()
   const [pipLarge, setPipLarge] = useState(false)
@@ -77,6 +77,10 @@ export function VideoStage() {
     },
     [currentTrack, setDuration]
   )
+
+  const handleEnded = useCallback(() => {
+    if (currentTrack) finishTrack(currentTrack.id)
+  }, [currentTrack, finishTrack])
 
   // Resolve and apply the current target parent for the shared player node.
   useEffect(() => {
@@ -173,7 +177,7 @@ export function VideoStage() {
           autoplay
           onPositionUpdate={handlePosition}
           onDurationUpdate={handleDuration}
-          onEnded={playNext}
+          onEnded={handleEnded}
           className="relative h-full w-full"
         />,
         portalHost

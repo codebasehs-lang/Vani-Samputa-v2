@@ -12,7 +12,6 @@ export const MADHAVA: Figure = {
   src: "/images/hero/madhava.png",
   name: "Śrī Mādhava",
   position: "50% 50%",
-  zoom: { scale: 1.18, origin: "54% 58%" },
 }
 
 // Paramparā order: Śrīla Prabhupāda → Śrīla Gurudeva → Gurudeva

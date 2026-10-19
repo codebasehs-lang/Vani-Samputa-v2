@@ -6,6 +6,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Playback history
 
+Selecting an audio or video lecture queues the remaining lectures in that playlist
+in the displayed order. When a lecture finishes, the next starts automatically;
+playback stops after the last lecture unless more tracks were added to the queue.
+Choosing another lecture replaces the queue with the rest of its playlist, and
+audio Play all restarts from the first lecture without duplicating queued tracks.
+Video details and the highlighted playlist item follow the currently playing
+lecture, including in audio-only mode. Playlist queues survive page navigation
+and app restarts, but reopening the app does not autoplay. If the browser blocks
+video autoplay, a message prompts the listener to press Play.
+
 The service worker caches static assets and public offline pages, but never
 API/session responses, RSC payloads, or private pages. A worker version update
 clears old runtime caches while preserving downloaded audio. The header waits
@@ -30,6 +40,13 @@ pages without deleting playback history or downloaded audio. Open the installed
 app online after deployment so it can receive the update.
 
 ## Getting Started
+
+The login and registration portrait row displays Gurudeva, Srila Gurudeva,
+and Srila Prabhupada from left to right, beneath the Sri Madhava portrait.
+The brand emblem fits inside its gold ring without zoom cropping, and the
+Sri Madhava portrait uses a centered, unzoomed crop to show more of both sides.
+On desktop auth pages, the portrait and parampara group sit slightly higher,
+with the rotating mandala centered on Sri Madhava. Mobile keeps its compact spacing.
 
 The installed mobile PWA has a midnight-indigo launch welcome with the brand
 emblem, a gold-and-lotus illustration, and a dedication to Sri Guru and Gauranga.

@@ -2,6 +2,7 @@
 
 import { usePlayerStore } from "@/store/playerStore"
 import { useEffect } from "react"
+import { toast } from "sonner"
 
 export function AudioEngine() {
   // All audio control is done via raw store subscriptions — no React re-render cycle
@@ -81,9 +82,11 @@ export function AudioEngine() {
         loadedTrackId = currentTrack?.url === track.url ? currentTrack.id : null
         loadingTrackId = null
         if (usePlayerStore.getState().isPlaying) await audio.play()
-      } catch {
+      } catch (error) {
         if (requestId !== sourceRequest) return
         loadingTrackId = null
+        console.error("Audio playback failed.", error)
+        toast.error("Could not play this lecture. Please try again.")
         usePlayerStore.getState().pause()
       }
     }
@@ -96,7 +99,9 @@ export function AudioEngine() {
       const trackId = loadedTrackId ?? loadingTrackId
       if (trackId) usePlayerStore.getState().setDuration(audio.duration, trackId)
     })
-    audio.addEventListener("ended", () => usePlayerStore.getState().playNext())
+    audio.addEventListener("ended", () => {
+      if (loadedTrackId) usePlayerStore.getState().finishTrack(loadedTrackId)
+    })
     // Wire store changes → DOM
     const unsub = usePlayerStore.subscribe((s, prev) => {
       // Track change

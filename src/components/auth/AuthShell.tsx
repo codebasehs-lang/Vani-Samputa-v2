@@ -19,14 +19,6 @@ export function AuthShell({ eyebrow, title, subtitle, children, footer }: AuthSh
     <div className="auth-page">
       <div className="auth-card">
         <aside className="auth-aside">
-          <svg className="auth-mandala" viewBox="0 0 200 200" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, i) => (
-              <ellipse key={i} cx="100" cy="100" rx="92" ry="34" transform={`rotate(${i * 15} 100 100)`} />
-            ))}
-            <circle cx="100" cy="100" r="96" />
-            <circle cx="100" cy="100" r="60" />
-          </svg>
-
           <div className="auth-aside-inner">
             <Link href="/" className="auth-logo" aria-label="Vāṇī Saṃpuṭa home">
               <Image src="/branding/logo-192.png" alt="" width={56} height={56} priority />
@@ -36,24 +28,33 @@ export function AuthShell({ eyebrow, title, subtitle, children, footer }: AuthSh
               </span>
             </Link>
 
-            <div className="auth-deity">
-              <span className="auth-deity-halo" aria-hidden="true" />
-              <span className="auth-deity-ring" aria-hidden="true" />
-              <span className="auth-deity-frame">
-                <Portrait figure={MADHAVA} sizes="176px" priority />
-              </span>
+            <div className="auth-parampara">
+              <div className="auth-deity">
+                <svg className="auth-mandala" viewBox="0 0 200 200" aria-hidden="true">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <ellipse key={i} cx="100" cy="100" rx="92" ry="34" transform={`rotate(${i * 15} 100 100)`} />
+                  ))}
+                  <circle cx="100" cy="100" r="96" />
+                  <circle cx="100" cy="100" r="60" />
+                </svg>
+                <span className="auth-deity-halo" aria-hidden="true" />
+                <span className="auth-deity-ring" aria-hidden="true" />
+                <span className="auth-deity-frame">
+                  <Portrait figure={MADHAVA} sizes="176px" priority />
+                </span>
+              </div>
+
+              <ul className="auth-gurus" aria-label="Guru-paramparā">
+                {[...GURUS].reverse().map((g) => (
+                  <li key={g.src} className="auth-guru">
+                    <Portrait figure={g} sizes="56px" priority />
+                  </li>
+                ))}
+              </ul>
+
+              <p className="auth-verse">guru-mukha-padma-vakya, cittete koriya aikya...</p>
+              <span className="auth-ornament" aria-hidden="true"><i />✦<i /></span>
             </div>
-
-            <ul className="auth-gurus" aria-label="Guru-paramparā">
-              {GURUS.map((g) => (
-                <li key={g.src} className="auth-guru">
-                  <Portrait figure={g} sizes="56px" priority />
-                </li>
-              ))}
-            </ul>
-
-            <p className="auth-verse">guru-mukha-padma-vakya, cittete koriya aikya...</p>
-            <span className="auth-ornament" aria-hidden="true"><i />✦<i /></span>
           </div>
         </aside>
 

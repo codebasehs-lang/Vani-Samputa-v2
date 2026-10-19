@@ -9,6 +9,7 @@ import {
   type CSSProperties,
 } from "react"
 import { usePlayerStore } from "@/store/playerStore"
+import { toast } from "sonner"
 
 export type YouTubePlayerHandle = {
   getCurrentTime: () => number | null
@@ -110,9 +111,15 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
           readyRef.current = true
           playerRef.current?.seekTo?.(resolvedStart, true)
           onDurationUpdate?.(playerRef.current?.getDuration?.())
-          if (!usePlayerStore.getState().isPlaying) {
+          if (autoplay && usePlayerStore.getState().isPlaying) {
+            playerRef.current?.playVideo?.()
+          } else if (!usePlayerStore.getState().isPlaying) {
             playerRef.current?.pauseVideo?.()
           }
+        },
+        onAutoplayBlocked: () => {
+          usePlayerStore.getState().pause()
+          toast.info("Your browser paused autoplay. Press Play to continue the lecture.")
         },
         onStateChange: (e: { data: number }) => {
           if (e.data === 0) onEnded?.() // 0 = ended

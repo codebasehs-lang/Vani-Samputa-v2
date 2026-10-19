@@ -37,16 +37,16 @@ function parseTranscript(transcript: string): TranscriptLine[] {
 }
 
 export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: Lecture[]; playlistId: string; initialVideoId?: string }) {
-  const { play, seek, videoProgressMap, currentTrack, setVideoMini } =
+  const { playPlaylist, seek, videoProgressMap, currentTrack, setVideoMini } =
     usePlayerStore()
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
   const [selectedId, setSelectedId] = useState<string | null>(
     initialVideoId && lectures.some((lecture) => lecture.id === initialVideoId) ? initialVideoId : null
   )
-  const activeId = selectedId ?? (
+  const activeId = (
     mounted && currentTrack?.mediaType === "VIDEO" && currentTrack.playlistId === playlistId &&
     lectures.some((lecture) => lecture.id === currentTrack.id) ? currentTrack.id : null
-  )
+  ) ?? selectedId
   const [audioOnly, setAudioOnly] = useState(false)
   const [transcriptVideoId, setTranscriptVideoId] = useState<string | null>(null)
   const showTranscript = activeId !== null && transcriptVideoId === activeId
@@ -66,8 +66,13 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
   useEffect(() => {
     if (!initialVideoId) return
     const lecture = lectures.find((l) => l.id === initialVideoId)
-    if (lecture && usePlayerStore.getState().currentTrack?.id !== lecture.id) {
-      play(toTrack(lecture), usePlayerStore.getState().trackProgress[lecture.id]?.positionS ?? 0)
+    if (lecture) {
+      const state = usePlayerStore.getState()
+      playPlaylist(
+        lectures.map(toTrack),
+        lecture.id,
+        state.currentTrack?.id === lecture.id ? state.positionS : state.trackProgress[lecture.id]?.positionS ?? 0,
+      )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -91,7 +96,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
     if (state.currentTrack?.id === lecture.id) {
       state.resume()
     } else {
-      play(toTrack(lecture), state.trackProgress[lecture.id]?.positionS ?? 0)
+      playPlaylist(lectures.map(toTrack), lecture.id, state.trackProgress[lecture.id]?.positionS ?? 0)
     }
     // scroll to player
     window.scrollTo({ top: 0, behavior: "smooth" })

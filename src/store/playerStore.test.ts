@@ -100,6 +100,99 @@ test("queue playback is added to history and clears stale seeks", () => {
   assert.equal(usePlayerStore.getState().trackProgress.video.positionS, 90)
 })
 
+for (const mediaType of ["AUDIO", "VIDEO"] as const) {
+  test(`${mediaType} playlist completion advances in order and stops at the last lecture`, () => {
+    const tracks = [1, 2, 3].map((index): Track => ({
+      id: `${mediaType}-${index}`,
+      title: `Lecture ${index}`,
+      url: `${mediaType}-${index}`,
+      mediaType,
+      playlistId: "playlist",
+      duration: 600,
+    }))
+    const store = usePlayerStore.getState()
+    store.playPlaylist(tracks, tracks[0].id)
+    assert.deepEqual(usePlayerStore.getState().queue, tracks.slice(1))
+    store.finishTrack(tracks[0].id)
+    assert.equal(usePlayerStore.getState().currentTrack?.id, tracks[1].id)
+    assert.equal(usePlayerStore.getState().positionS, 0)
+    assert.equal(usePlayerStore.getState().isPlaying, true)
+    assert.equal(usePlayerStore.getState().trackProgress[tracks[0].id].positionS, 600)
+    if (mediaType === "VIDEO") {
+      assert.equal(usePlayerStore.getState().videoProgressMap[tracks[0].id], 100)
+    }
+    store.finishTrack(tracks[1].id)
+    assert.equal(usePlayerStore.getState().currentTrack?.id, tracks[2].id)
+    store.finishTrack(tracks[2].id)
+    assert.equal(usePlayerStore.getState().currentTrack?.id, tracks[2].id)
+    assert.equal(usePlayerStore.getState().isPlaying, false)
+    assert.deepEqual(usePlayerStore.getState().queue, [])
+  })
+}
+
+test("selecting a middle lecture replaces stale queue entries with the remaining playlist", () => {
+  const tracks: Track[] = [audio, { ...audio, id: "second" }, { ...audio, id: "third" }]
+  const store = usePlayerStore.getState()
+  store.addToQueue(video)
+  store.playPlaylist(tracks, "second", 42)
+  assert.deepEqual(usePlayerStore.getState().queue.map((track) => track.id), ["third"])
+  assert.equal(usePlayerStore.getState().positionS, 42)
+  store.finishTrack("second")
+  assert.equal(usePlayerStore.getState().currentTrack?.id, "third")
+})
+
+test("Play all replaces the queue without duplicates and restarts the current lecture", () => {
+  const store = usePlayerStore.getState()
+  store.playPlaylist([audio, video], audio.id)
+  store.setPosition(100)
+  store.playPlaylist([audio, video], audio.id)
+  assert.deepEqual(usePlayerStore.getState().queue, [video])
+  assert.equal(usePlayerStore.getState().positionS, 0)
+  assert.equal(usePlayerStore.getState().requestedPositionS, 0)
+})
+
+test("automatic next starts at zero even when that lecture has saved progress", () => {
+  const store = usePlayerStore.getState()
+  store.play(video)
+  store.setPosition(500)
+  store.playPlaylist([audio, video], audio.id)
+  store.finishTrack(audio.id)
+  assert.equal(usePlayerStore.getState().positionS, 0)
+  assert.equal(usePlayerStore.getState().trackProgress.video.positionS, 0)
+})
+
+test("duplicate completion from the outgoing player cannot skip the next lecture", () => {
+  const third: Track = { ...audio, id: "third" }
+  const store = usePlayerStore.getState()
+  store.playPlaylist([audio, video, third], audio.id)
+  store.finishTrack(audio.id)
+  store.finishTrack(audio.id)
+  assert.equal(usePlayerStore.getState().currentTrack?.id, video.id)
+  assert.deepEqual(usePlayerStore.getState().queue, [third])
+})
+
+test("playlist queue persists while restored playback remains paused", async () => {
+  const store = usePlayerStore.getState()
+  store.playPlaylist([audio, video], audio.id)
+  const persisted = localSaved.get("vs-player")!
+  usePlayerStore.setState(initialState, true)
+  localSaved.set("vs-player", persisted)
+  await usePlayerStore.persist.rehydrate()
+  assert.deepEqual(usePlayerStore.getState().queue, [video])
+  assert.equal(usePlayerStore.getState().isPlaying, false)
+  usePlayerStore.getState().resume()
+  usePlayerStore.getState().finishTrack(audio.id)
+  assert.equal(usePlayerStore.getState().currentTrack?.id, video.id)
+  assert.equal(usePlayerStore.getState().isPlaying, true)
+})
+
+test("invalid playlist selection fails explicitly without changing playback", () => {
+  const store = usePlayerStore.getState()
+  store.play(audio)
+  assert.throws(() => store.playPlaylist([audio], "missing"), /not in the playlist/)
+  assert.equal(usePlayerStore.getState().currentTrack?.id, audio.id)
+})
+
 test("history and per-track progress survive storage rehydration", async () => {
   const store = usePlayerStore.getState()
   store.play(audio)

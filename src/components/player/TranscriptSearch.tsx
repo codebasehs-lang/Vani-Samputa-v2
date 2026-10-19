@@ -29,7 +29,7 @@ function toTrack(lecture: TranscriptLecture, playlistId: string): Track {
   return {
     id: lecture.id,
     title: lecture.title,
-    url: lecture.url,
+    url: lecture.mediaType === "AUDIO" ? `/api/audio/${lecture.id}` : lecture.url,
     mediaType: lecture.mediaType,
     duration: lecture.duration ?? undefined,
     thumbnail: lecture.thumbnail ?? undefined,
@@ -39,7 +39,7 @@ function toTrack(lecture: TranscriptLecture, playlistId: string): Track {
 
 export function TranscriptSearch({ lectures, playlistId }: { lectures: TranscriptLecture[]; playlistId: string }) {
   const [query, setQuery] = useState("")
-  const { play, seek } = usePlayerStore()
+  const { playPlaylist } = usePlayerStore()
   const normalizedQuery = query.trim().toLocaleLowerCase()
 
   const results: Result[] = []
@@ -61,8 +61,11 @@ export function TranscriptSearch({ lectures, playlistId }: { lectures: Transcrip
   }
 
   function selectResult(result: Result) {
-    play(toTrack(result.lecture, playlistId))
-    if (result.timestampS > 0) seek(result.timestampS)
+    playPlaylist(
+      lectures.map((lecture) => toTrack(lecture, playlistId)),
+      result.lecture.id,
+      result.timestampS,
+    )
   }
 
   return (

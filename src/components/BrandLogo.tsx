@@ -3,8 +3,6 @@ type Props = {
   animated?: boolean
 }
 
-// The source PNG has ~9% transparent padding around the emblem, so the image is
-// scaled up inside a clipped circle to let the gold ring sit flush against it.
 export function BrandLogo({ className = "", animated = true }: Props) {
   return (
     <span
@@ -15,7 +13,7 @@ export function BrandLogo({ className = "", animated = true }: Props) {
         src="/branding/logo-192.png"
         srcSet="/branding/logo-192.png 1x, /branding/logo-512.png 3x"
         alt="Vani Samputa"
-        className="h-full w-full scale-[1.2] object-cover"
+        className="h-full w-full object-contain"
       />
     </span>
   )

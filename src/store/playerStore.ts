@@ -29,6 +29,8 @@ type PlayerState = {
   sleepTimerEnd: number | null       // epoch ms; AudioEngine pauses when reached
 
   play: (track: Track, positionS?: number) => void
+  playPlaylist: (tracks: Track[], trackId: string, positionS?: number) => void
+  finishTrack: (trackId: string) => void
   pause: () => void
   stop: () => void
   resume: () => void
@@ -82,6 +84,22 @@ export const usePlayerStore = create<PlayerState>()(
           // prepend to history, dedup by id, cap at 20
           history: [track, ...s.history.filter((t) => t.id !== track.id)].slice(0, 20),
         }))
+      },
+      playPlaylist(tracks, trackId, positionS = 0) {
+        const index = tracks.findIndex((track) => track.id === trackId)
+        if (index < 0) throw new Error("Selected lecture is not in the playlist")
+        const isCurrent = get().currentTrack?.id === trackId
+        set({ queue: tracks.slice(index + 1) })
+        get().play(tracks[index], positionS)
+        if (isCurrent) get().seek(positionS)
+      },
+      finishTrack(trackId) {
+        const state = get()
+        if (state.currentTrack?.id !== trackId) return
+        if (state.duration > 0) state.setPosition(state.duration, trackId)
+        if (state.currentTrack.mediaType === "VIDEO") state.setVideoProgress(trackId, 100)
+        if (state.queue.length) state.playNext()
+        else state.pause()
       },
       pause() {
         set({ isPlaying: false })
@@ -165,7 +183,16 @@ export const usePlayerStore = create<PlayerState>()(
         const { queue } = get()
         if (!queue.length) return
         const [next, ...rest] = queue
-        set({ queue: rest })
+        set((s) => ({
+          queue: rest,
+          trackProgress: {
+            ...s.trackProgress,
+            [next.id]: {
+              positionS: 0,
+              duration: s.trackProgress[next.id]?.duration || next.duration || 0,
+            },
+          },
+        }))
         get().play(next)
       },
       openFullScreen() {
