@@ -4,6 +4,33 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 - Admin lecture upload guide: [docs/admin-lecture-upload-guide.md](docs/admin-lecture-upload-guide.md)
 
+## Admin playlists
+
+The Playlists admin page supports title search and combined language, media type,
+and category filters, including playlists without categories. Clear filters
+restores the full list. Category edits apply to the playlist's grouping, not to
+its individual lectures.
+
+Expand a playlist to load all its lectures in playlist order. The expanded
+section supports editing, confirmed deletion, and adding a new lecture without
+leaving the page. The lecture form is bound to the exact playlist ID (not just
+its title), with its language and media type fixed to the playlist. New lectures
+start with the playlist's categories selected. Successful changes reload the
+lecture list and update its count.
+
+Each playlist has a Delete action with an explicit confirmation. Deleting a
+playlist permanently deletes all lectures associated with it and their saved
+notes, favorites, history, and progress, as well as playlist favorites. The
+playlist and lecture deletions run in one database transaction; other playlists
+and standalone lectures are not deleted. This removes application records, not
+the original videos or externally hosted audio files.
+
+Run the playlist regression tests without connecting to a database:
+
+```bash
+node --test src/app/api/admin/playlists/route.test.mjs src/app/api/admin/lectures/route.test.mjs src/components/admin/AdminPlaylistsTable.test.mjs src/components/admin/PlaylistLectures.test.mjs
+```
+
 ## Playback history
 
 Selecting an audio or video lecture queues the remaining lectures in that playlist

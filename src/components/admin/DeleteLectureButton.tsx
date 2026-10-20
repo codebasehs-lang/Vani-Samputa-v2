@@ -6,22 +6,26 @@ import { toast } from "sonner"
 import { Trash2 } from "lucide-react"
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
 
-export function DeleteLectureButton({ id }: { id: string }) {
+export function DeleteLectureButton({ id, onDeleted }: { id: string; onDeleted?: () => void }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [open, setOpen] = useState(false)
 
   async function handleDelete() {
+    if (busy) return
     setBusy(true)
-    const res = await fetch(`/api/admin/lectures?id=${id}`, { method: "DELETE" })
-    setBusy(false)
-    setOpen(false)
-    if (!res.ok) {
-      toast.error("Failed to delete lecture.")
-      return
+    try {
+      const res = await fetch(`/api/admin/lectures?id=${encodeURIComponent(id)}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Failed to delete lecture.")
+      setOpen(false)
+      toast.success("Lecture deleted.")
+      onDeleted?.()
+      router.refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete lecture.")
+    } finally {
+      setBusy(false)
     }
-    toast.success("Lecture deleted.")
-    router.refresh()
   }
 
   return (
@@ -41,7 +45,7 @@ export function DeleteLectureButton({ id }: { id: string }) {
         danger
         busy={busy}
         onConfirm={handleDelete}
-        onCancel={() => setOpen(false)}
+        onCancel={() => { if (!busy) setOpen(false) }}
       />
     </>
   )

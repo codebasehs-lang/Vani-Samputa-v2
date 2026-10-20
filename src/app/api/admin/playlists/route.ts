@@ -44,3 +44,31 @@ export async function PATCH(req: NextRequest) {
   })
   return NextResponse.json(playlist)
 }
+
+export async function DELETE(req: NextRequest) {
+  const guard = await requireAdmin()
+  if (guard.response) return guard.response
+
+  const id = req.nextUrl.searchParams.get("id")?.trim()
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const playlist = await tx.playlist.findUnique({ where: { id }, select: { id: true } })
+      if (!playlist) return null
+
+      // The existing foreign key uses SetNull, so explicitly delete children first.
+      const lectures = await tx.lecture.deleteMany({ where: { playlistId: id } })
+      await tx.playlist.delete({ where: { id } })
+      return { deletedLectures: lectures.count }
+    }, { isolationLevel: "Serializable" })
+
+    if (!result) {
+      return NextResponse.json({ error: "Playlist not found" }, { status: 404 })
+    }
+    return NextResponse.json({ ok: true, ...result })
+  } catch (error) {
+    console.error("Failed to delete playlist and its lectures:", error)
+    return NextResponse.json({ error: "Could not delete the playlist and its lectures." }, { status: 500 })
+  }
+}
