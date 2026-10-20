@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
-import { categorySlug } from "@/lib/categories"
+import { ensureCategories } from "@/lib/categories"
 import { prisma } from "@/lib/prisma"
 
 export async function GET() {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   if (guard.response) return guard.response
   const name = String((await req.json()).name ?? "").trim()
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 })
-  const category = await prisma.category.create({ data: { name, slug: categorySlug(name) } })
+  const [category] = await ensureCategories([name])
   return NextResponse.json(category, { status: 201 })
 }
 
