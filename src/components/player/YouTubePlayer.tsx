@@ -6,10 +6,12 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
   type CSSProperties,
 } from "react"
 import { usePlayerStore } from "@/store/playerStore"
 import { toast } from "sonner"
+import { extractYouTubeId } from "@/lib/youtube"
 
 export type YouTubePlayerHandle = {
   getCurrentTime: () => number | null
@@ -32,27 +34,33 @@ interface Props {
 
 // Module-level singleton to avoid loading the script multiple times
 let ytApiState: "idle" | "loading" | "ready" = "idle"
-const ytCallbacks: Array<() => void> = []
+const ytCallbacks: Array<{ ready: () => void; fail: () => void }> = []
 
-function loadYTApi(cb: () => void) {
+function loadYTApi(cb: () => void, onError: () => void) {
   if (typeof window === "undefined") return
   if (ytApiState === "ready") { cb(); return }
-  ytCallbacks.push(cb)
+  ytCallbacks.push({ ready: cb, fail: onError })
   if (ytApiState === "loading") return
   ytApiState = "loading"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(window as any).onYouTubeIframeAPIReady = () => {
     ytApiState = "ready"
-    ytCallbacks.forEach((fn) => fn())
+    ytCallbacks.forEach((callback) => callback.ready())
     ytCallbacks.length = 0
   }
   const tag = document.createElement("script")
   tag.src = "https://www.youtube.com/iframe_api"
+  tag.onerror = () => {
+    ytApiState = "idle"
+    const pending = ytCallbacks.splice(0)
+    pending.forEach((callback) => callback.fail())
+    tag.remove()
+  }
   document.head.appendChild(tag)
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function YouTubePlayer({
-    videoId,
+    videoId: rawVideoId,
     startSeconds = 0,
     autoplay = true,
     className,
@@ -61,6 +69,12 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
     onDurationUpdate,
     onEnded,
   }, ref) {
+  const videoId = extractYouTubeId(rawVideoId)
+  const validVideoId = /^[\w-]{11}$/.test(videoId)
+  const [playbackError, setPlaybackError] = useState<{ videoId: string; message: string } | null>(null)
+  const errorMessage = !validVideoId
+    ? "This lecture has an invalid YouTube video ID. Please ask an administrator to check its URL."
+    : playbackError?.videoId === videoId ? playbackError.message : null
   const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null)
@@ -83,7 +97,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
   }), [])
 
   const init = useCallback(() => {
-    if (!mountedRef.current || !containerRef.current || playerRef.current) return
+    if (!validVideoId || !mountedRef.current || !containerRef.current || playerRef.current) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const YT = (window as any).YT
     // Resolved here (not frozen earlier) so "live" reads the store after any
@@ -107,6 +121,18 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
         playsinline: 1,
       },
       events: {
+        onError: (event: { data: number }) => {
+          const message = event.data === 101 || event.data === 150
+            ? "This video cannot be embedded. Please open it on YouTube."
+            : event.data === 100
+              ? "This video is unavailable or private. Please check it on YouTube."
+              : event.data === 153
+                ? "YouTube could not verify this player. Please open the lecture on YouTube."
+                : `YouTube could not play this lecture (error ${event.data}). Please try it on YouTube.`
+          setPlaybackError({ videoId, message })
+          const state = usePlayerStore.getState()
+          if (state.currentTrack?.mediaType === "VIDEO" && extractYouTubeId(state.currentTrack.url) === videoId) state.pause()
+        },
         onReady: () => {
           readyRef.current = true
           playerRef.current?.seekTo?.(resolvedStart, true)
@@ -130,7 +156,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
               onPositionUpdate?.(pos)
             }
             const state = usePlayerStore.getState()
-            if (state.currentTrack?.mediaType === "VIDEO" && state.currentTrack.url === videoId) {
+            if (state.currentTrack?.mediaType === "VIDEO" && extractYouTubeId(state.currentTrack.url) === videoId) {
               if (e.data === 1 && !state.isPlaying) state.resume()
               if (e.data === 2 && state.isPlaying) state.pause()
             }
@@ -145,12 +171,15 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
         onPositionUpdate?.(pos)
       }
     }, 1_000)
-  }, [videoId, autoplay, onPositionUpdate, onDurationUpdate, onEnded])
+  }, [videoId, validVideoId, autoplay, onPositionUpdate, onDurationUpdate, onEnded])
 
   useEffect(() => {
     const container = containerRef.current
     mountedRef.current = true
-    loadYTApi(init)
+    if (validVideoId) loadYTApi(init, () => {
+      if (!mountedRef.current) return
+      setPlaybackError({ videoId, message: "Could not load the YouTube player. Check your connection or open the lecture on YouTube." })
+    })
     return () => {
       mountedRef.current = false
       if (timerRef.current) clearInterval(timerRef.current)
@@ -165,7 +194,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
       readyRef.current = false
       container?.replaceChildren()
     }
-  }, [init, onPositionUpdate])
+  }, [init, onPositionUpdate, validVideoId, videoId])
 
   // Flush progress when the page is hidden, backgrounded, or navigating away (especially on mobile/PWA).
   useEffect(() => {
@@ -188,7 +217,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
   // (e.g. switching to the mini player) would resume from a stale/wrong position.
   useEffect(() => {
     return usePlayerStore.subscribe((s, prev) => {
-      if (s.currentTrack?.mediaType !== "VIDEO" || s.currentTrack.url !== videoId || !readyRef.current) return
+      if (s.currentTrack?.mediaType !== "VIDEO" || extractYouTubeId(s.currentTrack.url) !== videoId || !readyRef.current) return
       if (s.isPlaying !== prev.isPlaying) {
         if (s.isPlaying) playerRef.current?.playVideo?.()
         else playerRef.current?.pauseVideo?.()
@@ -203,6 +232,21 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, Props>(function You
   return (
     <div className={className ?? "relative w-full aspect-video"} style={style}>
       <div ref={containerRef} className="absolute inset-0 h-full w-full" />
+      {errorMessage && (
+        <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/90 px-6 text-center text-sm text-white">
+          <p>{errorMessage}</p>
+          {validVideoId && (
+            <a
+              href={`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-[var(--accent)] px-4 py-2 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Open on YouTube
+            </a>
+          )}
+        </div>
+      )}
     </div>
   )
 })

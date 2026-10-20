@@ -6,6 +6,7 @@ import { formatDuration } from "@/lib/duration"
 import { Headphones, History, Pause, Play, PlayCircle } from "lucide-react"
 import Link from "next/link"
 import { SectionHeading } from "./SectionHeading"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
 
 const noopSubscribe = () => () => {}
 
@@ -81,12 +82,7 @@ function TrackInfo({ track, isAudio, isPlaying }: { track: Track; isAudio: boole
   return (
     <>
       <div className="now-thumb">
-        {track.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={track.thumbnail} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <TypeIcon size={28} className="text-[#e9c977]" />
-        )}
+        <LectureThumbnail src={track.thumbnail} alt="" className="h-full w-full object-cover" />
         {isPlaying && (
           <span className="now-eq" aria-hidden="true">
             <i /><i /><i /><i />

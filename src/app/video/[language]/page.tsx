@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { ListVideo, Video } from "lucide-react"
 import { PageHeader } from "@/components/PageHeader"
 import { PlaylistBrowser, type BrowseItem } from "@/components/browse/PlaylistBrowser"
+import { youtubeThumbnailUrl } from "@/lib/youtube"
 
 const VALID = ["odia", "hindi", "english"] as const
 type Lang = (typeof VALID)[number]
@@ -61,7 +62,7 @@ export default async function LanguageVideoPage(
     id: pl.id,
     title: pl.title,
     href: `/video/playlist/${pl.id}${pl.lectures[0] ? `?video=${pl.lectures[0].id}` : ""}`,
-    cover: pl.lectures[0]?.thumbnail ?? (pl.lectures[0]?.url ? `https://img.youtube.com/vi/${pl.lectures[0].url}/mqdefault.jpg` : null),
+    cover: pl.lectures[0]?.thumbnail || (pl.lectures[0]?.url ? youtubeThumbnailUrl(pl.lectures[0].url) : null),
     contain: false,
     count: pl._count.lectures,
     tags: pl.categories.map((c) => c.name),

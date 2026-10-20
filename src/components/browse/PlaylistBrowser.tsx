@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Headphones, ListMusic, Play, PlayCircle, Search } from "lucide-react"
 import { PlaylistFavoriteButton } from "@/components/PlaylistFavoriteButton"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
 
 export type BrowseItem = {
   id: string
@@ -79,17 +80,12 @@ export function PlaylistBrowser({
                 <div key={pl.id} className="playlist-card group">
                   <Link href={pl.href} className="block">
                     <div className="playlist-cover">
-                      {pl.cover ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <LectureThumbnail
                           src={pl.cover}
                           alt=""
                           className={`playlist-cover-img ${pl.contain ? "object-contain" : "object-cover"}`}
                           loading="lazy"
                         />
-                      ) : (
-                        <TypeIcon size={40} className="text-[#e9c977]" />
-                      )}
                       <span className="playlist-badge">
                         <TypeIcon size={11} />
                         {isAudio ? "Audio" : "Video"}

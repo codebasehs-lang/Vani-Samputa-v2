@@ -1,6 +1,8 @@
 "use client"
 
 import { ShareButton } from "@/components/ShareButton"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
+import { extractYouTubeId, youtubeThumbnailUrl } from "@/lib/youtube"
 import { formatDuration } from "@/lib/duration"
 import { isDocumentPiPSupported, registerVideoDock, requestDocumentPiP } from "@/lib/videoDock"
 import { usePlayerStore, type Track } from "@/store/playerStore"
@@ -81,10 +83,10 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
     return {
       id: l.id,
       title: l.title,
-      url: l.url,
+      url: extractYouTubeId(l.url),
       mediaType: "VIDEO",
       duration: l.duration ?? undefined,
-      thumbnail: l.thumbnail ?? `https://img.youtube.com/vi/${l.url}/mqdefault.jpg`,
+      thumbnail: l.thumbnail || youtubeThumbnailUrl(l.url),
       playlistId,
     }
   }
@@ -143,9 +145,8 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                   className="absolute inset-0 flex items-center justify-center"
                   aria-label={`Play ${activeLecture.title}`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={activeLecture.thumbnail ?? `https://img.youtube.com/vi/${activeLecture.url}/mqdefault.jpg`}
+                  <LectureThumbnail
+                    src={activeLecture.thumbnail || youtubeThumbnailUrl(activeLecture.url)}
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover"
                   />
@@ -272,7 +273,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
             </div>
             <div className="flex flex-col gap-2">
               {lectures.map((lecture) => {
-                const thumb = lecture.thumbnail ?? `https://img.youtube.com/vi/${lecture.url}/mqdefault.jpg`
+                const thumb = lecture.thumbnail || youtubeThumbnailUrl(lecture.url)
                 const progress = videoProgressMap[lecture.id] ?? 0
                 const isActive = activeId === lecture.id
 
@@ -284,8 +285,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
                     className="surface-card group flex gap-2.5 overflow-hidden p-2 text-left"
                   >
                     <div className="relative h-[70px] w-[124px] shrink-0 overflow-hidden rounded-lg">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <LectureThumbnail
                         src={thumb}
                         alt={lecture.title}
                         className="h-full w-full object-cover"
@@ -320,7 +320,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
         /* Browse grid — nothing selected yet */
         <div className="playlist-grid">
           {lectures.map((lecture) => {
-            const thumb = lecture.thumbnail ?? `https://img.youtube.com/vi/${lecture.url}/mqdefault.jpg`
+            const thumb = lecture.thumbnail || youtubeThumbnailUrl(lecture.url)
             const progress = videoProgressMap[lecture.id] ?? 0
 
             return (
@@ -331,8 +331,7 @@ export function VideoGrid({ lectures, playlistId, initialVideoId }: { lectures: 
               >
                 {/* Thumbnail */}
                 <div className="relative overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <LectureThumbnail
                     src={thumb}
                     alt={lecture.title}
                     className="w-full aspect-video object-cover"

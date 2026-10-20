@@ -2,6 +2,7 @@
 
 import { NotebookOverlay } from "@/components/player/NotebookOverlay"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import {
   closestCenter,
@@ -198,12 +199,7 @@ export function FullScreenPlayer() {
                 <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
                 <div className="fsp-art-glow" aria-hidden="true" />
                 <div className="fsp-medallion">
-                  {currentTrack.thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={currentTrack.thumbnail} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <TypeIcon size={40} strokeWidth={1.6} />
-                  )}
+                  <LectureThumbnail src={currentTrack.thumbnail} alt="" className="h-full w-full object-cover" />
                 </div>
                 <span className="fsp-art-badge">
                   <TypeIcon size={11} />

@@ -5,6 +5,7 @@ import { usePlayerStore } from "@/store/playerStore"
 import { formatDuration } from "@/lib/duration"
 import { Clock3, Headphones, Play, PlayCircle } from "lucide-react"
 import { SectionHeading } from "./SectionHeading"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
 
 const noopSubscribe = () => () => {}
 
@@ -41,12 +42,7 @@ export function RecentlyPlayed() {
                 className="recent-card group"
               >
                 <div className="recent-thumb">
-                  {track.thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={track.thumbnail} alt="" className="h-full w-full object-cover" loading="lazy" />
-                  ) : (
-                    <TypeIcon size={24} className="text-[#e9c977]" />
-                  )}
+                  <LectureThumbnail src={track.thumbnail} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <span className="recent-thumb-play" aria-hidden="true">
                     <Play size={14} fill="currentColor" className="ml-0.5" />
                   </span>

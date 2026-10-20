@@ -1,6 +1,8 @@
 import { Headphones, ListMusic, Play, PlayCircle } from "lucide-react"
 import { PlaylistScroller } from "./PlaylistScroller"
 import { SectionHeading } from "./SectionHeading"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
+import { youtubeThumbnailUrl } from "@/lib/youtube"
 
 type Playlist = {
   id: string
@@ -54,24 +56,19 @@ function PlaylistCard({ playlist }: { playlist: Playlist }) {
   const href = isAudio ? `/audio/playlist/${playlist.id}` : `/video/playlist/${playlist.id}`
   const firstLecture = playlist.lectures[0]
   const videoThumbnail = firstLecture?.mediaType === "VIDEO"
-    ? firstLecture.thumbnail ?? `https://img.youtube.com/vi/${firstLecture.url}/mqdefault.jpg`
+    ? firstLecture.thumbnail || youtubeThumbnailUrl(firstLecture.url)
     : null
   const coverUrl = playlist.coverUrl ?? videoThumbnail
 
   return (
     <a href={href} className="playlist-card group">
       <div className="playlist-cover">
-        {coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <LectureThumbnail
             src={coverUrl}
             alt=""
             className={`playlist-cover-img ${playlist.coverUrl ? "object-contain" : "object-cover"}`}
             loading="lazy"
           />
-        ) : (
-          <TypeIcon size={40} className="text-[#e9c977]" />
-        )}
         <span className="playlist-badge">
           <TypeIcon size={11} />
           {isAudio ? "Audio" : "Video"}

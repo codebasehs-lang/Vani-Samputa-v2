@@ -3,7 +3,8 @@
 import { usePlayerStore } from "@/store/playerStore"
 import { formatDuration } from "@/lib/duration"
 import { usePathname } from "next/navigation"
-import { ChevronUp, Headphones, Pause, Play, RotateCcw, RotateCw, X } from "lucide-react"
+import { ChevronUp, Pause, Play, RotateCcw, RotateCw, X } from "lucide-react"
+import { LectureThumbnail } from "@/components/LectureThumbnail"
 import type { CSSProperties } from "react"
 
 export function MiniPlayer() {
@@ -43,12 +44,7 @@ export function MiniPlayer() {
 
         <div className="relative flex items-center gap-3 px-3 py-2.5 sm:px-4">
           <button onClick={openFullScreen} aria-label="Expand player" className="mini-thumb">
-            {currentTrack.thumbnail ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={currentTrack.thumbnail} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <Headphones size={20} className="text-[#f6d77a]" />
-            )}
+            <LectureThumbnail src={currentTrack.thumbnail} alt="" className="h-full w-full object-cover" />
             {isPlaying && (
               <span className="now-eq" aria-hidden="true">
                 <i /><i /><i /><i />
