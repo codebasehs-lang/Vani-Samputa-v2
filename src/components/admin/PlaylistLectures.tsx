@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Pencil, Plus } from "lucide-react"
+import { ExternalLink, Pencil, Plus } from "lucide-react"
 import { EditLectureModal, type EditableLecture, type LecturePlaylist } from "@/components/admin/EditLectureModal"
 import { DeleteLectureButton } from "@/components/admin/DeleteLectureButton"
 import { formatDuration } from "@/lib/duration"
+import { extractYouTubeId } from "@/lib/youtube"
 
 export function PlaylistLectures({ playlist, onCountChange }: {
   playlist: LecturePlaylist
@@ -97,6 +98,18 @@ export function PlaylistLectures({ playlist, onCountChange }: {
                       <Pencil size={15} strokeWidth={1.75} />
                     </button>
                     <DeleteLectureButton id={lecture.id} onDeleted={refresh} />
+                    {lecture.mediaType === "VIDEO" && (
+                      <a
+                        href={`https://www.youtube.com/watch?v=${encodeURIComponent(extractYouTubeId(lecture.url))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open ${lecture.title} on YouTube (opens in a new tab)`}
+                        title="Open on YouTube"
+                        className="rounded-lg p-1.5 text-[var(--muted)] hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                      >
+                        <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
+                      </a>
+                    )}
                   </div>
                 </td>
               </tr>

@@ -17,6 +17,8 @@ leaving the page. The lecture form is bound to the exact playlist ID (not just
 its title), with its language and media type fixed to the playlist. New lectures
 start with the playlist's categories selected. Successful changes reload the
 lecture list and update its count.
+Video lecture actions also include a YouTube icon that opens the original video
+in a new tab. Audio lectures do not show this action.
 
 Each playlist has a Delete action with an explicit confirmation. Deleting a
 playlist permanently deletes all lectures associated with it and their saved

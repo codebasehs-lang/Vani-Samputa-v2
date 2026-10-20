@@ -12,6 +12,11 @@ const lecture = {
   categories: [{ name: "General" }], description: null, duration: null, lectureDate: null, playlist: { title: playlist.title },
 }
 
+const youtube = {}
+vm.runInNewContext(ts.transpileModule(readFileSync(new URL("../../lib/youtube.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports: youtube, URL })
+
 function harness(filename, exportName, props, fetchImpl) {
   const state = []
   const effects = []
@@ -37,11 +42,12 @@ function harness(filename, exportName, props, fetchImpl) {
       },
     },
     "react/jsx-runtime": jsxRuntime,
-    "lucide-react": { Pencil: () => null, Plus: () => null, X: () => null, Trash2: () => null },
+    "lucide-react": { Pencil: () => null, Plus: () => null, X: () => null, Trash2: () => null, ExternalLink: () => null },
     "@/components/admin/EditLectureModal": { EditLectureModal },
     "@/components/admin/DeleteLectureButton": { DeleteLectureButton },
     "@/components/admin/ConfirmDialog": { ConfirmDialog },
     "@/lib/duration": { formatDuration: () => "" },
+    "@/lib/youtube": youtube,
     "@/lib/adminColors": { ADMIN_COLORS: {}, adminGradient: () => "" },
     "next/navigation": { useRouter: () => ({ refresh: () => calls.push("refresh") }) },
     sonner: { toast: { success: (message) => calls.push(message), error: (message) => calls.push(message) } },
@@ -118,6 +124,35 @@ test("expanded lecture load errors offer retry and empty playlists offer Add Lec
   app.nodes().find((node) => node.type === "button" && node.props.children === "Retry").props.onClick()
   await app.settle()
   assert.ok(app.nodes().some((node) => node.props.children === "No lectures in this playlist yet. Add the first lecture above."))
+})
+
+test("video lecture YouTube icons open the correct video in a safe new tab for stored IDs and URLs", async () => {
+  const videoId = "dQw4w9WgXcQ"
+  for (const url of [
+    videoId,
+    `https://www.youtube.com/watch?v=${videoId}&t=42`,
+    `https://youtu.be/${videoId}?si=share`,
+    `https://www.youtube.com/embed/${videoId}`,
+    `https://www.youtube.com/live/${videoId}`,
+    `https://www.youtube.com/shorts/${videoId}`,
+  ]) {
+    const app = harness("./PlaylistLectures.tsx", "PlaylistLectures", { playlist, onCountChange() {} },
+      () => Response.json({ lectures: [{ ...lecture, url }], total: 1 }))
+    await app.settle()
+    const link = app.nodes().find((node) => node.type === "a")
+    assert.equal(link.props.href, `https://www.youtube.com/watch?v=${videoId}`)
+    assert.equal(link.props.target, "_blank")
+    assert.equal(link.props.rel, "noopener noreferrer")
+    assert.equal(link.props.title, "Open on YouTube")
+    assert.match(link.props["aria-label"], /Existing lecture.*YouTube.*new tab/)
+  }
+})
+
+test("audio lectures do not show a YouTube link", async () => {
+  const app = harness("./PlaylistLectures.tsx", "PlaylistLectures", { playlist, onCountChange() {} },
+    () => Response.json({ lectures: [{ ...lecture, mediaType: "AUDIO", url: "https://example.com/audio.mp3" }], total: 1 }))
+  await app.settle()
+  assert.equal(app.nodes().some((node) => node.type === "a"), false)
 })
 
 test("shared modal creates and edits within the exact playlist and refreshes only on success", async () => {
