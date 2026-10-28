@@ -1,8 +1,8 @@
-import Link from "next/link"
-import { prisma } from "@/lib/prisma"
-import type { Metadata } from "next"
 import { PageHeader } from "@/components/PageHeader"
+import { prisma } from "@/lib/prisma"
 import { ArrowUpRight, Headphones, Library, ListMusic, Video } from "lucide-react"
+import type { Metadata } from "next"
+import Link from "next/link"
 
 export const metadata: Metadata = { title: "Standalone Lectures" }
 
@@ -23,7 +23,7 @@ export default async function StandaloneLecturesPage({ searchParams }: { searchP
         icon={Library}
         eyebrow="Single talks"
         title="Standalone Lectures"
-        description="Individual lectures that are not part of any playlist — click to open on the original source."
+        description="Individual lectures outside a playlist."
         crumbs={[{ label: "Home", href: "/" }, { label: "Lectures" }]}
         meta={[{ label: `${lectures.length} lecture${lectures.length !== 1 ? "s" : ""}`, icon: ListMusic }]}
       />
@@ -41,7 +41,7 @@ export default async function StandaloneLecturesPage({ searchParams }: { searchP
           return (
             <Link
               key={lecture.id}
-              href={lecture.mediaType === "AUDIO" ? lecture.url : `https://www.youtube.com/watch?v=${lecture.url}`}
+              href={lecture.mediaType === "AUDIO" ? `/api/audio/${lecture.id}` : `https://www.youtube.com/watch?v=${lecture.url}`}
               target="_blank"
               rel="noreferrer"
               className="lecture-row"

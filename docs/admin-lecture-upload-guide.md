@@ -2,6 +2,82 @@
 
 This guide explains how to upload lectures from the admin panel, how playlists are related to lectures, and how to prepare an Excel file for bulk upload.
 
+## Zoho Stratus Audio: Ready-to-Use Format
+
+Use the example workbook at [public/zoho-audio-import-example.xlsx](../public/zoho-audio-import-example.xlsx), or select Audio and Download Sample Excel on `/admin/import`.
+
+Use one row per MP3, with these headers:
+
+```text
+Title | URL | Media Type | Language | Categories | Playlist | Duration | Lecture Date
+```
+
+The URL cell must contain the **permanent object URL**, for example:
+
+```text
+https://vani-samputa-audio-development.zohostratus.in/HH%20Haladhara%20Swami%20Maharaj/0001%20BG%2003-01%20-%20Introduction%20to%20Chapter%20Three%20-%202022-02-15.mp3
+```
+
+Spaces in the object URL are accepted and normalized to `%20`. Preserve the exact folder and filename, including capitalization, punctuation and the numeric prefix. The displayed Title can be friendlier than the filename.
+
+Do not put any of these in the URL column:
+
+- A temporary `/_signed/` playback URL or any URL with signature/query parameters.
+- The Catalyst serverless function URL.
+- The application's `/api/audio/...` URL.
+- The ZIP filename, a local disk path, or just an MP3 filename.
+- A shared secret or other credential.
+
+### Example Rows
+
+The workbook contains these three real object paths; all are under `HH Haladhara Swami Maharaj/` in the Development bucket:
+
+| Title | Object filename used in URL | Media Type | Language | Categories | Playlist | Duration | Lecture Date |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Introduction to Chapter Three | 0001 BG 03-01 - Introduction to Chapter Three - 2022-02-15.mp3 | AUDIO | English | Bhagavad Gita | | 01:06:44 | 2022-02-15 |
+| Europe Tour - Belgium | 0003 Europe Tour-01-Belgium.mp3 | AUDIO | English | General | Europe Tour | | |
+| Europe Tour - France | 0004 Europe Tour-02-France.mp3 | AUDIO | English | General | Europe Tour | | |
+
+The actual workbook's URL cells contain full permanent HTTPS URLs, not only the filenames shown in this table. The first row is standalone because Playlist is empty. The other two rows create or reuse one `Europe Tour` playlist. Change the sample language/category metadata to match your catalog before importing.
+
+- Create the active categories `Bhagavad Gita` and `General` in Admin -> Categories before importing this sample. Alternatively, replace them with existing active category names.
+- For additional playlists, repeat the exact same Playlist name, Language and Media Type on each related row. A different Playlist name creates a separate playlist.
+- Leave Playlist truly empty for standalone lectures; do not enter `None`, `Standalone`, or `-`.
+- Categories can contain multiple existing names separated by commas. Categories do not determine playlist membership.
+- Duration is optional. Use whole seconds, or set the Excel cell format to Text and enter `HH:MM:SS`. Blank durations are learned by the player during playback.
+- Lecture Date is optional. Prefer `YYYY-MM-DD`; Excel date serials are also supported.
+- Put lecture rows on the first worksheet. Both `.xlsx` and `.xls` are supported.
+- The upload page retains every row and sends sequential batches of 100. Duplicate normalized URLs are skipped. Errors identify the Excel row number, including the header row.
+- A new filename is a new lecture URL. Import is not an edit operation for existing lectures or playlist membership; edit existing records through the admin screens.
+- Import validates the URL shape and configured bucket, but does not check every object's existence or request signed URLs during import. Test a lecture after importing.
+
+### App Server Configuration
+
+Set these in the app server's environment and locally in the ignored root `.env` for development. Restart/redeploy the app after changes:
+
+```dotenv
+CATALYST_AUDIO_SIGNER_URL=https://vani-samputa-audio-60092075946.development.catalystserverless.in/server/vani-audio-url-signer/
+CATALYST_AUDIO_SIGNER_SECRET=<same value as SIGNER_SHARED_SECRET in Zoho>
+STRATUS_AUDIO_BUCKET_ORIGIN=https://vani-samputa-audio-development.zohostratus.in
+```
+
+Never prefix these variables with `NEXT_PUBLIC_`. Keep the shared secret out of the workbook, source control and browser code.
+
+The audio files stay in the private Stratus bucket. The ZIP uploaded to Serverless contains the signer code and SDK dependencies, not the audio files. Keep `STRATUS_BUCKET_NAME=vani-samputa-audio`, `AUDIO_OBJECT_PREFIX=HH Haladhara Swami Maharaj/`, and the matching `SIGNER_SHARED_SECRET` on that function. New links use the deployed function's expiry; set its `URL_EXPIRY_SECONDS` to `9000` for 2 hours 30 minutes.
+
+At playback, a signed-in listener requests `/api/audio/{lectureId}`. The app looks up the permanent URL, derives its object key, calls the function with `X-Audio-Signer-Secret`, and streams the signed Stratus response. Range requests are forwarded for seeking. The workbook never needs updating when signed URLs expire; each playback/range request obtains a fresh signed URL.
+
+### Upload and Verify
+
+1. Configure the app server and existing active categories.
+2. Open Admin -> Import, select Audio, and choose the workbook.
+3. Check the preview and total row count, then click Import All Rows.
+4. Review created/skipped counts and any row errors.
+5. Sign in as a listener, open the playlist or standalone lecture, and test playback plus seeking. The app audio request should return `200` or `206`.
+6. Confirm the app audio endpoint rejects a signed-out request with `401`. Confirm the signer rejects a request without its custom secret header with `401`.
+
+These URLs refer to Development. Do not mix Development URLs with Production bucket/function settings. Production needs its own tested matching configuration.
+
 ## 1. Lecture-Playlist Relation (Important)
 
 - One playlist can have many lectures.

@@ -1,0 +1,10 @@
+{
+    "execution": {
+        "main": "index.js"
+    },
+    "deployment": {
+        "stack": "node22",
+        "name": "vani-audio-url-signer",
+        "type": "advancedio"
+    }
+}
