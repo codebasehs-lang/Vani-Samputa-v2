@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { X } from "lucide-react"
-import { formatDuration } from "@/lib/duration"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { formatDuration } from "@/lib/duration"
+import { X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 const LANGUAGES = ["Odia", "Hindi", "English"]
 const MEDIA_TYPES = ["AUDIO", "VIDEO"]
@@ -19,6 +19,7 @@ export type EditableLecture = {
   description: string | null
   duration: number | null
   lectureDate: Date | string | null
+  place: string | null
   playlist: { title: string } | null
   categories: { name: string }[]
 }
@@ -33,7 +34,7 @@ export type LecturePlaylist = {
 
 const EMPTY_FORM = {
   title: "", url: "", mediaType: "AUDIO", language: "Odia",
-  categories: "", playlistName: "", duration: "", description: "", lectureDate: "",
+  categories: "", playlistName: "", duration: "", description: "", lectureDate: "", place: "",
 }
 
 function formToInitial(lecture: EditableLecture | null) {
@@ -48,6 +49,7 @@ function formToInitial(lecture: EditableLecture | null) {
     duration: formatDuration(lecture.duration),
     description: lecture.description ?? "",
     lectureDate: lecture.lectureDate ? new Date(lecture.lectureDate).toISOString().slice(0, 10) : "",
+    place: lecture.place ?? "",
   }
 }
 
@@ -76,12 +78,12 @@ export function EditLectureModal({ lecture, playlist, onSaved, onClose }: {
     async function loadCategories() {
       try {
         const res = await fetch("/api/admin/categories", { signal: controller.signal })
-        if (!res.ok) throw new Error("Could not load categories.")
+        if (!res.ok) throw new Error("Could not load tags.")
         const categories: { name: string }[] = await res.json()
         if (!controller.signal.aborted) setAvailableCategories(categories.map((c) => c.name))
       } catch (error) {
         if (!controller.signal.aborted) {
-          setError(error instanceof Error ? error.message : "Could not load categories.")
+          setError(error instanceof Error ? error.message : "Could not load tags.")
         }
       }
     }
@@ -146,14 +148,14 @@ export function EditLectureModal({ lecture, playlist, onSaved, onClose }: {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto px-4 py-8"
+      className="fixed inset-0 z-[100] flex items-center justify-center px-3 py-4 sm:px-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-lecture-title"
     >
       <div className="absolute inset-0 bg-black/40" onClick={() => { if (!busy) onClose() }} aria-hidden="true" />
       <div
-        className="relative w-full max-w-xl rounded-xl border border-[var(--border)] p-5 shadow-xl sm:p-6"
+        className="relative max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-xl overflow-y-auto overscroll-contain rounded-lg border border-[var(--border)] p-4 shadow-xl sm:p-6"
         style={{ background: "var(--surface)" }}
       >
         <h2 id="edit-lecture-title" className="mb-5 text-lg font-bold text-[var(--foreground)]">
@@ -162,112 +164,113 @@ export function EditLectureModal({ lecture, playlist, onSaved, onClose }: {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4">
-          {[
-            { key: "title", label: "Title", type: "text", required: true },
-            { key: "url", label: "URL / YouTube ID", type: "text", required: true },
-            { key: "playlistName", label: "Playlist Name", type: "text" },
-          ].map(({ key, label, type, required }) => (
-            <div key={key}>
-              <label htmlFor={`lecture-${key}`} className="mb-1 block text-xs font-medium text-[var(--muted)]">{label}</label>
-              <input
-                id={`lecture-${key}`}
-                type={type}
-                value={form[key as keyof typeof form]}
-                onChange={(e) => set(key, e.target.value)}
-                required={required}
-                readOnly={key === "playlistName" && Boolean(playlist)}
-                className="admin-input w-full px-4 py-2.5 text-sm"
-              />
-            </div>
-          ))}
-
-          <div>
-            <label htmlFor="lecture-categories" className="mb-1 block text-xs font-medium text-[var(--muted)]">Categories</label>
-            {selectedCategories.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {selectedCategories.map((name) => (
-                  <span
-                    key={name}
-                    className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-medium text-[var(--accent)]"
-                  >
-                    {name}
-                    <button
-                      type="button"
-                      onClick={() => removeCategory(name)}
-                      aria-label={`Remove ${name}`}
-                      className="rounded-full p-0.5 hover:bg-[var(--accent)]/20"
-                    >
-                      <X size={11} strokeWidth={2} />
-                    </button>
-                  </span>
-                ))}
+            {[
+              { key: "title", label: "Title", type: "text", required: true },
+              { key: "url", label: "URL / YouTube ID", type: "text", required: true },
+              { key: "playlistName", label: "Playlist Name", type: "text" },
+            ].map(({ key, label, type, required }) => (
+              <div key={key}>
+                <label htmlFor={`lecture-${key}`} className="mb-1 block text-xs font-medium text-[var(--muted)]">{label}</label>
+                <input
+                  id={`lecture-${key}`}
+                  type={type}
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => set(key, e.target.value)}
+                  required={required}
+                  readOnly={key === "playlistName" && Boolean(playlist)}
+                  className="admin-input w-full px-4 py-2.5 text-sm"
+                />
               </div>
-            )}
-            <select
-              id="lecture-categories"
-              value=""
-              onChange={(e) => addCategory(e.target.value)}
-              className="admin-select w-full px-4 py-2.5 text-sm"
-            >
-              <option value="">Add a category...</option>
-              {availableCategories.filter((name) => !selectedCategories.includes(name)).map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </div>
+            ))}
 
-          {[
-            { key: "duration", label: "Duration (HH:MM:SS)", type: "text" },
-            { key: "lectureDate", label: "Lecture Date", type: "date" },
-            { key: "description", label: "Description", type: "text" },
-          ].map(({ key, label, type }) => (
-            <div key={key}>
-              <label htmlFor={`lecture-${key}`} className="mb-1 block text-xs font-medium text-[var(--muted)]">{label}</label>
-              <input
-                id={`lecture-${key}`}
-                type={type}
-                value={form[key as keyof typeof form]}
-                onChange={(e) => set(key, e.target.value)}
-                className="admin-input w-full px-4 py-2.5 text-sm"
-              />
-            </div>
-          ))}
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="lecture-type" className="mb-1 block text-xs font-medium text-[var(--muted)]">Type</label>
+              <label htmlFor="lecture-categories" className="mb-1 block text-xs font-medium text-[var(--muted)]">Tags</label>
+              {selectedCategories.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {selectedCategories.map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-medium text-[var(--accent)]"
+                    >
+                      {name}
+                      <button
+                        type="button"
+                        onClick={() => removeCategory(name)}
+                        aria-label={`Remove ${name}`}
+                        className="rounded-full p-0.5 hover:bg-[var(--accent)]/20"
+                      >
+                        <X size={11} strokeWidth={2} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
               <select
-                id="lecture-type"
-                disabled={Boolean(playlist)}
-                value={form.mediaType}
-                onChange={(e) => set("mediaType", e.target.value)}
+                id="lecture-categories"
+                value=""
+                onChange={(e) => addCategory(e.target.value)}
                 className="admin-select w-full px-4 py-2.5 text-sm"
               >
-                {MEDIA_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
+                <option value="">Add a tag...</option>
+                {availableCategories.filter((name) => !selectedCategories.includes(name)).map((name) => (
+                  <option key={name} value={name}>{name}</option>
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="lecture-language" className="mb-1 block text-xs font-medium text-[var(--muted)]">Language</label>
-              <select
-                id="lecture-language"
-                disabled={Boolean(playlist)}
-                value={form.language}
-                onChange={(e) => set("language", e.target.value)}
-                className="admin-select w-full px-4 py-2.5 text-sm"
-              >
-                {[...new Set([...LANGUAGES, form.language])].map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
+
+            {[
+              { key: "duration", label: "Duration (HH:MM:SS)", type: "text" },
+              { key: "lectureDate", label: "Lecture Date", type: "date" },
+              { key: "place", label: "Place", type: "text" },
+              { key: "description", label: "Description", type: "text" },
+            ].map(({ key, label, type }) => (
+              <div key={key}>
+                <label htmlFor={`lecture-${key}`} className="mb-1 block text-xs font-medium text-[var(--muted)]">{label}</label>
+                <input
+                  id={`lecture-${key}`}
+                  type={type}
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => set(key, e.target.value)}
+                  className="admin-input w-full px-4 py-2.5 text-sm"
+                />
+              </div>
+            ))}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="lecture-type" className="mb-1 block text-xs font-medium text-[var(--muted)]">Type</label>
+                <select
+                  id="lecture-type"
+                  disabled={Boolean(playlist)}
+                  value={form.mediaType}
+                  onChange={(e) => set("mediaType", e.target.value)}
+                  className="admin-select w-full px-4 py-2.5 text-sm"
+                >
+                  {MEDIA_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="lecture-language" className="mb-1 block text-xs font-medium text-[var(--muted)]">Language</label>
+                <select
+                  id="lecture-language"
+                  disabled={Boolean(playlist)}
+                  value={form.language}
+                  onChange={(e) => set("language", e.target.value)}
+                  className="admin-select w-full px-4 py-2.5 text-sm"
+                >
+                  {[...new Set([...LANGUAGES, form.language])].map((l) => (
+                    <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
           </fieldset>
 
           {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="flex flex-wrap justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={onClose}

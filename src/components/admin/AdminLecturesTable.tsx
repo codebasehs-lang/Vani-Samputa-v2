@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { Mic, Clapperboard, Inbox, Trash2, Pencil } from "lucide-react"
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
 import { DeleteLectureButton } from "@/components/admin/DeleteLectureButton"
 import { EditLectureModal, type EditableLecture } from "@/components/admin/EditLectureModal"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { Clapperboard, Inbox, Mic, Pencil, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 type Lecture = EditableLecture & {
   mediaType: string
@@ -54,7 +54,7 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
   return (
     <>
       {selected.size > 0 && (
-        <div className="admin-gradient-surface mb-3 flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-2.5">
+        <div className="admin-gradient-surface mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] px-4 py-2.5">
           <p className="text-sm font-medium text-[var(--foreground)]">{selected.size} selected</p>
           <button
             type="button"
@@ -66,8 +66,8 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
         </div>
       )}
 
-      <div className="admin-panel overflow-hidden">
-        <table className="w-full text-sm">
+      <div role="region" aria-label="Lectures table" tabIndex={0} className="admin-panel max-w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+        <table className="w-full min-w-[960px] text-sm">
           <thead className="border-b border-[var(--border)]">
             <tr>
               <th className="w-10 px-4 py-3">
@@ -79,7 +79,7 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
                   className="accent-[var(--accent)]"
                 />
               </th>
-              {["Type", "Title", "Language", "Playlist", "Lecture Date", "Category", ""].map((h) => (
+              {["Type", "Title", "Language", "Playlist", "Lecture Date", "Place", "Tags", ""].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                   {h}
                 </th>
@@ -89,7 +89,7 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
           <tbody className="divide-y divide-[var(--border)]">
             {lectures.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-10">
+                <td colSpan={9} className="px-4 py-10">
                   <div className="flex flex-col items-center gap-3 text-center">
                     <span
                       className="flex h-12 w-12 items-center justify-center rounded-full text-white"
@@ -133,6 +133,7 @@ export function AdminLecturesTable({ lectures }: { lectures: Lecture[] }) {
                 <td className="px-4 py-2.5 text-[var(--muted)]">
                   {l.lectureDate ? new Date(l.lectureDate).toLocaleDateString() : "—"}
                 </td>
+                <td className="max-w-[140px] px-4 py-2.5 truncate text-[var(--muted)]">{l.place || "—"}</td>
                 <td className="max-w-[160px] px-4 py-2.5 truncate text-[var(--muted)]">
                   {l.categories.length ? l.categories.map((c) => c.name).join(", ") : "—"}
                 </td>

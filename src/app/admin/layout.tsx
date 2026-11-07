@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
-import { redirect } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s — Admin" } }
 
@@ -11,10 +11,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (role !== "ADMIN") redirect("/login")
 
   return (
-    <div className="admin-shell-bg min-h-full">
+    <div className="admin-shell-bg min-h-full min-w-0">
       <AdminSidebar />
-      <main className="min-h-full lg:ml-64">
-        <div className="admin-content-surface min-h-[calc(100vh-3rem)] p-4 sm:p-5 lg:p-6">{children}</div>
+      <main className="min-h-full min-w-0 lg:ml-64">
+        <div className="admin-content-surface min-h-[calc(100dvh-3.5rem)] min-w-0 px-3 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">{children}</div>
       </main>
     </div>
   )

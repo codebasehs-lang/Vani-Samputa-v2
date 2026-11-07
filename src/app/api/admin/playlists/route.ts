@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest) {
   const categoryNames = [...new Set((categories ?? []).map((name) => name.trim()).filter(Boolean))]
   const missing = await validateCategories(categoryNames)
   if (missing.length) {
-    return NextResponse.json({ error: `Add these categories first from Admin -> Categories: ${missing.join(", ")}` }, { status: 400 })
+    return NextResponse.json({ error: `Add these tags first from Admin -> Tags: ${missing.join(", ")}` }, { status: 400 })
   }
 
   const playlist = await prisma.playlist.update({

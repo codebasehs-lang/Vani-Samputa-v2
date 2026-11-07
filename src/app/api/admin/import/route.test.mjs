@@ -63,7 +63,7 @@ function row(filename, playlist = "") {
     return {
         Title: filename, URL: `${origin}/HH Haladhara Swami Maharaj/${filename}.mp3`,
         "Media Type": "AUDIO", Language: "English", Categories: "Bhagavad Gita",
-        Playlist: playlist, Duration: "01:06:44", "Lecture Date": "2022-02-15",
+        Playlist: playlist, Duration: "01:06:44", "Lecture Date": "2022-02-15", Place: "Bhubaneswar",
     }
 }
 
@@ -76,6 +76,7 @@ test("audio import groups playlist rows and leaves standalone lectures unlinked"
     assert.equal(app.lectures[0].playlistId, app.lectures[1].playlistId)
     assert.equal(app.lectures[2].playlistId, null)
     assert.equal(app.lectures[0].duration, 4004)
+    assert.equal(app.lectures[0].place, "Bhubaneswar")
     assert.equal(app.lectures[0].url, `${origin}/HH%20Haladhara%20Swami%20Maharaj/Lecture%201.mp3`)
 })
 
@@ -109,7 +110,16 @@ test("audio import reports missing configuration and categories", async () => {
     const missing = setup({ missingCategories: ["Bhagavad Gita"] })
     const categoryResult = await (await missing.request([row("Audio")])).json()
     assert.equal(categoryResult.skipped, 1)
-    assert.match(categoryResult.errors[0], /add categories first/)
+    assert.match(categoryResult.errors[0], /add tags first from Admin -> Tags/)
+})
+
+test("downloadable audio samples use Tags and import without changing tag assignments", async () => {
+    const { zohoAudioImportSampleRows } = load("../../../../lib/lectureImportSamples.ts")
+    assert.ok(zohoAudioImportSampleRows.every((sample) => sample.Tags && !Object.hasOwn(sample, "Categories")))
+    const app = setup()
+    const response = await app.request(zohoAudioImportSampleRows)
+    assert.deepEqual(await response.json(), { created: 3, skipped: 0, errors: [] })
+    assert.deepEqual(app.lectures.map((lecture) => lecture.categories), [["Bhagavad Gita"], ["General"], ["General"]])
 })
 
 test("video import keeps YouTube handling and does not require Stratus configuration", async () => {

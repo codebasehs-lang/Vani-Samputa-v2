@@ -26,6 +26,7 @@ function setup({ rows = [], responses = [], parsedRows = [] } = {}) {
         sonner: { toast: { success: (value) => messages.push(value), error: (value) => messages.push(value) } },
         "lucide-react": Object.fromEntries(["Upload", "Download", "FileSpreadsheet", "Mic", "Clapperboard", "CircleCheck", "CircleAlert"].map((name) => [name, icon])),
         "@/lib/adminColors": { ADMIN_COLORS: {}, adminGradient: () => "" },
+        "@/components/admin/AdminPageHeader": { AdminPageHeader: () => null },
         "@/lib/lectureImportSamples": { zohoAudioImportSampleRows: [] },
     }
     const exports = {}

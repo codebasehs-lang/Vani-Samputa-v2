@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       continue
     }
     if (!categoryNames.length) {
-      errors.push(`Row ${rowNumber}: choose at least one category.`)
+      errors.push(`Row ${rowNumber}: choose at least one tag.`)
       continue
     }
     if (seen.has(videoId)) {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     seen.add(videoId)
     const missingCategories = await validateCategories(categoryNames)
     if (missingCategories.length) {
-      errors.push(`Row ${rowNumber}: add categories first: ${missingCategories.join(", ")}.`)
+      errors.push(`Row ${rowNumber}: add tags first: ${missingCategories.join(", ")}.`)
       continue
     }
     validRows.push({ ...row, videoId, title, language: row.language?.trim() || "Odia", category: categoryNames.join(", "), categoryNames })

@@ -1,8 +1,10 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { prisma } from "@/lib/prisma"
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader"
 import { ABOUT_SLUGS } from "@/lib/aboutContent"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { prisma } from "@/lib/prisma"
+import { Info, Pencil, Plus } from "lucide-react"
+import type { Metadata } from "next"
+import Link from "next/link"
 
 export const metadata: Metadata = { title: "About" }
 
@@ -28,16 +30,15 @@ export default async function AdminAboutPage() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">About Sections ({ordered.length})</h1>
+      <AdminPageHeader title="About" section="Settings" Icon={Info} color={ADMIN_COLORS.about} detail={`${ordered.length} sections`} actions={
         <Link
           href="/admin/about/new"
           style={{ background: adminGradient(ADMIN_COLORS.about) }}
-          className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
-          + New About Section
+          <Plus size={16} />New section
         </Link>
-      </div>
+      } />
 
       <div className="admin-panel divide-y divide-[var(--border)] overflow-hidden">
         {ordered.length === 0 && (
@@ -55,10 +56,11 @@ export default async function AdminAboutPage() {
             </p>
             <Link
               href={`/admin/about/${section.slug}`}
-              className="text-xs font-medium"
-              style={{ color: "var(--saffron)" }}
+              aria-label={`Edit ${section.title}`}
+              title="Edit section"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--accent)] hover:bg-[var(--admin-hover)]"
             >
-              Edit
+              <Pencil size={16} />
             </Link>
           </div>
         ))}

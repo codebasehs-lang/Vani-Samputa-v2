@@ -79,10 +79,11 @@ export async function POST(req: NextRequest) {
       const duration = parseDuration(durationRaw)
       const lectureDateRaw = col(row, "lecture date", "lecture_date", "date", "event date")
       const lectureDate = parseExcelDate(lectureDateRaw)
+      const place = col(row, "place", "location", "venue") || null
       const missingCategories = await validateCategories(categories)
       if (missingCategories.length) {
         skipped++
-        errors.push(`Row ${rowNumber}: add categories first from Admin -> Categories: ${missingCategories.join(", ")}`)
+        errors.push(`Row ${rowNumber}: add tags first from Admin -> Tags: ${missingCategories.join(", ")}`)
         continue
       }
 
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
       }
 
       await prisma.lecture.create({
-        data: { title, url, mediaType: lectureMediaType, language, category: categories[0] || "General", duration, lectureDate, playlistId, categories: categoryConnect(categories) },
+        data: { title, url, mediaType: lectureMediaType, language, category: categories[0] || "General", duration, lectureDate, place, playlistId, categories: categoryConnect(categories) },
       })
       created++
     } catch (e) {

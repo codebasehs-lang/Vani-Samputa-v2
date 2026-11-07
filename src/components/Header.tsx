@@ -4,12 +4,12 @@ import { BrandLogo } from "@/components/BrandLogo"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { ADMIN_COLORS } from "@/lib/adminColors"
 import { usePlayerStore } from "@/store/playerStore"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   BookOpen, CalendarDays, ChevronRight, CircleUserRound, ExternalLink, Headphones, House,
   Info, Library, LogIn, LogOut, Menu, Newspaper, Radio, Video, X,
   type LucideIcon,
 } from "lucide-react"
-import { AnimatePresence, motion } from "framer-motion"
 import { signOut, useSession } from "next-auth/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -43,7 +43,7 @@ const navLinks: NavLink[] = [
 ]
 
 function noopSubscribe() {
-  return () => {}
+  return () => { }
 }
 
 function NavLabel({ label, live }: { label: string; live?: boolean }) {
@@ -96,23 +96,23 @@ export function Header() {
   if (isAdminRoute) {
     return (
       <header
-        className="sticky top-0 z-50 border-b border-[var(--border)]"
-        style={{ background: "color-mix(in oklab, var(--surface) 96%, white 4%)" }}
+        className="admin-shell-bg admin-topbar sticky top-0 z-50"
       >
-        <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:pl-[16.5rem] lg:pr-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Admin Workspace</p>
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-6 lg:pl-72 lg:pr-8">
+          <p className="text-xs font-medium text-[var(--muted)]">Admin workspace</p>
 
-          <div className="flex items-center gap-2.5">
-            <span className="rounded-full" style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.categories} 14%, transparent)` }}>
-              <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+            <span className="rounded-full bg-white">
+              <ThemeToggle className="h-11 w-11 rounded-full" />
             </span>
 
-            <div className="hidden items-center gap-2 lg:flex">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Link
                 href="/profile"
                 aria-label="Open profile"
-                className="inline-flex items-center justify-center rounded-full p-1.5 transition-opacity hover:opacity-80"
-                style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.dashboard} 14%, transparent)` }}
+                title="Open profile"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full p-1.5 transition-opacity hover:opacity-80"
+                style={{ background: "#ffffff" }}
               >
                 {session?.user?.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -128,8 +128,9 @@ export function Header() {
               <button
                 onClick={() => signOut()}
                 aria-label="Log out"
-                className="rounded-full p-2 transition-opacity hover:opacity-80"
-                style={{ background: `color-mix(in oklab, ${ADMIN_COLORS.youtube} 14%, transparent)` }}
+                title="Log out"
+                className="flex h-11 w-11 items-center justify-center rounded-full p-2 transition-opacity hover:opacity-80"
+                style={{ background: "#ffffff" }}
               >
                 <LogOut size={18} style={{ color: ADMIN_COLORS.youtube }} />
               </button>

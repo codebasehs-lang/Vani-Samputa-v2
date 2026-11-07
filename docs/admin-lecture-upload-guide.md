@@ -4,12 +4,12 @@ This guide explains how to upload lectures from the admin panel, how playlists a
 
 ## Zoho Stratus Audio: Ready-to-Use Format
 
-Use the example workbook at [public/zoho-audio-import-example.xlsx](../public/zoho-audio-import-example.xlsx), or select Audio and Download Sample Excel on `/admin/import`.
+Select Audio and Download Sample Excel on `/admin/import` to get the example workbook.
 
 Use one row per MP3, with these headers:
 
 ```text
-Title | URL | Media Type | Language | Categories | Playlist | Duration | Lecture Date
+Title | URL | Media Type | Language | Tags | Playlist | Duration | Lecture Date | Place
 ```
 
 The URL cell must contain the **permanent object URL**, for example:
@@ -32,20 +32,21 @@ Do not put any of these in the URL column:
 
 The workbook contains these three real object paths; all are under `HH Haladhara Swami Maharaj/` in the Development bucket:
 
-| Title | Object filename used in URL | Media Type | Language | Categories | Playlist | Duration | Lecture Date |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Introduction to Chapter Three | 0001 BG 03-01 - Introduction to Chapter Three - 2022-02-15.mp3 | AUDIO | English | Bhagavad Gita | | 01:06:44 | 2022-02-15 |
-| Europe Tour - Belgium | 0003 Europe Tour-01-Belgium.mp3 | AUDIO | English | General | Europe Tour | | |
-| Europe Tour - France | 0004 Europe Tour-02-France.mp3 | AUDIO | English | General | Europe Tour | | |
+| Title | Object filename used in URL | Media Type | Language | Tags | Playlist | Duration | Lecture Date | Place |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Introduction to Chapter Three | 0001 BG 03-01 - Introduction to Chapter Three - 2022-02-15.mp3 | AUDIO | English | Bhagavad Gita | | 01:06:44 | 2022-02-15 | Bhubaneswar |
+| Europe Tour - Belgium | 0003 Europe Tour-01-Belgium.mp3 | AUDIO | English | General | Europe Tour | | | Belgium |
+| Europe Tour - France | 0004 Europe Tour-02-France.mp3 | AUDIO | English | General | Europe Tour | | | France |
 
-The actual workbook's URL cells contain full permanent HTTPS URLs, not only the filenames shown in this table. The first row is standalone because Playlist is empty. The other two rows create or reuse one `Europe Tour` playlist. Change the sample language/category metadata to match your catalog before importing.
+The actual workbook's URL cells contain full permanent HTTPS URLs, not only the filenames shown in this table. The first row is standalone because Playlist is empty. The other two rows create or reuse one `Europe Tour` playlist. Change the sample language/tag metadata to match your catalog before importing.
 
-- Create the active categories `Bhagavad Gita` and `General` in Admin -> Categories before importing this sample. Alternatively, replace them with existing active category names.
+- Create the active tags `Bhagavad Gita` and `General` in Admin -> Tags before importing this sample. Alternatively, replace them with existing active tag names.
 - For additional playlists, repeat the exact same Playlist name, Language and Media Type on each related row. A different Playlist name creates a separate playlist.
 - Leave Playlist truly empty for standalone lectures; do not enter `None`, `Standalone`, or `-`.
-- Categories can contain multiple existing names separated by commas. Categories do not determine playlist membership.
+- Tags can contain multiple existing names separated by commas. Tags do not determine playlist membership. Older workbooks with a `Categories` header are still accepted.
 - Duration is optional. Use whole seconds, or set the Excel cell format to Text and enter `HH:MM:SS`. Blank durations are learned by the player during playback.
 - Lecture Date is optional. Prefer `YYYY-MM-DD`; Excel date serials are also supported.
+- Place is optional free text for where the lecture was given (headers `Place`, `Location` or `Venue` are accepted).
 - Put lecture rows on the first worksheet. Both `.xlsx` and `.xls` are supported.
 - The upload page retains every row and sends sequential batches of 100. Duplicate normalized URLs are skipped. Errors identify the Excel row number, including the header row.
 - A new filename is a new lecture URL. Import is not an edit operation for existing lectures or playlist membership; edit existing records through the admin screens.
@@ -69,7 +70,7 @@ At playback, a signed-in listener requests `/api/audio/{lectureId}`. The app loo
 
 ### Upload and Verify
 
-1. Configure the app server and existing active categories.
+1. Configure the app server and existing active tags.
 2. Open Admin -> Import, select Audio, and choose the workbook.
 3. Check the preview and total row count, then click Import All Rows.
 4. Review created/skipped counts and any row errors.
@@ -100,9 +101,9 @@ When you provide a playlist name, the system tries to find an existing playlist 
 If found, the lecture connects to that playlist.
 If not found, a new playlist is created automatically and the lecture is connected.
 
-## What Is Category Used For?
+## What Are Tags Used For?
 
-Category is a broad subject or content grouping. It is not the playlist name.
+Tags identify subjects or content groupings. They are not playlist names.
 
 Examples:
 
@@ -113,21 +114,21 @@ Examples:
 - Philosophy
 - General
 
-### Playlist category
+### Playlist tags
 
-For a playlist, Category is used on the public Audio and Video language pages as a section heading. For example, all playlists with category `Gita` appear under the `Gita` heading.
+For a playlist, tags are used on the public Audio and Video language pages as section headings. For example, all playlists with tag `Gita` appear under the `Gita` heading.
 
-### Lecture category
+### Lecture tags
 
-For a lecture, Category is saved as lecture information. The lecture is connected to a playlist only through the Playlist Name field, not through Category. At present, the lecture category is not used as an independent filter in the admin lecture list.
+For a lecture, tags are saved as lecture information. The lecture is connected to a playlist only through the Playlist Name field, not through tags. At present, tags are not used as an independent filter in the admin lecture list.
 
 ### Recommended rule
 
-Use the same category for a playlist and its lectures when they cover the same subject. Use the exact same spelling and capitalization for related rows.
+Use the same tags for a playlist and its lectures when they cover the same subject. Use the exact same spelling and capitalization for related rows.
 
-## 1A. Category/Tag Design
+## 1A. Tag Design
 
-The system uses one shared Category model for reusable tags:
+The UI calls these Tags. The database continues to use one shared Category model, preserving existing records and links:
 
 ```text
 Category
@@ -143,15 +144,15 @@ Lecture <-> Category (many-to-many)
 
 This allows:
 
-- One playlist to have multiple categories.
-- One lecture to have multiple categories.
-- The same category to be reused across playlists and lectures.
-- Categories to be managed from an admin screen instead of typed repeatedly.
+- One playlist to have multiple tags.
+- One lecture to have multiple tags.
+- The same tag to be reused across playlists and lectures.
+- Tags to be managed from an admin screen instead of typed repeatedly.
 - Users to select a tag and see matching playlists or lectures.
 
-### Initial category list
+### Initial tag list
 
-The initial categories can be:
+The initial tags can be:
 
 - Bhagavad Gita
 - Srimad Bhagavatam
@@ -164,13 +165,13 @@ The initial categories can be:
 - Seva
 - Goswami
 
-More categories can be added later by an administrator without changing the database schema.
+More tags can be added later by an administrator without changing the database schema.
 
 ## 1B. How Tag Filtering Should Work in the UI
 
 On each language Audio or Video page:
 
-1. Show category/tag buttons or a multi-select control.
+1. Show tag buttons or a multi-select control.
 2. When a user selects one tag, show playlists or lectures having that tag.
 3. If multiple tags are selected, use OR behavior by default, meaning content with any selected tag is shown.
 4. Provide an `All` option to clear the filter.
@@ -179,50 +180,50 @@ For a playlist page, show all lectures in that playlist. The playlist's tags can
 
 ## 1C. Lectures That Are Not in a Playlist
 
-A lecture does not need a playlist. It can still have one or more categories:
+A lecture does not need a playlist. It can still have one or more tags:
 
 - `playlistId` remains empty.
-- Categories are attached directly to the lecture.
+- Tags are attached directly to the lecture.
 - The lecture appears in a standalone lecture/tag result.
-- Users can find it by language, media type, or category.
+- Users can find it by language, media type, or tag.
 
 Example:
 
 ```text
 Lecture: Q&A on Sadhana
 Playlist: none
-Categories: Question & Answer Sessions, Guru Tattva
+Tags: Question & Answer Sessions, Guru Tattva
 ```
 
 This keeps standalone content discoverable without creating unnecessary one-lecture playlists.
 
-## 1D. Upload Format for Category Tags
+## 1D. Upload Format for Tags
 
 For Excel imports, use a `Media Type` column with `AUDIO` or `VIDEO` for each row. You can upload audio and video lectures in the same Excel file. If this column is empty or absent, the Audio/Video toggle selected on the Import page is used.
 
-Use a `Categories` column with comma-separated category names:
+Use a `Tags` column with comma-separated tag names. The older `Categories` header is still accepted:
 
 ```text
-Title | URL | Media Type | Language | Categories | Playlist | Duration | Lecture Date
+Title | URL | Media Type | Language | Tags | Playlist | Duration | Lecture Date
 Q&A on Sadhana | audio-url | AUDIO | Odia | Question & Answer Sessions, Guru Tattva | | 00:30:00 | 2026-08-25
 Gita Lecture 1 | youtube-id | VIDEO | Odia | Bhagavad Gita | Morning Series | 00:40:00 | 2026-08-20
 ```
 
 Processing rules:
 
-1. Split the Categories cell by commas.
+1. Split the Tags cell by commas.
 2. Trim each name and ignore blank values.
-4. Find each category by exact name in the active admin-managed category list.
-5. If any category does not exist, the row is rejected. Add it first from Admin -> Categories, then upload again.
-6. Attach all found categories to the lecture.
+4. Find each tag by exact name in the active admin-managed tag list.
+5. If any tag does not exist, the row is rejected. Add it first from Admin -> Tags, then upload again.
+6. Attach all found tags to the lecture.
 7. If Playlist is supplied, attach the lecture to that playlist as well.
-8. If Playlist is blank, save the lecture as a categorized standalone lecture.
+8. If Playlist is blank, save the lecture as a tagged standalone lecture.
 
-For consistency, category names should be selected from the admin-managed list rather than typed manually in normal use.
+For consistency, tag names should be selected from the admin-managed list rather than typed manually in normal use.
 
-### Category restriction
+### Tag restriction
 
-New category names cannot be created from the lecture form or Excel import. The administrator must first open Admin -> Categories and add the category there. Uploads then accept only an exact match to an active category name.
+New tag names cannot be created from the lecture form or Excel import. The administrator must first open Admin -> Tags and add the tag there. Uploads then accept only an exact match to an active tag name.
 
 ## 2. Single Lecture Upload (Admin Form)
 
@@ -238,7 +239,7 @@ Steps:
    - URL / YouTube ID (required)
 3. Fill optional fields:
    - Playlist Name
-   - Categories (comma-separated)
+   - Tags (comma-separated)
    - Duration (`HH:MM:SS`, for example `01:23:45`)
    - Lecture Date
    - Description
@@ -285,7 +286,7 @@ Use these exact column headers for best results:
 - URL
 - Media Type (optional if the Import page toggle is used; otherwise `AUDIO` or `VIDEO`)
 - Language
-- Categories
+- Tags
 - Playlist
 - Duration
 - Lecture Date
@@ -308,8 +309,9 @@ Language column can also be:
 
 - lang
 
-Categories column can also be:
+Tags column can also be:
 
+- categories
 - category
 - cat
 
@@ -347,14 +349,14 @@ Required per row:
 Optional per row:
 
 - Language (default: Odia)
-- Category (default: General)
+- Tags (default: General)
 - Playlist
 - Duration
 - Lecture Date (optional; recommended when known)
 
 Lecture Date means the date the lecture actually happened. It is different from `createdAt` (upload date) and `publishedAt` (publication date). Use a date such as `2026-08-25` in Excel.
 
-Category is optional because the system uses `General` when it is blank. It is recommended to enter a meaningful category so playlists are grouped correctly on the public pages.
+Tags are optional because the system uses `General` when the cell is blank. It is recommended to enter meaningful tags so playlists are grouped correctly on the public pages.
 
 ## 6. How Playlist Connection Happens in Excel Upload
 

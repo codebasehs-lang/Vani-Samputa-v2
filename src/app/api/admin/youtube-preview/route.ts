@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server"
 
 const YT = "https://www.googleapis.com/youtube/v3"
 
@@ -21,9 +21,29 @@ type YouTubeItem = {
 // Fetches the channel's videos from YouTube and upserts them into the local staging
 // table. Never overwrites an admin's reviewed language/category/playlist choices —
 // only updates YouTube-owned metadata (title/thumbnail/duration/lastSeenAt).
-export async function POST() {
+export async function POST(req: Request) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
+
+  let from = ""
+  let to = ""
+  try {
+    const text = await req.text()
+    const body = text ? JSON.parse(text) : {}
+    if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error()
+    from = body.from ?? ""
+    to = body.to ?? ""
+    if (typeof from !== "string" || typeof to !== "string") throw new Error()
+  } catch {
+    return NextResponse.json({ error: "Invalid sync request" }, { status: 400 })
+  }
+  const rangeStart = parseUploadDate(from)
+  const rangeEnd = parseUploadDate(to)
+  if ((from || to) && (rangeStart === null || rangeEnd === null || rangeStart > rangeEnd)) {
+    return NextResponse.json({ error: "Enter valid From and To dates, with From on or before To." }, { status: 400 })
+  }
+  const endExclusive = rangeEnd === null ? null : rangeEnd + 86_400_000
+  const matchedIds = new Set<string>()
 
   const apiKey = process.env.YOUTUBE_API_KEY
   const channelId = process.env.YOUTUBE_CHANNEL_ID
@@ -68,11 +88,14 @@ export async function POST() {
             const videoId = video.snippet?.resourceId?.videoId
             const videoTitle = video.snippet?.title?.trim()
             if (!videoId || !videoTitle || videoTitle === "Deleted video" || videoTitle === "Private video") continue
-            fetched++
             const detail = details.get(videoId)
+            const uploadTime = detail?.snippet?.publishedAt ? Date.parse(detail.snippet.publishedAt) : NaN
+            if (rangeStart !== null && endExclusive !== null && (!Number.isFinite(uploadTime) || uploadTime < rangeStart || uploadTime >= endExclusive)) continue
+            fetched++
+            matchedIds.add(videoId)
             const thumbnail = detail?.snippet?.thumbnails?.medium?.url ?? video.snippet?.thumbnails?.medium?.url ?? video.snippet?.thumbnails?.default?.url ?? null
             const duration = isoDurationToSeconds(detail?.contentDetails?.duration)
-            const publishedAt = video.snippet?.publishedAt ? new Date(video.snippet.publishedAt) : null
+            const publishedAt = Number.isFinite(uploadTime) ? new Date(uploadTime) : null
             const existingLectureId = existingLectureIds.get(videoId)
             const isImported = Boolean(existingLectureId)
 
@@ -127,10 +150,17 @@ export async function POST() {
       pageToken = data.nextPageToken ?? ""
     } while (pageToken)
 
-    return NextResponse.json({ fetched, inserted, updated })
+    return NextResponse.json({ fetched, inserted, updated, ...(from ? { videoIds: [...matchedIds], from, to } : {}) })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 502 })
   }
+}
+
+function parseUploadDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  const timestamp = Date.parse(`${value}T00:00:00.000Z`)
+  if (!Number.isFinite(timestamp) || new Date(timestamp).toISOString().slice(0, 10) !== value) return null
+  return timestamp
 }
 
 async function youtubeFetch<T>(path: string, apiKey: string): Promise<T> {

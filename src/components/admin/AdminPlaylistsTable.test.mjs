@@ -147,7 +147,7 @@ test("category edits show server results and remain unchanged on failure", async
     await app.flush()
     app.select(2, "Holy Name")
     assert.deepEqual(app.titles(), failMutation ? [] : ["English Bhagavatam"])
-    assert.equal(app.messages[0], failMutation ? "Request failed" : "Playlist category updated.")
+    assert.equal(app.messages[0], failMutation ? "Request failed" : "Playlist tags updated.")
   }
 })
 

@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import * as XLSX from "xlsx"
-import { toast } from "sonner"
-import { Video, RefreshCw, CircleCheck, CircleAlert, Upload, Download, ExternalLink, X } from "lucide-react"
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader"
+import { UploadDateRangePicker } from "@/components/admin/UploadDateRangePicker"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { CircleAlert, CircleCheck, Download, ExternalLink, RefreshCw, Upload, Video, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
+import * as XLSX from "xlsx"
 
 // Categories are stored as a comma-separated string (e.g. "Goswami, Kirtan") since a
 // playlist/lecture can belong to more than one category.
@@ -65,52 +67,98 @@ export default function AdminYoutubePage() {
   const [playlistFilter, setPlaylistFilter] = useState("ALL")
   const [result, setResult] = useState<ImportResult | null>(null)
   const [log, setLog] = useState("")
+  const [from, setFrom] = useState("")
+  const [to, setTo] = useState("")
+  const [savingEdits, setSavingEdits] = useState(false)
+  const invalidRange = Boolean(from || to) && (!from || !to || from > to)
 
   useEffect(() => {
-    void loadStaging()
+    void loadStaging().catch((error) => toast.error(error instanceof Error ? error.message : "Could not load cached videos."))
   }, [])
 
-  async function loadStaging() {
+  async function loadStaging(videoIds?: string[]) {
     setLoading(true)
-    const response = await fetch("/api/admin/youtube-staging")
-    if (response.ok) {
+    try {
+      const response = await fetch("/api/admin/youtube-staging")
+      if (!response.ok) throw new Error("Could not load cached videos.")
       const data = await response.json() as { categories: string[]; videos: StagedVideo[] }
+      const matched = videoIds ? new Set(videoIds) : null
       setCategories(data.categories)
-      setRows(data.videos)
+      setRows(matched ? data.videos.filter((video) => matched.has(video.videoId)) : data.videos)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function handleSync() {
-    setBusy(true)
-    setResult(null)
-    setLog("Fetching latest videos from YouTube...")
-    const response = await fetch("/api/admin/youtube-preview", { method: "POST" })
-    const data = await response.json()
-    setLog("")
-    if (!response.ok) {
-      setBusy(false)
-      toast.error(data.error ?? "Could not fetch YouTube data.")
+    if (busy) return
+    if (invalidRange) {
+      toast.error("Enter both dates, with From on or before To.")
       return
     }
-    await loadStaging()
-    setBusy(false)
-    toast.success(`Sync complete: ${data.inserted} new, ${data.updated} refreshed.`)
+    setBusy(true)
+    setResult(null)
+    setLog(from ? `Fetching videos uploaded ${from} to ${to} (UTC)...` : "Fetching latest videos from YouTube...")
+    try {
+      const response = await fetch("/api/admin/youtube-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(from ? { from, to } : {}),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error ?? "Could not fetch YouTube data.")
+      await loadStaging(data.videoIds)
+      setLog(`${data.fetched} videos synced${from ? ` for ${from} to ${to} (UTC)` : ""}. ${data.inserted} new, ${data.updated} refreshed.`)
+      toast.success(`Sync complete: ${data.inserted} new, ${data.updated} refreshed.`)
+    } catch (error) {
+      setLog("Sync could not complete.")
+      toast.error(error instanceof Error ? error.message : "Could not fetch YouTube data.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function patchRow(videoId: string, changes: Partial<Pick<StagedVideo, "language" | "category" | "playlistTitle" | "status" | "customSortOrder">>) {
-    setRows((current) => current.map((row) => row.videoId === videoId ? { ...row, ...changes } : row))
-    const response = await fetch("/api/admin/youtube-staging", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId, ...changes }),
-    })
-    if (!response.ok) toast.error("Could not save change; refresh and try again.")
+    if (busy || savingEdits) return false
+    const groupEdit = playlistFilter !== "ALL" && ["language", "category", "playlistTitle"].some((field) => field in changes)
+    const targets = rows.filter((row) => row.status !== "IMPORTED" && (groupEdit
+      ? (row.playlistTitle ?? row.ytPlaylistTitle ?? "") === playlistFilter
+      : row.videoId === videoId))
+    if (!targets.length) return false
+    const reviewed = { ...changes, ...(changes.playlistTitle !== undefined ? { playlistTitle: changes.playlistTitle?.trim() ?? "" } : {}) }
+    if (targets.every((row) => Object.entries(reviewed).every(([field, value]) => {
+      const current = field === "playlistTitle" ? row.playlistTitle ?? row.ytPlaylistTitle ?? ""
+        : field === "language" ? row.language ?? row.detectedLanguage
+          : field === "category" ? row.category ?? row.detectedCategory
+            : row[field as keyof StagedVideo]
+      return current === value
+    }))) return true
+    const videoIds = targets.map((row) => row.videoId)
+    setSavingEdits(true)
+    try {
+      const response = await fetch("/api/admin/youtube-staging", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(groupEdit ? { videoIds, ...reviewed } : { videoId, ...reviewed }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error ?? "Could not save change.")
+      const selected = new Set(videoIds)
+      setRows((current) => current.map((row) => selected.has(row.videoId) ? { ...row, ...reviewed } : row))
+      if (groupEdit && reviewed.playlistTitle !== undefined) setPlaylistFilter(reviewed.playlistTitle || "ALL")
+      if (groupEdit) toast.success(`Updated ${result.updated} videos in the selected playlist.`)
+      return true
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save playlist changes.")
+      return false
+    } finally {
+      setSavingEdits(false)
+    }
   }
 
   function toggleApproved(row: StagedVideo) {
     if (row.status === "IMPORTED") return
-    void patchRow(row.videoId, { status: row.status === "APPROVED" ? "NEW" : "APPROVED" })
+    return patchRow(row.videoId, { status: row.status === "APPROVED" ? "NEW" : "APPROVED" })
   }
 
   function toggleSkipped(row: StagedVideo) {
@@ -201,10 +249,11 @@ export default function AdminYoutubePage() {
       URL: row.videoId,
       "Media Type": "VIDEO",
       Language: row.language ?? row.detectedLanguage,
-      Categories: row.category ?? row.detectedCategory,
+      Tags: row.category ?? row.detectedCategory,
       Playlist: row.playlistTitle ?? row.ytPlaylistTitle ?? "",
       Duration: row.duration ?? "",
       "Lecture Date": row.publishedAt ? row.publishedAt.slice(0, 10) : "",
+      Place: "",
       Order: getImportSortOrder(row),
       Status: row.status,
     }))
@@ -242,12 +291,7 @@ export default function AdminYoutubePage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full text-white" style={{ background: adminGradient(ADMIN_COLORS.youtube) }}>
-          <Video size={18} strokeWidth={1.75} />
-        </span>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">YouTube Import</h1>
-      </div>
+      <AdminPageHeader title="YouTube Sync" section="Publishing" Icon={Video} color={ADMIN_COLORS.youtube} detail={`${rows.length} cached videos · ${counts.APPROVED} approved`} />
 
       <p className="mb-6 max-w-3xl text-sm text-[var(--muted)]">
         Videos are cached locally from your last sync, so this page loads instantly without calling the YouTube API.
@@ -255,35 +299,41 @@ export default function AdminYoutubePage() {
         automatically. Only approved rows are ever written to the lecture database.
       </p>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
+      <fieldset className="mb-4 border-y border-[var(--border)] py-4">
+        <legend className="px-1 text-xs font-semibold text-[var(--foreground)]">Upload date range (UTC)</legend>
+        <UploadDateRangePicker from={from} to={to} disabled={busy || savingEdits} onChange={(range) => { setFrom(range.from); setTo(range.to) }} />
+        {invalidRange && <p role="alert" className="mt-2 text-xs text-red-500">Enter both dates, with From on or before To.</p>}
+      </fieldset>
+
+      <div className="mb-6 grid min-w-0 grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
         <button
-          onClick={() => void handleSync()}
-          disabled={busy}
+          onClick={handleSync}
+          disabled={busy || savingEdits || loading || invalidRange}
           style={{ background: adminGradient(ADMIN_COLORS.youtube) }}
-          className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
         >
           <RefreshCw size={15} strokeWidth={1.75} className={busy ? "animate-spin" : ""} />
-          {busy ? "Syncing..." : "Sync from YouTube"}
+          {busy ? "Syncing..." : from && to ? "Sync date range" : "Sync from YouTube"}
         </button>
         <button
           onClick={() => void handleImport()}
-          disabled={busy || counts.APPROVED === 0}
+          disabled={busy || savingEdits || counts.APPROVED === 0}
           style={{ background: adminGradient(ADMIN_COLORS.import) }}
-          className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
         >
           <Upload size={15} strokeWidth={1.75} /> Import {counts.APPROVED} Approved
         </button>
         {rows.length > 0 && (
           <button
             onClick={handleExport}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-6 py-2.5 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            className="admin-input inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-[var(--admin-hover)]"
           >
             <Download size={15} strokeWidth={1.75} /> Export to Excel
           </button>
         )}
       </div>
 
-      {log && <p className="mb-4 text-sm text-[var(--muted)]">{log}</p>}
+      {log && <p role="status" className="mb-4 text-sm text-[var(--muted)]">{log}</p>}
       {loading && <p className="mb-4 text-sm text-[var(--muted)]">Loading cached videos...</p>}
 
       {!loading && rows.length === 0 && (
@@ -296,6 +346,7 @@ export default function AdminYoutubePage() {
             {filterTabs.map((tab) => (
               <button
                 key={tab.key}
+                disabled={busy || savingEdits}
                 onClick={() => setFilter(tab.key)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filter === tab.key ? "text-white" : "border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                 style={filter === tab.key ? { background: adminGradient(ADMIN_COLORS.youtube) } : undefined}
@@ -305,22 +356,24 @@ export default function AdminYoutubePage() {
             ))}
           </div>
 
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="mb-4 grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-2 xl:grid-cols-4">
             <input
               value={searchText}
+              disabled={savingEdits}
               onChange={(event) => setSearchText(event.target.value)}
               placeholder="Search title or video ID..."
-              className="admin-input min-w-[220px] flex-1 px-3 py-1.5 text-sm"
+              aria-label="Search YouTube videos"
+              className="admin-input w-full min-w-0 px-3 py-1.5 text-sm"
             />
-            <select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)} className="admin-input px-3 py-1.5 text-sm">
+            <select disabled={savingEdits} aria-label="Filter YouTube language" value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)} className="admin-input w-full min-w-0 px-3 py-1.5 text-sm">
               <option value="ALL">All languages</option>
               {languageOptions.map((language) => <option key={language} value={language}>{language}</option>)}
             </select>
-            <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="admin-input px-3 py-1.5 text-sm">
-              <option value="ALL">All categories</option>
+            <select disabled={savingEdits} aria-label="Filter YouTube tags" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="admin-input w-full min-w-0 px-3 py-1.5 text-sm">
+              <option value="ALL">All tags</option>
               {categoryOptions.map((category) => <option key={category} value={category}>{category}</option>)}
             </select>
-            <select value={playlistFilter} onChange={(event) => setPlaylistFilter(event.target.value)} className="admin-input px-3 py-1.5 text-sm">
+            <select disabled={savingEdits} aria-label="Filter YouTube playlist" value={playlistFilter} onChange={(event) => setPlaylistFilter(event.target.value)} className="admin-input w-full min-w-0 px-3 py-1.5 text-sm">
               <option value="ALL">All playlists</option>
               {playlistOptions.map((playlist) => <option key={playlist} value={playlist}>{playlist}</option>)}
             </select>
@@ -342,11 +395,11 @@ export default function AdminYoutubePage() {
             )}
             <span className="text-sm text-[var(--muted)]">{filteredRows.length} of {rows.length} shown</span>
             {playlistFilter !== "ALL" && !canCustomizePlaylistOrder && (
-              <span className="text-sm text-[var(--muted)]">Use the All tab and clear search/language/category filters to customize full playlist order.</span>
+              <span className="text-sm text-[var(--muted)]">Use the All tab and clear search/language/tag filters to customize full playlist order.</span>
             )}
           </div>
 
-          <div className="admin-panel max-h-[70vh] overflow-auto">
+          <div role="region" aria-label="YouTube videos table" tabIndex={0} className="admin-panel max-h-[70dvh] max-w-full overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
             <table className={`${canCustomizePlaylistOrder ? "min-w-[1250px]" : "min-w-[1150px]"} w-full text-xs`}>
               <thead className="sticky top-0 bg-[var(--surface)]">
                 <tr>
@@ -364,7 +417,7 @@ export default function AdminYoutubePage() {
                   <th className="w-14 px-3 py-3 text-left">Link</th>
                   <th className="min-w-[240px] px-3 py-3 text-left">Title</th>
                   <th className="w-28 px-3 py-3 text-left">Language</th>
-                  <th className="w-44 px-3 py-3 text-left">Category</th>
+                  <th className="w-44 px-3 py-3 text-left">Tags</th>
                   <th className="w-48 px-3 py-3 text-left">Playlist</th>
                   {canCustomizePlaylistOrder && <th className="w-32 px-3 py-3 text-left">Order</th>}
                   <th className="w-20 px-3 py-3 text-left">Duration</th>
@@ -377,7 +430,7 @@ export default function AdminYoutubePage() {
                   const effectiveLanguage = row.language ?? row.detectedLanguage
                   const selectedCategories = splitCategoryNames(row.category ?? row.detectedCategory).filter((name) => categories.includes(name))
                   const effectivePlaylist = row.playlistTitle ?? row.ytPlaylistTitle ?? ""
-                  const locked = row.status === "IMPORTED"
+                  const locked = row.status === "IMPORTED" || busy || savingEdits
                   const visibleOrder = index + 1
                   return (
                     <tr key={row.videoId} className="border-t border-[var(--border)] align-top">
@@ -409,7 +462,8 @@ export default function AdminYoutubePage() {
                         <select
                           value={effectiveLanguage}
                           disabled={locked}
-                          onChange={(event) => void patchRow(row.videoId, { language: event.target.value })}
+                          aria-label={`Language for ${row.title}`}
+                          onChange={(event) => patchRow(row.videoId, { language: event.target.value })}
                           className="admin-input w-full px-2 py-1.5"
                         >
                           {languages.map((language) => <option key={language}>{language}</option>)}
@@ -420,14 +474,20 @@ export default function AdminYoutubePage() {
                           selected={selectedCategories}
                           options={categories}
                           disabled={locked}
-                          onChange={(next) => void patchRow(row.videoId, { category: next.join(", ") })}
+                          onChange={(next) => patchRow(row.videoId, { category: next.join(", ") })}
                         />
                       </td>
                       <td className="px-3 py-3">
                         <input
+                          key={`${row.videoId}-${effectivePlaylist}`}
                           defaultValue={effectivePlaylist}
                           disabled={locked}
-                          onBlur={(event) => void patchRow(row.videoId, { playlistTitle: event.target.value })}
+                          aria-label={`Playlist for ${row.title}`}
+                          onBlur={async (event) => {
+                            const input = event.currentTarget
+                            const saved = await patchRow(row.videoId, { playlistTitle: input.value })
+                            if (!saved) input.value = effectivePlaylist
+                          }}
                           className="admin-input w-full px-2 py-1.5"
                         />
                       </td>
@@ -543,7 +603,7 @@ function CategoryCell({
         }}
         className="admin-input w-full px-2 py-1.5"
       >
-        <option value="">{selected.length ? "Add category" : "Choose category"}</option>
+        <option value="">{selected.length ? "Add tag" : "Choose tag"}</option>
         {options.filter((name) => !selected.includes(name)).map((category) => <option key={category}>{category}</option>)}
       </select>
     </div>
@@ -556,7 +616,7 @@ function StatusBadge({ status, hasCategory }: { status: Status; hasCategory: boo
   if (status === "APPROVED") {
     return hasCategory
       ? <span className="text-green-600">Approved</span>
-      : <span className="inline-flex items-center gap-1 text-red-500"><CircleAlert size={12} /> Choose category</span>
+      : <span className="inline-flex items-center gap-1 text-red-500"><CircleAlert size={12} /> Choose tag</span>
   }
   return <span className="text-[var(--muted)]">New</span>
 }

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
+import type { MediaType } from "@/generated/prisma/enums"
 import { requireAdmin } from "@/lib/adminAuth"
-import { prisma } from "@/lib/prisma"
 import { categoryConnect, parseCategoryNames, validateCategories } from "@/lib/categories"
 import { parseDuration } from "@/lib/duration"
+import { prisma } from "@/lib/prisma"
 import { extractYouTubeId } from "@/lib/youtube"
-import type { MediaType } from "@/generated/prisma/enums"
+import { NextRequest, NextResponse } from "next/server"
 
 async function resolvePlaylist(input: {
   playlistId?: unknown
@@ -41,6 +41,10 @@ async function resolvePlaylist(input: {
   return { id: playlist.id }
 }
 
+function normalizePlace(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null
+}
+
 export async function GET(req: NextRequest) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
@@ -75,13 +79,13 @@ export async function POST(req: NextRequest) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
 
-  const { title, url, mediaType, language, category, categories, playlistName, playlistId: requestedPlaylistId, duration, description, lectureDate } =
+  const { title, url, mediaType, language, category, categories, playlistName, playlistId: requestedPlaylistId, duration, description, lectureDate, place } =
     await req.json()
 
   const categoryNames = parseCategoryNames(categories || category || "General")
   const missingCategories = await validateCategories(categoryNames)
   if (missingCategories.length) {
-    return NextResponse.json({ error: `Add these categories first from Admin -> Categories: ${missingCategories.join(", ")}` }, { status: 400 })
+    return NextResponse.json({ error: `Add these tags first from Admin -> Tags: ${missingCategories.join(", ")}` }, { status: 400 })
   }
 
   const playlist = await resolvePlaylist({ playlistId: requestedPlaylistId, playlistName, language, mediaType, categoryNames })
@@ -97,6 +101,7 @@ export async function POST(req: NextRequest) {
       description,
       duration: parseDuration(duration),
       lectureDate: lectureDate ? new Date(lectureDate) : null,
+      place: normalizePlace(place),
       playlistId: playlist.id,
       categories: categoryConnect(categoryNames),
     },
@@ -112,13 +117,13 @@ export async function PATCH(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id")
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
 
-  const { title, url, mediaType, language, category, categories, playlistName, playlistId: requestedPlaylistId, duration, description, lectureDate } =
+  const { title, url, mediaType, language, category, categories, playlistName, playlistId: requestedPlaylistId, duration, description, lectureDate, place } =
     await req.json()
 
   const categoryNames = parseCategoryNames(categories || category || "General")
   const missingCategories = await validateCategories(categoryNames)
   if (missingCategories.length) {
-    return NextResponse.json({ error: `Add these categories first from Admin -> Categories: ${missingCategories.join(", ")}` }, { status: 400 })
+    return NextResponse.json({ error: `Add these tags first from Admin -> Tags: ${missingCategories.join(", ")}` }, { status: 400 })
   }
 
   const playlist = await resolvePlaylist({ playlistId: requestedPlaylistId, playlistName, language, mediaType, categoryNames })
@@ -135,6 +140,7 @@ export async function PATCH(req: NextRequest) {
       description,
       duration: parseDuration(duration),
       lectureDate: lectureDate ? new Date(lectureDate) : null,
+      place: normalizePlace(place),
       playlistId: playlist.id,
       categories: { set: categoryNames.map((name: string) => ({ name })) },
     },

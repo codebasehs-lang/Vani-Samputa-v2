@@ -1,16 +1,17 @@
 "use client"
 
-import { useRef, useState, useSyncExternalStore } from "react"
-import * as XLSX from "xlsx"
-import { toast } from "sonner"
-import { Quote, Download, Upload, CircleCheck, CircleAlert, RefreshCw, Pencil, Trash2, X } from "lucide-react"
-import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader"
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
+import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 import { buildQuoteMonthRows, formatQuoteDay, parseQuoteDay } from "@/lib/dailyQuotes"
+import { CircleAlert, CircleCheck, Download, Pencil, Quote, RefreshCw, Trash2, Upload, X } from "lucide-react"
+import { useRef, useState, useSyncExternalStore } from "react"
+import { toast } from "sonner"
+import * as XLSX from "xlsx"
 
 type Row = Record<string, string>
 
-const noopSubscribe = () => () => {}
+const noopSubscribe = () => () => { }
 
 type ImportResult = {
   created: number
@@ -165,12 +166,7 @@ export default function AdminQuotesPage() {
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full text-white" style={{ background: adminGradient(ADMIN_COLORS.quotes) }}>
-          <Quote size={18} strokeWidth={1.75} />
-        </span>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Daily Quotes Import</h1>
-      </div>
+      <AdminPageHeader title="Daily Quotes" section="Publishing" Icon={Quote} color={ADMIN_COLORS.quotes} />
       <p className="mb-6 text-sm text-[var(--muted)]">
         Quotes repeat every year by month and day. Download a month template and upload the filled file.
         Re-uploading the same month and day updates the existing quote; any year in the file is ignored.
@@ -224,7 +220,7 @@ export default function AdminQuotesPage() {
       {rows.length > 0 && (
         <div className="mb-5">
           <p className="mb-2 text-sm text-[var(--muted)]">{rows.length} rows loaded (showing first 6)</p>
-          <div className="admin-panel overflow-x-auto">
+          <div role="region" aria-label="Quote spreadsheet preview" tabIndex={0} className="admin-panel max-w-full overflow-x-auto">
             <table className="min-w-full text-xs">
               <thead className="bg-[var(--surface)]">
                 <tr>
@@ -306,7 +302,7 @@ export default function AdminQuotesPage() {
           quotes.length === 0 ? (
             <p className="mt-4 text-sm text-[var(--muted)]">No quotes found for month {two(month)}.</p>
           ) : (
-            <div className="admin-panel mt-4 overflow-x-auto">
+            <div role="region" aria-label="Daily quotes table" tabIndex={0} className="admin-panel mt-4 max-w-full overflow-x-auto">
               <table className="min-w-full text-xs">
                 <thead className="bg-[var(--surface)]">
                   <tr>
@@ -357,10 +353,10 @@ export default function AdminQuotesPage() {
 
       {/* Edit quote modal */}
       {editingQuote && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-3 py-4 sm:px-4" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditingQuote(null)} aria-hidden="true" />
-          <div className="relative w-full max-w-lg rounded-xl border border-[var(--border)] p-5 shadow-xl" style={{ background: "var(--surface)" }}>
-            <div className="mb-4 flex items-center justify-between">
+          <div className="relative max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-lg overflow-y-auto overscroll-contain rounded-lg border border-[var(--border)] p-4 shadow-xl sm:p-5" style={{ background: "var(--surface)" }}>
+            <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">Edit quote — {fmtDate(editingQuote.date)}</h2>
               <button onClick={() => setEditingQuote(null)} aria-label="Close" className="rounded-lg p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
                 <X size={16} />

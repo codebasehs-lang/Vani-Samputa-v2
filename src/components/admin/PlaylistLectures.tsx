@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { ExternalLink, Pencil, Plus } from "lucide-react"
-import { EditLectureModal, type EditableLecture, type LecturePlaylist } from "@/components/admin/EditLectureModal"
 import { DeleteLectureButton } from "@/components/admin/DeleteLectureButton"
+import { EditLectureModal, type EditableLecture, type LecturePlaylist } from "@/components/admin/EditLectureModal"
 import { formatDuration } from "@/lib/duration"
 import { extractYouTubeId } from "@/lib/youtube"
+import { ExternalLink, Pencil, Plus } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function PlaylistLectures({ playlist, onCountChange }: {
   playlist: LecturePlaylist
@@ -50,8 +50,8 @@ export function PlaylistLectures({ playlist, onCountChange }: {
 
   return (
     <section id={`playlist-lectures-${playlist.id}`} aria-label={`Lectures in ${playlist.title}`} className="p-4 sm:p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-[var(--foreground)]">Lectures in {playlist.title}</h2>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="min-w-0 break-words font-semibold text-[var(--foreground)]">Lectures in {playlist.title}</h2>
         <button
           type="button"
           onClick={() => setEditor({ lecture: null })}
@@ -73,7 +73,7 @@ export function PlaylistLectures({ playlist, onCountChange }: {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--muted)]">
-              {["Title", "Duration", "Lecture date", "Categories", "Actions"].map((heading) => (
+              {["Title", "Duration", "Lecture date", "Place", "Tags", "Actions"].map((heading) => (
                 <th key={heading} scope="col" className="px-3 py-2">{heading}</th>
               ))}
             </tr>
@@ -86,6 +86,7 @@ export function PlaylistLectures({ playlist, onCountChange }: {
                 <td className="px-3 py-2.5 text-[var(--muted)]">
                   {lecture.lectureDate ? new Date(lecture.lectureDate).toISOString().slice(0, 10) : "—"}
                 </td>
+                <td className="px-3 py-2.5 text-[var(--muted)]">{lecture.place || "—"}</td>
                 <td className="px-3 py-2.5 text-[var(--muted)]">{lecture.categories.map((c) => c.name).join(", ") || "—"}</td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-1">

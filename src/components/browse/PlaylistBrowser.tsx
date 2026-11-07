@@ -119,7 +119,7 @@ export function PlaylistBrowser({
 
         <aside className="hidden lg:sticky lg:top-24 lg:block">
           <div className="side-filter">
-            <p className="section-eyebrow mb-3 px-1">Filter by category</p>
+            <p className="section-eyebrow mb-3 px-1">Filter by tag</p>
             <nav className="flex flex-col gap-0.5">
               <Link href={tagHref()} data-active={!tag} className="side-filter-link">All</Link>
               {categories.map((c) => (

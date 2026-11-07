@@ -1,8 +1,8 @@
 "use client"
 
+import { LectureThumbnail } from "@/components/LectureThumbnail"
 import { NotebookOverlay } from "@/components/player/NotebookOverlay"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { LectureThumbnail } from "@/components/LectureThumbnail"
 import { usePlayerStore, type Track } from "@/store/playerStore"
 import {
   closestCenter,
@@ -32,6 +32,7 @@ import {
   X,
 } from "lucide-react"
 import { useSession } from "next-auth/react"
+import Link from "next/link"
 import { useEffect, useRef, useState, type CSSProperties } from "react"
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
@@ -54,7 +55,7 @@ export function FullScreenPlayer() {
   const [view, setView] = useState<"player" | "notes">("player")
   const [shareLabel, setShareLabel] = useState("Share")
   const [now, setNow] = useState(() => Date.now())
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const sensors = useSensors(useSensor(PointerSensor))
 
   const remaining = sleepTimerEnd ? Math.max(0, Math.ceil((sleepTimerEnd - now) / 60_000)) : null
@@ -161,36 +162,34 @@ export function FullScreenPlayer() {
           <div className="fsp-bg" aria-hidden="true" />
 
           {/* Header */}
-          <div className="relative flex items-center justify-between px-5 pb-3 pt-10 sm:pt-8">
+          <div className="relative flex shrink-0 items-center justify-between gap-2 px-5 pb-3 pt-10 sm:pt-8">
             <button onClick={closeFullScreen} aria-label="Close player" className="fsp-icon-btn">
               <ChevronDown size={22} />
             </button>
-            {session ? (
-              <div className="fsp-segment" role="tablist" aria-label="Player view">
-                {(["player", "notes"] as const).map((v) => (
-                  <button
-                    key={v}
-                    role="tab"
-                    onClick={() => setView(v)}
-                    aria-selected={view === v}
-                    data-active={view === v ? "true" : undefined}
-                    className="fsp-segment-btn px-4 py-1 text-[11px] uppercase tracking-[0.16em]"
-                  >
-                    {v === "player" ? "Player" : "Notes"}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="fsp-eyebrow">
-                <span className="fsp-eyebrow-dot" aria-hidden="true" />
-                Now Playing
-              </p>
-            )}
+            <div className="fsp-segment shrink-0" role="tablist" aria-label="Player view">
+              {(["player", "notes"] as const).map((v) => (
+                <button
+                  key={v}
+                  role="tab"
+                  id={`fsp-tab-${v}`}
+                  aria-controls={`fsp-panel-${v}`}
+                  onClick={() => setView(v)}
+                  aria-selected={view === v}
+                  data-active={view === v ? "true" : undefined}
+                  className="fsp-segment-btn min-h-10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] sm:px-4"
+                >
+                  {v === "player" ? "Player" : "Notes"}
+                </button>
+              ))}
+            </div>
             <ThemeToggle className="fsp-icon-btn" />
           </div>
 
           <div
-            className="relative flex flex-1 flex-col overflow-y-auto pb-8"
+            id="fsp-panel-player"
+            role="tabpanel"
+            aria-labelledby="fsp-tab-player"
+            className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pb-8"
             style={{ display: view === "player" ? "flex" : "none" }}
           >
             {/* Artwork */}
@@ -411,18 +410,32 @@ export function FullScreenPlayer() {
             </div>
           </div>
 
-          {session && (
-            <div
-              className="relative flex-1 overflow-hidden"
-              style={{ display: view === "notes" ? "block" : "none" }}
-            >
+          <div
+            id="fsp-panel-notes"
+            role="tabpanel"
+            aria-labelledby="fsp-tab-notes"
+            className="relative min-h-0 flex-1 overflow-hidden"
+            style={{ display: view === "notes" ? "block" : "none" }}
+          >
+            {session ? (
               <NotebookOverlay
                 lectureId={currentTrack.id}
                 lectureTitle={currentTrack.title}
                 positionS={positionS}
               />
-            </div>
-          )}
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+                {status === "loading" ? (
+                  <p role="status" className="text-sm text-[var(--muted)]">Loading notes…</p>
+                ) : (
+                  <>
+                    <p className="text-sm text-[var(--muted)]">Sign in to write and view your notes.</p>
+                    <Link href="/login" onClick={closeFullScreen} className="btn-accent px-4 py-2 text-sm">Sign in</Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

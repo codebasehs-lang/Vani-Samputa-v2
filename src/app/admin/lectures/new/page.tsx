@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 import { Breadcrumbs } from "@/components/admin/Breadcrumbs"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 const LANGUAGES = ["Odia", "Hindi", "English"]
 const MEDIA_TYPES = ["AUDIO", "VIDEO"]
@@ -15,7 +15,7 @@ export default function NewLecturePage() {
   const [error, setError] = useState("")
   const [form, setForm] = useState({
     title: "", url: "", mediaType: "AUDIO", language: "Odia",
-    categories: "", playlistName: "", duration: "", description: "", lectureDate: "",
+    categories: "", playlistName: "", duration: "", description: "", lectureDate: "", place: "",
   })
 
   function set(key: string, value: string) {
@@ -51,13 +51,14 @@ export default function NewLecturePage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {[
-          { key: "title",       label: "Title",          type: "text",   required: true },
-          { key: "url",         label: "URL / YouTube ID", type: "text", required: true },
-          { key: "playlistName",label: "Playlist Name",  type: "text" },
-          { key: "categories",  label: "Categories (comma-separated)", type: "text" },
-          { key: "duration",    label: "Duration (HH:MM:SS)", type: "text" },
-          { key: "lectureDate", label: "Lecture Date",    type: "date" },
-          { key: "description", label: "Description",    type: "text" },
+          { key: "title", label: "Title", type: "text", required: true },
+          { key: "url", label: "URL / YouTube ID", type: "text", required: true },
+          { key: "playlistName", label: "Playlist Name", type: "text" },
+          { key: "categories", label: "Tags (comma-separated)", type: "text" },
+          { key: "duration", label: "Duration (HH:MM:SS)", type: "text" },
+          { key: "lectureDate", label: "Lecture Date", type: "date" },
+          { key: "place", label: "Place", type: "text" },
+          { key: "description", label: "Description", type: "text" },
         ].map(({ key, label, type, required }) => (
           <div key={key}>
             <label className="mb-1 block text-xs font-medium text-[var(--muted)]">{label}</label>
@@ -71,7 +72,7 @@ export default function NewLecturePage() {
           </div>
         ))}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--muted)]">Type</label>
             <select

@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import { AlertTriangle } from "lucide-react"
+import { useEffect, useRef } from "react"
 
 type ConfirmDialogProps = {
   open: boolean
@@ -42,10 +42,10 @@ export function ConfirmDialog({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-3 py-4 sm:px-4" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} aria-hidden="true" />
       <div
-        className="relative w-full max-w-sm rounded-xl border border-[var(--border)] p-5 shadow-xl"
+        className="relative max-h-[calc(100dvh-2rem)] w-full min-w-0 max-w-sm overflow-y-auto overscroll-contain rounded-lg border border-[var(--border)] p-5 shadow-xl"
         style={{ background: "var(--surface)" }}
       >
         <div className="mb-3 flex items-center gap-3">
@@ -63,7 +63,7 @@ export function ConfirmDialog({
           <h2 id="confirm-dialog-title" className="text-sm font-semibold text-[var(--foreground)]">{title}</h2>
         </div>
         {description && <p className="mb-5 text-sm text-[var(--muted)]">{description}</p>}
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
@@ -77,9 +77,8 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className={`rounded-lg px-3.5 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60 ${
-              danger ? "bg-red-500 hover:bg-red-600" : "admin-gradient-accent"
-            }`}
+            className={`rounded-lg px-3.5 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60 ${danger ? "bg-red-500 hover:bg-red-600" : "admin-gradient-accent"
+              }`}
           >
             {busy ? "Please wait…" : confirmLabel}
           </button>

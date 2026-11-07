@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/adminAuth"
 import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from "next/server"
 
 // Reads cached YouTube videos from the local staging table — no YouTube API calls,
 // so opening this page never costs quota. Use the sync endpoint to refresh the cache.
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest) {
   const guard = await requireAdmin()
   if (guard.response) return guard.response
 
-  const body = await req.json() as {
+  const body = await req.json().catch(() => null) as {
     videoId?: string
     videoIds?: string[]
     language?: string
@@ -39,6 +39,7 @@ export async function PATCH(req: NextRequest) {
     orderUpdates?: { videoId?: string; customSortOrder?: number | null }[]
     status?: "NEW" | "APPROVED" | "SKIPPED"
   }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Invalid staging request" }, { status: 400 })
 
   if (Array.isArray(body.orderUpdates)) {
     const orderUpdates = body.orderUpdates.map((update) => ({
@@ -63,16 +64,30 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (Array.isArray(body.videoIds)) {
-    const videoIds = body.videoIds.map((id) => String(id).trim()).filter(Boolean)
+    if (body.videoIds.some((id) => typeof id !== "string")) return NextResponse.json({ error: "videoIds must contain strings" }, { status: 400 })
+    const videoIds = [...new Set(body.videoIds.map((id) => id.trim()).filter(Boolean))]
     if (!videoIds.length) return NextResponse.json({ error: "videoIds must not be empty" }, { status: 400 })
-    if (!body.status || (body.status as string) === "IMPORTED") {
-      return NextResponse.json({ error: "status must be NEW, APPROVED, or SKIPPED" }, { status: 400 })
+    const data: { language?: string; category?: string; playlistTitle?: string; status?: "NEW" | "APPROVED" | "SKIPPED" } = {}
+    for (const field of ["language", "category", "playlistTitle"] as const) {
+      if (body[field] === undefined) continue
+      if (typeof body[field] !== "string" || body[field].length > 191) return NextResponse.json({ error: `${field} must be a string of at most 191 characters` }, { status: 400 })
+      data[field] = body[field].trim()
     }
-    const result = await prisma.youtubeStagingVideo.updateMany({
-      where: { videoId: { in: videoIds }, status: { not: "IMPORTED" } },
-      data: { status: body.status },
-    })
-    return NextResponse.json({ updated: result.count })
+    if (data.language !== undefined && !["Odia", "Hindi", "English", "Sanskrit"].includes(data.language)) return NextResponse.json({ error: "Invalid language" }, { status: 400 })
+    if (body.status !== undefined) {
+      if (!["NEW", "APPROVED", "SKIPPED"].includes(body.status)) return NextResponse.json({ error: "status must be NEW, APPROVED, or SKIPPED" }, { status: 400 })
+      data.status = body.status
+    }
+    if (!Object.keys(data).length) return NextResponse.json({ error: "No reviewed fields to update" }, { status: 400 })
+    try {
+      const result = await prisma.youtubeStagingVideo.updateMany({
+        where: { videoId: { in: videoIds }, status: { not: "IMPORTED" } },
+        data,
+      })
+      return NextResponse.json({ updated: result.count })
+    } catch {
+      return NextResponse.json({ error: "Could not save playlist changes" }, { status: 500 })
+    }
   }
 
   const videoId = String(body.videoId ?? "").trim()
@@ -80,8 +95,8 @@ export async function PATCH(req: NextRequest) {
 
   const data: Record<string, string | number | null> = {}
   if (body.language !== undefined) data.language = body.language || null
-  if (body.category !== undefined) data.category = body.category || null
-  if (body.playlistTitle !== undefined) data.playlistTitle = body.playlistTitle || null
+  if (body.category !== undefined) data.category = body.category
+  if (body.playlistTitle !== undefined) data.playlistTitle = body.playlistTitle
   if (body.customSortOrder !== undefined) data.customSortOrder = normalizeCustomSortOrder(body.customSortOrder)
   if (body.status && body.status !== "IMPORTED" as string) data.status = body.status
 

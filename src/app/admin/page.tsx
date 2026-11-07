@@ -1,7 +1,10 @@
-import { prisma } from "@/lib/prisma"
-import type { Metadata } from "next"
-import { BookOpen, ListMusic, Users, Newspaper, Mic, Clapperboard, Inbox } from "lucide-react"
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
+import { prisma } from "@/lib/prisma"
+import { ArrowUpRight, BookOpen, Clapperboard, Inbox, ListMusic, Mic, Newspaper, Plus, Upload, Users } from "lucide-react"
+import type { Metadata } from "next"
+import Link from "next/link"
+import type { CSSProperties } from "react"
 
 export const metadata: Metadata = { title: "Dashboard" }
 
@@ -28,44 +31,51 @@ export default async function AdminDashboard() {
   const { lectures, users, playlists, articles, audio, video, recent } = await getStats()
 
   const stats = [
-    { label: "Total Lectures", value: lectures, sub: `${audio} audio · ${video} video`, Icon: BookOpen, color: ADMIN_COLORS.dashboard },
-    { label: "Playlists",      value: playlists, Icon: ListMusic, color: ADMIN_COLORS.lectures },
-    { label: "Users",          value: users, Icon: Users, color: ADMIN_COLORS.import },
-    { label: "Articles",       value: articles, Icon: Newspaper, color: ADMIN_COLORS.categories },
+    { label: "Total Lectures", value: lectures, sub: `${audio} audio · ${video} video`, Icon: BookOpen, color: ADMIN_COLORS.dashboard, href: "/admin/lectures" },
+    { label: "Playlists", value: playlists, sub: "Audio & video collections", Icon: ListMusic, color: ADMIN_COLORS.categories, href: "/admin/playlists" },
+    { label: "Users", value: users, sub: "Registered listeners", Icon: Users, color: ADMIN_COLORS.import, href: null },
+    { label: "Articles", value: articles, sub: "Published & draft articles", Icon: Newspaper, color: ADMIN_COLORS.youtube, href: "/admin/articles" },
   ]
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
+      <AdminPageHeader title="Dashboard" section="Workspace" Icon={BookOpen} color={ADMIN_COLORS.dashboard} actions={<>
+        <Link href="/admin/import" className="admin-input flex items-center gap-2 px-3 py-2 text-sm font-medium"><Upload size={16} />Import Excel</Link>
+        <Link href="/admin/lectures/new" className="btn-accent flex items-center gap-2 px-3 py-2 text-sm font-semibold"><Plus size={16} />Add lecture</Link>
+      </>} />
 
-      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map(({ label, value, sub, Icon, color }) => (
-          <div
-            key={label}
-            className="rounded-xl border border-[var(--border)] p-5 transition-transform duration-150 hover:-translate-y-0.5"
-            style={{ background: `linear-gradient(160deg, color-mix(in oklab, ${color} 7%, var(--surface) 93%), var(--surface))` }}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-3xl font-bold" style={{ color }}>
-                {value.toLocaleString()}
-              </p>
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm"
-                style={{ background: adminGradient(color) }}
-                aria-hidden="true"
-              >
-                <Icon size={19} strokeWidth={1.75} />
-              </span>
-            </div>
-            <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
-            {sub && <p className="mt-0.5 text-xs text-[var(--muted)]">{sub}</p>}
-          </div>
-        ))}
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map(({ label, value, sub, Icon, color, href }) => {
+          const Stat = href ? Link : "div"
+          return (
+            <Stat
+              key={label}
+              href={href ?? "#"}
+              className="admin-stat min-w-0 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:p-5"
+              style={{ "--section-color": color } as CSSProperties}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <p className="admin-stat-value text-3xl font-semibold tabular-nums">
+                  {value.toLocaleString()}
+                </p>
+                <span
+                  className="admin-section-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+                  aria-hidden="true"
+                >
+                  <Icon size={19} strokeWidth={1.75} />
+                </span>
+              </div>
+              <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
+              {sub && <p className="mt-0.5 text-xs text-[var(--muted)]">{sub}</p>}
+            </Stat>
+          )
+        })}
       </div>
 
-      <div className="admin-panel">
-        <div className="border-b border-[var(--border)] px-4 py-3">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">Recently Added</h2>
+      <div className="overflow-hidden border-y border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-4 sm:px-5">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">Recently added</h2>
+          <Link href="/admin/lectures" className="flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">All lectures<ArrowUpRight size={14} /></Link>
         </div>
         <div className="divide-y divide-[var(--border)]">
           {recent.length === 0 && (
@@ -95,7 +105,7 @@ export default async function AdminDashboard() {
                   <p className="truncate text-sm font-medium text-[var(--foreground)]">{l.title}</p>
                   <p className="text-[10px] text-[var(--muted)]">{l.language}</p>
                 </div>
-                <p className="text-[10px] text-[var(--muted)]">
+                <p className="shrink-0 text-[10px] text-[var(--muted)]">
                   {new Date(l.createdAt).toLocaleDateString()}
                 </p>
               </div>

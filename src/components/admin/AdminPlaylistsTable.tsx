@@ -1,10 +1,10 @@
 "use client"
 
-import { Fragment, useCallback, useEffect, useState } from "react"
-import { toast } from "sonner"
-import { ChevronDown, Trash2, X } from "lucide-react"
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog"
 import { PlaylistLectures } from "@/components/admin/PlaylistLectures"
+import { ChevronDown, Trash2, X } from "lucide-react"
+import { Fragment, useCallback, useEffect, useState } from "react"
+import { toast } from "sonner"
 
 type Playlist = {
   id: string
@@ -53,7 +53,7 @@ export function AdminPlaylistsTable() {
           fetch("/api/admin/categories", { signal: controller.signal }),
         ])
         if (!playlistResponse.ok || !categoryResponse.ok) {
-          throw new Error("Could not load playlists and categories. Please reload to try again.")
+          throw new Error("Could not load playlists and tags. Please reload to try again.")
         }
         const playlistData: Playlist[] = await playlistResponse.json()
         const categoryData: { name: string }[] = await categoryResponse.json()
@@ -82,13 +82,13 @@ export function AdminPlaylistsTable() {
       })
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error ?? "Could not update playlist category.")
+        throw new Error(data.error ?? "Could not update playlist tags.")
       }
       const updated: Playlist = await response.json()
       setPlaylists((current) => current.map((pl) => pl.id === id ? updated : pl))
-      toast.success("Playlist category updated.")
+      toast.success("Playlist tags updated.")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not update playlist category.")
+      toast.error(error instanceof Error ? error.message : "Could not update playlist tags.")
     } finally {
       setBusy(false)
     }
@@ -146,162 +146,162 @@ export function AdminPlaylistsTable() {
 
   return (
     <>
-    <div className="admin-panel mb-4 p-4 sm:p-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <label className="text-xs font-medium text-[var(--muted)]">
-          Search playlists
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title..."
-            className="admin-input mt-1.5 w-full px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="text-xs font-medium text-[var(--muted)]">
-          Language
-          <select value={language} onChange={(e) => setLanguage(e.target.value)} className="admin-select mt-1.5 w-full px-3 py-2 text-sm">
-            <option value="">All languages</option>
-            {languages.map((name) => <option key={name} value={name}>{name}</option>)}
-          </select>
-        </label>
-        <label className="text-xs font-medium text-[var(--muted)]">
-          Media type
-          <select value={mediaType} onChange={(e) => setMediaType(e.target.value)} className="admin-select mt-1.5 w-full px-3 py-2 text-sm">
-            <option value="">All types</option>
-            <option value="AUDIO">Audio</option>
-            <option value="VIDEO">Video</option>
-          </select>
-        </label>
-        <label className="text-xs font-medium text-[var(--muted)]">
-          Category
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="admin-select mt-1.5 w-full px-3 py-2 text-sm">
-            <option value="">All categories</option>
-            <option value="__uncategorized__">No categories</option>
-            {categoryNames.map((name) => <option key={name} value={name}>{name}</option>)}
-          </select>
-        </label>
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <p aria-live="polite" className="text-xs text-[var(--muted)]">
-          Showing {filteredPlaylists.length} of {playlists.length} playlists
-        </p>
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={() => { setSearch(""); setLanguage(""); setMediaType(""); setCategory("") }}
-            className="text-xs font-medium text-[var(--accent)] hover:underline"
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
-    </div>
-    <div className="admin-panel overflow-x-auto">
-      <table className="min-w-[900px] w-full text-sm">
-        <thead className="bg-[var(--surface)]">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Title</th>
-            <th className="w-24 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Language</th>
-            <th className="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Type</th>
-            <th className="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Lectures</th>
-            <th className="min-w-[320px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Categories</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--border)]">
-          {!filteredPlaylists.length && (
-            <tr>
-              <td colSpan={6} className="px-4 py-10 text-center text-[var(--muted)]">
-                {playlists.length ? "No playlists match your filters." : "No playlists yet."}
-              </td>
-            </tr>
+      <div className="admin-panel mb-4 p-4 sm:p-5">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <label className="min-w-0 text-xs font-medium text-[var(--muted)]">
+            Search playlists
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by title..."
+              className="admin-input mt-1.5 w-full px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="text-xs font-medium text-[var(--muted)]">
+            Language
+            <select value={language} onChange={(e) => setLanguage(e.target.value)} className="admin-select mt-1.5 w-full px-3 py-2 text-sm">
+              <option value="">All languages</option>
+              {languages.map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-medium text-[var(--muted)]">
+            Media type
+            <select value={mediaType} onChange={(e) => setMediaType(e.target.value)} className="admin-select mt-1.5 w-full px-3 py-2 text-sm">
+              <option value="">All types</option>
+              <option value="AUDIO">Audio</option>
+              <option value="VIDEO">Video</option>
+            </select>
+          </label>
+          <label className="text-xs font-medium text-[var(--muted)]">
+            Tags
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="admin-select mt-1.5 w-full px-3 py-2 text-sm">
+              <option value="">All tags</option>
+              <option value="__uncategorized__">No tags</option>
+              {categoryNames.map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p aria-live="polite" className="text-xs text-[var(--muted)]">
+            Showing {filteredPlaylists.length} of {playlists.length} playlists
+          </p>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setLanguage(""); setMediaType(""); setCategory("") }}
+              className="text-xs font-medium text-[var(--accent)] hover:underline"
+            >
+              Clear filters
+            </button>
           )}
-          {filteredPlaylists.map((playlist) => (
-            <Fragment key={playlist.id}>
+        </div>
+      </div>
+      <div role="region" aria-label="Playlists table" tabIndex={0} className="admin-panel max-w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+        <table className="min-w-[900px] w-full text-sm">
+          <thead className="bg-[var(--surface)]">
             <tr>
-              <td className="max-w-xs truncate px-4 py-3 font-medium text-[var(--foreground)]">{playlist.title}</td>
-              <td className="px-4 py-3 text-[var(--muted)]">{playlist.language}</td>
-              <td className="px-4 py-3 text-[var(--muted)]">{playlist.mediaType}</td>
-              <td className="px-4 py-3 text-[var(--muted)]">{playlist._count.lectures}</td>
-              <td className="px-4 py-3">
-                <div className="mb-2 flex flex-wrap gap-1.5">
-                  {playlist.categories.map((c) => (
-                    <span key={c.name} className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
-                      {c.name}
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => removeCategory(playlist, c.name)}
-                        aria-label={`Remove ${c.name} from ${playlist.title}`}
-                        className="rounded-full p-0.5 hover:bg-[var(--accent)]/20 disabled:opacity-40"
-                      >
-                        <X size={11} strokeWidth={2} />
-                      </button>
-                    </span>
-                  ))}
-                  {!playlist.categories.length && <span className="text-xs text-[var(--muted)]">No categories</span>}
-                </div>
-                <select
-                  value=""
-                  disabled={busy}
-                  aria-label={`Add a category to ${playlist.title}`}
-                  onChange={(e) => addCategory(playlist, e.target.value)}
-                  className="admin-select w-full max-w-[220px] px-3 py-1.5 text-xs disabled:opacity-40"
-                >
-                  <option value="">Add a category...</option>
-                  {availableCategories.filter((name) => !playlist.categories.some((c) => c.name === name)).map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="px-4 py-3">
-                <button
-                  type="button"
-                  onClick={() => toggleExpanded(playlist.id)}
-                  aria-expanded={expanded.has(playlist.id)}
-                  aria-controls={`playlist-lectures-${playlist.id}`}
-                  aria-label={`${expanded.has(playlist.id) ? "Collapse" : "Expand"} lectures in ${playlist.title}`}
-                  className="mb-1 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-                >
-                  <ChevronDown size={14} className={expanded.has(playlist.id) ? "rotate-180" : ""} />
-                  {expanded.has(playlist.id) ? "Collapse" : "Expand"}
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => setDeleting(playlist)}
-                  aria-label={`Delete playlist ${playlist.title}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-40"
-                >
-                  <Trash2 size={14} strokeWidth={1.75} /> Delete
-                </button>
-              </td>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Title</th>
+              <th className="w-24 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Language</th>
+              <th className="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Type</th>
+              <th className="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Lectures</th>
+              <th className="min-w-[320px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Tags</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Actions</th>
             </tr>
-            {expanded.has(playlist.id) && (
+          </thead>
+          <tbody className="divide-y divide-[var(--border)]">
+            {!filteredPlaylists.length && (
               <tr>
-                <td colSpan={6} className="bg-[var(--surface)]">
-                  <PlaylistLectures playlist={playlist} onCountChange={updateLectureCount} />
+                <td colSpan={6} className="px-4 py-10 text-center text-[var(--muted)]">
+                  {playlists.length ? "No playlists match your filters." : "No playlists yet."}
                 </td>
               </tr>
             )}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <ConfirmDialog
-      open={deleting !== null}
-      title="Delete playlist and its lectures?"
-      description={deleting
-        ? `Deleting "${deleting.title}" permanently deletes this playlist and all its associated lectures (currently ${deleting._count.lectures}), including their saved notes, favorites, history, and progress. This cannot be undone.`
-        : undefined}
-      confirmLabel="Delete playlist"
-      danger
-      busy={busy}
-      onConfirm={() => void deletePlaylist()}
-      onCancel={() => { if (!busy) setDeleting(null) }}
-    />
+            {filteredPlaylists.map((playlist) => (
+              <Fragment key={playlist.id}>
+                <tr>
+                  <td className="max-w-xs truncate px-4 py-3 font-medium text-[var(--foreground)]">{playlist.title}</td>
+                  <td className="px-4 py-3 text-[var(--muted)]">{playlist.language}</td>
+                  <td className="px-4 py-3 text-[var(--muted)]">{playlist.mediaType}</td>
+                  <td className="px-4 py-3 text-[var(--muted)]">{playlist._count.lectures}</td>
+                  <td className="px-4 py-3">
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {playlist.categories.map((c) => (
+                        <span key={c.name} className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
+                          {c.name}
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => removeCategory(playlist, c.name)}
+                            aria-label={`Remove ${c.name} from ${playlist.title}`}
+                            className="rounded-full p-0.5 hover:bg-[var(--accent)]/20 disabled:opacity-40"
+                          >
+                            <X size={11} strokeWidth={2} />
+                          </button>
+                        </span>
+                      ))}
+                      {!playlist.categories.length && <span className="text-xs text-[var(--muted)]">No tags</span>}
+                    </div>
+                    <select
+                      value=""
+                      disabled={busy}
+                      aria-label={`Add a tag to ${playlist.title}`}
+                      onChange={(e) => addCategory(playlist, e.target.value)}
+                      className="admin-select w-full max-w-[220px] px-3 py-1.5 text-xs disabled:opacity-40"
+                    >
+                      <option value="">Add a tag...</option>
+                      {availableCategories.filter((name) => !playlist.categories.some((c) => c.name === name)).map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(playlist.id)}
+                      aria-expanded={expanded.has(playlist.id)}
+                      aria-controls={`playlist-lectures-${playlist.id}`}
+                      aria-label={`${expanded.has(playlist.id) ? "Collapse" : "Expand"} lectures in ${playlist.title}`}
+                      className="mb-1 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                    >
+                      <ChevronDown size={14} className={expanded.has(playlist.id) ? "rotate-180" : ""} />
+                      {expanded.has(playlist.id) ? "Collapse" : "Expand"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setDeleting(playlist)}
+                      aria-label={`Delete playlist ${playlist.title}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-40"
+                    >
+                      <Trash2 size={14} strokeWidth={1.75} /> Delete
+                    </button>
+                  </td>
+                </tr>
+                {expanded.has(playlist.id) && (
+                  <tr>
+                    <td colSpan={6} className="bg-[var(--surface)]">
+                      <PlaylistLectures playlist={playlist} onCountChange={updateLectureCount} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Delete playlist and its lectures?"
+        description={deleting
+          ? `Deleting "${deleting.title}" permanently deletes this playlist and all its associated lectures (currently ${deleting._count.lectures}), including their saved notes, favorites, history, and progress. This cannot be undone.`
+          : undefined}
+        confirmLabel="Delete playlist"
+        danger
+        busy={busy}
+        onConfirm={() => void deletePlaylist()}
+        onCancel={() => { if (!busy) setDeleting(null) }}
+      />
     </>
   )
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader"
 import { ADMIN_COLORS, adminGradient } from "@/lib/adminColors"
 import { zohoAudioImportSampleRows } from "@/lib/lectureImportSamples"
 import { CircleAlert, CircleCheck, Clapperboard, Download, FileSpreadsheet, Mic, Upload } from "lucide-react"
@@ -80,24 +81,26 @@ export default function AdminImportPage() {
         URL: "YOUTUBE_VIDEO_ID",
         "Media Type": "VIDEO",
         Language: "Odia",
-        Categories: "Bhagavad Gita",
+        Tags: "Bhagavad Gita",
         Playlist: "Bhagavad Gita - Chapter 1",
         Duration: 1800,
         "Lecture Date": "2026-08-20",
+        Place: "Bhubaneswar",
       },
       {
         Title: "Question and Answer Session",
         URL: "YOUTUBE_VIDEO_ID_2",
         "Media Type": "VIDEO",
         Language: "English",
-        Categories: "Question & Answer Sessions, Guru Tattva",
+        Tags: "Question & Answer Sessions, Guru Tattva",
         Playlist: "",
         Duration: 2400,
         "Lecture Date": "2026-08-21",
+        Place: "",
       },
     ]
     const worksheet = XLSX.utils.json_to_sheet(sampleRows)
-    worksheet["!cols"] = [{ wch: 36 }, { wch: 100 }, { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 24 }, { wch: 12 }, { wch: 14 }]
+    worksheet["!cols"] = [{ wch: 36 }, { wch: 100 }, { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 24 }, { wch: 12 }, { wch: 14 }, { wch: 24 }]
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Lectures")
     XLSX.writeFile(workbook, mediaType === "AUDIO" ? "zoho-audio-import-example.xlsx" : "lecture-upload-template.xlsx")
@@ -107,12 +110,7 @@ export default function AdminImportPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full text-white" style={{ background: adminGradient(ADMIN_COLORS.import) }}>
-          <FileSpreadsheet size={18} strokeWidth={1.75} />
-        </span>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Import from Excel</h1>
-      </div>
+      <AdminPageHeader title="Import Excel" section="Library" Icon={FileSpreadsheet} color={ADMIN_COLORS.import} />
 
       {/* Type toggle */}
       <div className="mb-4 flex gap-2">
@@ -126,8 +124,8 @@ export default function AdminImportPage() {
               onClick={() => setMediaType(t)}
               style={active ? { background: adminGradient(color) } : undefined}
               className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${active
-                  ? "text-white"
-                  : "border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                ? "text-white"
+                : "border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
                 }`}
             >
               {t === "AUDIO" ? <Mic size={14} strokeWidth={1.75} /> : <Clapperboard size={14} strokeWidth={1.75} />}
@@ -139,7 +137,7 @@ export default function AdminImportPage() {
 
       <div className="admin-panel mb-4 border-dashed p-6 text-center">
         <p className="mb-2 text-sm text-[var(--muted)]">
-          Upload .xlsx — columns: <code>Title, URL, Media Type, Language, Categories, Playlist, Duration, Lecture Date</code>
+          Upload .xlsx — columns: <code>Title, URL, Media Type, Language, Tags, Playlist, Duration, Lecture Date, Place</code>
         </p>
         <input ref={fileRef} type="file" accept=".xlsx,.xls" disabled={busy} onChange={handleFile} className="hidden" />
         <div className="flex flex-wrap items-center justify-center gap-2">
@@ -164,7 +162,7 @@ export default function AdminImportPage() {
       {rows.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-sm text-[var(--muted)]">{rows.length} rows loaded (showing first 5)</p>
-          <div className="admin-panel overflow-x-auto">
+          <div role="region" aria-label="Lecture spreadsheet preview" tabIndex={0} className="admin-panel max-w-full overflow-x-auto">
             <table className="min-w-full text-xs">
               <thead className="bg-[var(--surface)]">
                 <tr>
