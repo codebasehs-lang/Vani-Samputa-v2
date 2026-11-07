@@ -1,15 +1,16 @@
-import type { Metadata, Viewport } from "next";
-import { Crimson_Text, Inter, Noto_Serif_Devanagari } from "next/font/google";
-import "./globals.css";
-import { Providers } from "@/components/Providers";
-import { Header } from "@/components/Header";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { FirstVisitSplash } from "@/components/FirstVisitSplash";
+import { Header } from "@/components/Header";
+import { Providers } from "@/components/Providers";
 import { UserShell } from "@/components/UserShell";
 import { AudioEngine } from "@/components/player/AudioEngine";
-import { MiniPlayer } from "@/components/player/MiniPlayer";
 import { FullScreenPlayer } from "@/components/player/FullScreenPlayer";
+import { MiniPlayer } from "@/components/player/MiniPlayer";
 import { VideoStage } from "@/components/player/VideoStage";
-import { FirstVisitSplash } from "@/components/FirstVisitSplash";
+import type { Metadata, Viewport } from "next";
+import { Crimson_Text, Inter, Noto_Serif_Devanagari } from "next/font/google";
+import "react-day-picker/style.css";
+import "./globals.css";
 
 // Run during HTML parsing, not hydration, to cover the first installed-app paint.
 const pwaLaunchScript = `(function(){var installed=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;if(installed&&window.matchMedia("(max-width: 767px)").matches){document.documentElement.setAttribute("data-pwa-launch","");}})();`;
