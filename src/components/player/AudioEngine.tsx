@@ -86,8 +86,8 @@ export function AudioEngine() {
         if (requestId !== sourceRequest) return
         loadingTrackId = null
         console.error("Audio playback failed.", error)
-        toast.error("Could not play this lecture. Please try again.")
         usePlayerStore.getState().pause()
+        toast.error("Could not play this lecture. Please try again.")
       }
     }
 
@@ -142,7 +142,7 @@ export function AudioEngine() {
       }
       // User-initiated seek
       if (s.currentTrack?.mediaType === "AUDIO" && loadedTrackId === s.currentTrack.id &&
-          s.requestedPositionS !== null && s.requestedPositionS !== prev.requestedPositionS) {
+        s.requestedPositionS !== null && s.requestedPositionS !== prev.requestedPositionS) {
         audio.currentTime = s.requestedPositionS
         usePlayerStore.getState().clearSeekRequest()
       }

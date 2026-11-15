@@ -1,14 +1,8 @@
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { getStratusAudioSource } from "@/lib/stratusAudio"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest, { params }: RouteContext<"/api/audio/[id]">) {
-  const session = await auth()
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-  }
-
   const { id } = await params
   const lecture = await prisma.lecture.findFirst({
     where: { id, mediaType: "AUDIO" },

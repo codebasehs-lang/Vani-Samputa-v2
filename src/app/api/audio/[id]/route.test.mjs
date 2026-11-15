@@ -11,11 +11,10 @@ vm.runInNewContext(ts.transpileModule(
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
 ).outputText, { exports: sourceModule.exports, URL })
 
-function setup({ session = { user: { email: "listener@example.com" } }, lectureUrl, fetchResponses = [] } = {}) {
+function setup({ lectureUrl, fetchResponses = [] } = {}) {
   const calls = []
   const errors = []
   const modules = {
-    "@/auth": { auth: async () => session },
     "@/lib/stratusAudio": sourceModule.exports,
     "@/lib/prisma": {
       prisma: {
@@ -72,12 +71,12 @@ function setup({ session = { user: { email: "listener@example.com" } }, lectureU
 
 const lectureUrl = "https://vani-samputa-audio-development.zohostratus.in/HH%20Haladhara%20Swami%20Maharaj/0001%20Bhagavatam.mp3"
 
-test("audio route requires an authenticated user before looking up the lecture", async () => {
-  const app = setup({ session: null, lectureUrl })
+test("audio route returns 404 for a missing lecture", async () => {
+  const app = setup()
   const response = await app.request()
 
-  assert.equal(response.status, 401)
-  assert.equal(app.calls.length, 0)
+  assert.equal(response.status, 404)
+  assert.equal(app.calls.filter(([name]) => name === "fetch").length, 0)
 })
 
 test("audio route only signs audio URLs from the configured Stratus bucket", async () => {
@@ -88,7 +87,7 @@ test("audio route only signs audio URLs from the configured Stratus bucket", asy
   assert.equal(app.calls.filter(([name]) => name === "fetch").length, 0)
 })
 
-test("audio route signs the database object key and forwards byte ranges", async () => {
+test("audio route streams signed audio and forwards byte ranges without a session", async () => {
   const app = setup({
     lectureUrl,
     fetchResponses: [
@@ -129,7 +128,7 @@ test("audio route rejects an invalid signed URL without fetching it", async () =
   assert.equal(app.calls.filter(([name]) => name === "fetch").length, 1)
 })
 
-test("standalone audio links use the protected app endpoint while video links stay on YouTube", async () => {
+test("standalone audio links use the app endpoint while video links stay on YouTube", async () => {
   const lectures = [
     { id: "audio-1", title: "Standalone audio", url: lectureUrl, mediaType: "AUDIO", language: "English", categories: [] },
     { id: "video-1", title: "Standalone video", url: "video-id", mediaType: "VIDEO", language: "English", categories: [] },

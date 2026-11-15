@@ -66,7 +66,7 @@ Never prefix these variables with `NEXT_PUBLIC_`. Keep the shared secret out of 
 
 The audio files stay in the private Stratus bucket. The ZIP uploaded to Serverless contains the signer code and SDK dependencies, not the audio files. Keep `STRATUS_BUCKET_NAME=vani-samputa-audio`, `AUDIO_OBJECT_PREFIX=HH Haladhara Swami Maharaj/`, and the matching `SIGNER_SHARED_SECRET` on that function. New links use the deployed function's expiry; set its `URL_EXPIRY_SECONDS` to `9000` for 2 hours 30 minutes.
 
-At playback, a signed-in listener requests `/api/audio/{lectureId}`. The app looks up the permanent URL, derives its object key, calls the function with `X-Audio-Signer-Secret`, and streams the signed Stratus response. Range requests are forwarded for seeking. The workbook never needs updating when signed URLs expire; each playback/range request obtains a fresh signed URL.
+At playback, a listener requests `/api/audio/{lectureId}` without needing to sign in. The app looks up the permanent URL, derives its object key, calls the function with `X-Audio-Signer-Secret`, and streams the signed Stratus response. Range requests are forwarded for seeking. The workbook never needs updating when signed URLs expire; each playback/range request obtains a fresh signed URL.
 
 ### Upload and Verify
 
@@ -74,8 +74,8 @@ At playback, a signed-in listener requests `/api/audio/{lectureId}`. The app loo
 2. Open Admin -> Import, select Audio, and choose the workbook.
 3. Check the preview and total row count, then click Import All Rows.
 4. Review created/skipped counts and any row errors.
-5. Sign in as a listener, open the playlist or standalone lecture, and test playback plus seeking. The app audio request should return `200` or `206`.
-6. Confirm the app audio endpoint rejects a signed-out request with `401`. Confirm the signer rejects a request without its custom secret header with `401`.
+5. Without signing in, open the playlist or standalone lecture and test playback plus seeking. The app audio request should return `200` or `206`.
+6. Confirm the signer rejects a request without its custom secret header with `401`.
 
 These URLs refer to Development. Do not mix Development URLs with Production bucket/function settings. Production needs its own tested matching configuration.
 
