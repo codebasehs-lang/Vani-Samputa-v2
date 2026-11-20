@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useState } from "react"
 import { SplashVisual } from "@/components/SplashVisual"
+import { PWA_SPLASH_SESSION_KEY } from "@/lib/pwaSplash"
+import { useEffect, useLayoutEffect, useState } from "react"
 
 const FIRST_VISIT_SPLASH_KEY = "vs-first-visit-desktop-splash-v1"
 const FIRST_VISIT_SPLASH_DURATION_MS = 3600
@@ -22,7 +23,7 @@ export function FirstVisitSplash() {
     const standalone = window.matchMedia("(display-mode: standalone)").matches ||
       ("standalone" in navigator && navigator.standalone === true)
     const mobilePwa = !isDesktop && standalone
-    let showSplash = isDesktop || mobilePwa
+    let showSplash = isDesktop || (mobilePwa && document.documentElement.hasAttribute("data-pwa-launch"))
     if (isDesktop) {
       const seen = window.localStorage.getItem(FIRST_VISIT_SPLASH_KEY) === "1"
       showSplash = !seen
@@ -32,6 +33,11 @@ export function FirstVisitSplash() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const duration = mobilePwa ? (reduceMotion ? 600 : 2600) : FIRST_VISIT_SPLASH_DURATION_MS
     const showTimer = window.setTimeout(() => {
+      if (mobilePwa && showSplash) {
+        try {
+          window.sessionStorage.setItem(PWA_SPLASH_SESSION_KEY, "1")
+        } catch { }
+      }
       setIsPwa(mobilePwa)
       setVisible(showSplash)
       setChecking(false)
@@ -69,11 +75,10 @@ export function FirstVisitSplash() {
     <SplashVisual
       variant={pwa ? "pwa" : "default"}
       onEnter={pwa ? () => setFading(true) : undefined}
-      className={`fixed inset-0 z-[110] ${
-        pwa
+      className={`fixed inset-0 z-[110] ${pwa
           ? fading ? "pwa-splash-exiting" : ""
           : `transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`
-      } ${checking ? "pwa-splash-boot" : ""}`}
+        } ${checking ? "pwa-splash-boot" : ""}`}
       subtitle="Preparing your experience"
     />
   )

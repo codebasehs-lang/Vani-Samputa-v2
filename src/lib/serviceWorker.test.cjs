@@ -11,7 +11,11 @@ function worker() {
     URL,
     fetch: async () => new Response("ok"),
     caches: {
-      keys: async () => ["vani-samputa-v4-runtime", "vani-samputa-v4-precache", "vani-samputa-v5-runtime", "vani-samputa-audio-v1", "unrelated"],
+      keys: async () => [
+        "vani-samputa-v12-runtime", "vani-samputa-v12-precache",
+        "vani-samputa-v13-runtime", "vani-samputa-v13-precache",
+        "vani-samputa-audio-v1", "unrelated",
+      ],
       delete: async (key) => { deleted.push(key) },
       match: async () => undefined,
       open: async () => ({ put: async (request) => { writes.push(request.url) } }),
@@ -65,10 +69,10 @@ test("static assets remain cached, but private/no-store responses do not", async
   }
 })
 
-test("activation clears old cached sessions while preserving offline audio", async () => {
+test("activation clears the previous app shell and manifest caches while preserving offline audio", async () => {
   const { handlers, deleted } = worker()
   let completion
   handlers.activate({ waitUntil(promise) { completion = promise } })
   await completion
-  assert.deepEqual(deleted.sort(), ["vani-samputa-v4-precache", "vani-samputa-v4-runtime"])
+  assert.deepEqual(deleted.sort(), ["vani-samputa-v12-precache", "vani-samputa-v12-runtime"])
 })

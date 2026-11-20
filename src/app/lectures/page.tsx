@@ -18,7 +18,7 @@ export default async function StandaloneLecturesPage({ searchParams }: { searchP
   ])
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="standalone-lectures-page mx-auto max-w-5xl px-4 py-10">
       <PageHeader
         icon={Library}
         eyebrow="Single talks"

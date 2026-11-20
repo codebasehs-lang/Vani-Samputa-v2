@@ -7,13 +7,13 @@ import { AudioEngine } from "@/components/player/AudioEngine";
 import { FullScreenPlayer } from "@/components/player/FullScreenPlayer";
 import { MiniPlayer } from "@/components/player/MiniPlayer";
 import { VideoStage } from "@/components/player/VideoStage";
+import { pwaLaunchScript } from "@/lib/pwaSplash";
 import type { Metadata, Viewport } from "next";
 import { Crimson_Text, Inter, Noto_Serif_Devanagari } from "next/font/google";
 import "react-day-picker/style.css";
 import "./globals.css";
 
 // Run during HTML parsing, not hydration, to cover the first installed-app paint.
-const pwaLaunchScript = `(function(){var installed=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;if(installed&&window.matchMedia("(max-width: 767px)").matches){document.documentElement.setAttribute("data-pwa-launch","");}})();`;
 const pwaLaunchStyles = `
 html[data-pwa-launch], html[data-pwa-launch] body { background: #101327 !important; overflow: hidden; }
 html[data-pwa-launch] body > :not(.pwa-splash) { visibility: hidden; }
@@ -50,10 +50,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/branding/logo-192.png", type: "image/png", sizes: "192x192" },
-      { url: "/branding/logo-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/branding/app-icons/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/branding/app-icons/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: "/branding/logo-192.png",
+    apple: [
+      { url: "/branding/app-icons/apple-touch-icon-152.png", sizes: "152x152", type: "image/png" },
+      { url: "/branding/app-icons/apple-touch-icon-167.png", sizes: "167x167", type: "image/png" },
+      { url: "/branding/app-icons/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   formatDetection: { telephone: false },
 };

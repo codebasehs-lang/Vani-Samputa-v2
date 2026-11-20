@@ -3896,12 +3896,6 @@ a.admin-stat:hover {
   display: none;
 }
 
-@media (display-mode: standalone) and (max-width: 767px) {
-  .pwa-splash-boot {
-    display: flex;
-  }
-}
-
 .pwa-splash-frame {
   position: absolute;
   inset: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
@@ -3951,6 +3945,7 @@ a.admin-stat:hover {
 
 .pwa-splash-parampara {
   display: flex;
+  flex-direction: row-reverse;
   flex-shrink: 0;
   justify-content: center;
   gap: clamp(0.4rem, 2vw, 0.75rem);
@@ -5346,6 +5341,66 @@ textarea:focus-visible {
 .lecture-row:hover .lecture-go {
   color: var(--brand-gold);
   transform: translate(2px, -2px);
+}
+
+@media (max-width: 639px) {
+  .standalone-lectures-page .page-hero {
+    margin-bottom: 1.25rem;
+    padding: 1.15rem;
+    border-radius: 1.25rem;
+  }
+
+  .standalone-lectures-page .page-hero-row {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .standalone-lectures-page .page-hero-icon {
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 0.9rem;
+  }
+
+  .standalone-lectures-page .page-hero-title {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+  }
+
+  .standalone-lectures-page .page-hero-desc {
+    font-size: 0.84rem;
+  }
+
+  .standalone-lectures-page .page-hero-foot {
+    margin-top: 0.9rem;
+  }
+
+  .standalone-lectures-page .chip-row {
+    margin-bottom: 1rem;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .standalone-lectures-page .pill-filter {
+    min-height: 2.5rem;
+    padding-inline: 0.85rem;
+  }
+
+  .standalone-lectures-page .lecture-row {
+    min-width: 0;
+    gap: 0.65rem;
+    padding: 0.7rem;
+    border-radius: 0.9rem;
+  }
+
+  .standalone-lectures-page .lecture-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+  }
+
+  .standalone-lectures-page .lecture-tag {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
 }
 
 /* ── Article cards + reading view ───────────────────────── */

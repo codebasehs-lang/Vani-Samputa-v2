@@ -98,8 +98,14 @@ its dismissal without remounting the artwork. Manifest and standalone browser
 chrome use the same indigo as the custom launch screen; ordinary browser chrome
 keeps its cream color. Small, pre-generated WebP portraits and the shared logo
 are precached by the production service worker for faster repeat/offline launches.
-The native splash cannot be disabled, and existing installations may take time
-to refresh their manifest branding.
+The [app icons](./public/branding/app-icons) are separate from the custom welcome
+artwork. Standard icons have transparent corners. Android's adaptive icons use an
+opaque indigo background matching the manifest, with the emblem inside the
+circular mask-safe area for different launcher shapes. iPhone and iPad use
+size-specific, opaque Apple touch icons so the OS does not fill transparent
+corners. The native launch screen is device-controlled. Existing installations
+may take time to refresh their icons; reinstall if you need to preview the new
+branding immediately.
 
 Home search works in the browser and installed PWA and requires an internet
 connection. It shows loading and connection/request errors with a retry button.

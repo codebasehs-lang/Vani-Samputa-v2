@@ -1,4 +1,4 @@
-const VERSION = "vani-samputa-v12"
+const VERSION = "vani-samputa-v13"
 const PRECACHE = `${VERSION}-precache`
 const RUNTIME = `${VERSION}-runtime`
 const AUDIO_CACHE = "vani-samputa-audio-v1"
